@@ -40,3 +40,17 @@ Se realizo el diagrama identificando los componentes del sistema, identificando 
 - Fronted web: Este componente no recibe ningun dato de la base de datos, solo se encarga de la parte visual del la web
 
 ---
+## Diagrama de componentes especificos.
+![alt text](docs/uml/diagramaCE.drawio.png)
+
+Se realizo el diagrama identificando los subcomponentes que interactuan con el componente backend
+
+- Apis: En su interior se observa todas las iteraciones para la creacion de las APIs.
+- GestorMaterias: En su interior maneja todos los componentes que se reciben con la gestion de materias
+- GestoAcademico: En su interior maneja todos los componentes que se reciben con la gestion de cada usuario
+- Seguridad: En su interior maneja todos los componentes que se encargan de la seguridad del sistema
+- GestorReportes: En su interior maneja todos los componentes que se encarga de la logica de los reportes del sistema
+- GestorSolicitud: En su interior maneja todos los componentes que se reciben con la gestion de cada solucitud
+- GestorNotificacion: En su interior maneja todos los componentes que se reciben con la gestion de cada notificacion
+
+---
