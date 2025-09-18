@@ -19,9 +19,15 @@
 ---
 ---
 ## Diagrama de contexto.
-**Maven**
 ![alt text](docs/uml/diagramaContexto.drawio.png)
 
 Se realizo el diagrama de Contexto identificando los autores y identificando como interactuan con el sistema de SIRHA
+
+---
+---
+## Diagrama de casos de uso.
+![alt text](docs/uml/diagramaCasos.drawio.png)
+
+Se realizo el diagrama de casos de uso identificando todos los actores del sistema de horarios, se identifico lo que puede hacer cada uno y se relaciona con las acciones de otros actores
 
 ---
