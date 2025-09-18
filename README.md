@@ -17,3 +17,11 @@
 ![alt text](docs/imagenes/pruebaEjecucionSonarqube.png)
 
 ---
+---
+## Diagrama de contexto.
+**Maven**
+![alt text](docs/uml/diagramaContexto.drawio.png)
+
+Se realizo el diagrama de Contexto identificando los autores y identificando como interactuan con el sistema de SIRHA
+
+---
