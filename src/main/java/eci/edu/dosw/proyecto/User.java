@@ -2,8 +2,11 @@ package eci.edu.dosw.proyecto;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -12,7 +15,9 @@ import lombok.Data;
 @Entity
 @Data
 @AllArgsConstructor
-public abstract class Usuario {
+@NoArgsConstructor
+@Table(name = "users") 
+public class User {
     @Id
     private String id;
     private String name;
