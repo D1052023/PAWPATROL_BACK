@@ -71,6 +71,15 @@ En cuanto a los principios SOLID, se cumple:
 - I al definir interfaces específicas como ILoginService o ValidationStrategy
 - D al depender de abstracciones en lugar de implementaciones concretas.
 ---
+## Diagrama de secuencia.
+![DiagramaSecuencia](docs/uml/secuenceDiagram.png)
+Diagramas basados en casos de uso principales del sistema SIRHA:
+- Login / Autenticación de usuario
+- Gestión de usuarios (validar/crear usuario)
+- Crear solicitud de reasignación (Application)
+- Validar solicitud de reasignación
+- Notificación del resultado
+---
 ## Diagrama de Base de datos.
 ![DiagramaBases](docs/uml/DiagramaBasesDeDatos.png)
 
@@ -92,3 +101,5 @@ Con esta estructura nos aseguramos:
 - Mantener la integridad (las claves foráneas aseguran que una solicitud no se cree para un grupo inexistente)
 - Flexibilidad (es un sistema con tendencia a crecer, sin necesidad de modificar lo que hay).
 - Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
+
+---
