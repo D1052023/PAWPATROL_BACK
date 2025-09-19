@@ -62,7 +62,7 @@ class UserControllerTest {
 
         when(userRepository.save(any(User.class))).thenAnswer(inv -> {
             User u = inv.getArgument(0);
-            u.setId("123"); // simulamos que el repositorio asigna un id
+            u.setId("123"); 
             return u;
         });
 

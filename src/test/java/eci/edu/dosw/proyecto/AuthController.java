@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AuthControllerTest {
 
-    private JwtService jwtService; // servicio real
+    private JwtService jwtService; 
     @Mock
     private UserRepository userRepository;
     private AuthController authController;
@@ -23,7 +23,7 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        jwtService = new JwtService(); // instancia real
+        jwtService = new JwtService(); 
         authController = new AuthController(jwtService, userRepository);
     }
 

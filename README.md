@@ -17,20 +17,21 @@
 ![alt text](docs/imagenes/pruebaEjecucionSonarqube.png)
 
 ---
----
+
 ## Diagrama de contexto.
 ![alt text](docs/uml/diagramaContexto.drawio.png)
 
 Se realizo el diagrama de Contexto identificando los autores y identificando como interactuan con el sistema de SIRHA
 
 ---
----
+
 ## Diagrama de casos de uso.
 ![alt text](docs/uml/diagramaCasos.drawio.png)
 
 Se realizo el diagrama de casos de uso identificando todos los actores del sistema de horarios, se identifico lo que puede hacer cada uno y se relaciona con las acciones de otros actores
 
 ---
+
 ## Diagrama de componentes simple.
 ![alt text](docs/uml/diagramaCS.drawio.png)
 
@@ -40,6 +41,7 @@ Se realizo el diagrama identificando los componentes del sistema, identificando 
 - Fronted web: Este componente no recibe ningun dato de la base de datos, solo se encarga de la parte visual del la web
 
 ---
+
 ## Diagrama de componentes especificos.
 ![alt text](docs/uml/diagramaCE.drawio.png)
 
@@ -54,6 +56,7 @@ Se realizo el diagrama identificando los subcomponentes que interactuan con el c
 - GestorNotificacion: En su interior maneja todos los componentes que se reciben con la gestion de cada notificacion
 
 ---
+
 ## Diagrama de clases.
 ![alt text](docs/uml/diagramaClases.drawio.png)
 
@@ -71,7 +74,9 @@ En cuanto a los principios SOLID, se cumple:
 - I al definir interfaces específicas como ILoginService o ValidationStrategy
 - D al depender de abstracciones en lugar de implementaciones concretas.
 ---
+
 ## Diagrama de secuencia.
+
 ![DiagramaSecuencia](docs/uml/secuenceDiagram.png)
 Diagramas basados en casos de uso principales del sistema SIRHA:
 - Login / Autenticación de usuario
@@ -80,7 +85,9 @@ Diagramas basados en casos de uso principales del sistema SIRHA:
 - Validar solicitud de reasignación
 - Notificación del resultado
 ---
+
 ## Diagrama de Base de datos.
+
 ![DiagramaBases](docs/uml/DiagramaBasesDeDatos.png)
 
 En este diagrama encontramos las tablas(relaciones) que vamos a necesitar para tener una base
@@ -103,3 +110,65 @@ Con esta estructura nos aseguramos:
 - Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
 
 ---
+
+## Implementación autenticación usuario - pruebas (Parte de evidencia)
+
+![alt text](docs/imagenes/ImplementacioAutenticacion.png)
+
+![alt text](docs/imagenes/PruebaAu.png)
+
+## Endpoints y Swagger 
+
+- SWAGGER UI:
+
+![alt text](docs/imagenes/endpoints.jpeg)
+
+- Prueba swagger utilizando h2:
+
+![alt text](docs/imagenes/PruebaSwagger.png)
+
+Se realizo la prueba para ver como respondia la base y la autenticación.
+
+- Configuración Swagger:
+
+![alt text](docs/imagenes/Swagger.png)
+
+## Base de datos:
+
+- Se logro implementar la base de datos MySQL en el proyecto, se crea dentro una base de datos sirha_dosw:
+
+![alt text](docs/imagenes/implementarBase.png)
+
+![alt text](docs/imagenes/implementarBase1.png)
+
+- Hacemos pruebas en la autenticación de usuarios en swager UI y luego se actualiza la base de datos MySQL para ver si se ha enviado información:
+
+![alt text](docs/imagenes/SwaggerBase.png)
+
+- Se refresca la base de datos y miramos si se creo la tabla de usuarios con la prueba que hicimos:
+
+![alt text](docs/imagenes/MySQL.jpeg)
+
+![alt text](docs/imagenes/MySQL1.jpeg)
+
+## Cobertura JACOCO y SonarQube
+
+[alt text](docs/imagenes/EjecucionJacoco.jpeg)
+
+![alt text](docs/imagenes/Jacoco.jpeg)
+
+![alt text](docs/imagenes/Jacoco1.jpeg)
+
+![alt text](docs/imagenes/EjecucionSonar.jpeg)
+
+![alt text](docs/imagenes/Sonar.jpeg)
+
+- Como se evidencia las pruebas cubren gran parte del proyecto verificando asi la funcionalidad y mantenimiento del código
+
+## Tablero de JIRA
+
+![alt text](docs/imagenes/Jira.jpeg)
+
+
+
+
