@@ -54,3 +54,20 @@ Se realizo el diagrama identificando los subcomponentes que interactuan con el c
 - GestorNotificacion: En su interior maneja todos los componentes que se reciben con la gestion de cada notificacion
 
 ---
+## Diagrama de clases.
+![alt text](docs/uml/diagramaClases.drawio.png)
+
+El diagrama de clases aplica varios patrones de diseño:
+- Strategy en las validaciones de solicitudes
+- Observer para las notificaciones
+- Facade en la clase principal Proyecto 
+- Factory Method de forma implícita en la jerarquía de User.
+
+En cuanto a los principios SOLID, se cumple:
+
+- S al dar una unica responsabilidad a cada clase
+- O al permitir agregar validaciones y notificadores sin modificar el nucleo
+- L en la herencia de User y sus subclases
+- I al definir interfaces específicas como ILoginService o ValidationStrategy
+- D al depender de abstracciones en lugar de implementaciones concretas.
+---
