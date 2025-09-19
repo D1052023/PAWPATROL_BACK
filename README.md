@@ -71,3 +71,24 @@ En cuanto a los principios SOLID, se cumple:
 - I al definir interfaces específicas como ILoginService o ValidationStrategy
 - D al depender de abstracciones en lugar de implementaciones concretas.
 ---
+## Diagrama de Base de datos.
+![DiagramaBases](docs/uml/DiagramaBasesDeDatos.png)
+
+En este diagrama encontramos las tablas(relaciones) que vamos a necesitar para tener una base
+de datos suficiente para cumplir con los requisitos y poder administrar de manera correcta la información necesaria.
+
+Encontramos 8 tablas, las cuales son:
+- Estudiante, guarda la información de un estudiante(id,carrera,semestre).
+- Usuario, guarda la información de un usuario general(sin discriminar estudiante o decanatura)(id,nombre,correo_institucional,contraseña y rol).
+- Decanatura, guarda la información de un usuario con el rol de decanatura(id, facultad).
+- Materia, guarda la información sobre una materia en especifico(id, codigo, nombre y creditos).
+- Grupo, encontramos la información sobre un grupo(de una materia), (id, id_materia,profesor,cupoMaximo y horario).
+- Solicitud, es la tabla con más valores ya que contiene la información de una solicitud(id, id_estudiante,id_materia,grupo_origen,grupo_destino,estado,prioridad,fecha_creacion,observaciones).
+- DecisiónSolicitud, aqui se guardará la información con respecto a las respuestas por parte de la decanatura a las solicitudes(id, id_solicitud, id_decanatura, fechaRespuesta, resultado y comentarios).
+- Inscripcion, esta tabla nos permite llevar un control sobre las inscripciones que realiza y tiene un estudiante(id, id_estudiante, id_grupo, fechaInscripcion).
+
+Con esta estructura nos aseguramos:
+- Evitar redundancia de datos (no repetimos la información, usamos llaves foraneas).
+- Mantener la integridad (las claves foráneas aseguran que una solicitud no se cree para un grupo inexistente)
+- Flexibilidad (es un sistema con tendencia a crecer, sin necesidad de modificar lo que hay).
+- Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
