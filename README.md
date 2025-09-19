@@ -137,9 +137,9 @@ Se realizo la prueba para ver como respondia la base y la autenticación.
 
 - Se logro implementar la base de datos MySQL en el proyecto, se crea dentro una base de datos sirha_dosw:
 
-![alt text](docs/imagenes/implementarBase.png)
+![alt text](docs/imagenes/ImplementarBase.png)
 
-![alt text](docs/imagenes/implementarBase1.png)
+![alt text](docs/imagenes/ImplementarBase1.png)
 
 - Hacemos pruebas en la autenticación de usuarios en swager UI y luego se actualiza la base de datos MySQL para ver si se ha enviado información:
 
