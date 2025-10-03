@@ -184,7 +184,7 @@ _ _ _
 
 ## Configuracion base de datos MongoDB
 
-[Ver Configuración(PDF)](docs/pdf/BasEMongoDB.pdf)
+[Ver Configuración(PDF)](docs/pdf/BaseMongoDB.pdf)
 
 
 ### DOCKERIZACIÓN DE LA APPI
