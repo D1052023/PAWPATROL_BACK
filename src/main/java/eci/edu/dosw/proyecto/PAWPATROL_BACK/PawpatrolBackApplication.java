@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @SpringBootApplication
 @ComponentScan(basePackages = "eci.edu.dosw.proyecto")  
-@EnableMongoRepositories(basePackages = "eci.edu.dosw.proyecto")
+@EnableMongoRepositories(basePackages = "eci.edu.dosw.proyecto.repositories")
 public class PawpatrolBackApplication {
     public static void main(String[] args) {
         SpringApplication.run(PawpatrolBackApplication.class, args);
