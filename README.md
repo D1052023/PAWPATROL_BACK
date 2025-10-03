@@ -182,6 +182,10 @@ Con esta estructura nos aseguramos:
 - Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
 _ _ _
 
+## Configuracion base de datos MongoDB
+
+[Ver Configuración(PDF)](docs/pdf/BasEMongoDB.pdf)
+
 
 ### DOCKERIZACIÓN DE LA APPI
 
