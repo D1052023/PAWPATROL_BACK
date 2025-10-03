@@ -10,11 +10,50 @@
 `feature/proyecto_JuanCaballero_OscarSanchez_DiegoChavarro_RobinsonPortela_SantiagoPalacios_2025-2`
 
 ---
+
+## Estrategia de Versinamiento y ramas.
+
+**Template ramas**
+`feature/proyecto_JuanCaballero_OscarSanchez_DiegoChavarro_RobinsonPortela_SantiagoPalacios_Semana#`
+- main: Versión estable para PREPROD
+- develop: Rama principal de desarrollo
+- bugix/*: Manejo de errores
+- release/*: Manejo de versiones.
+
+**Template Ramas**
+`commit -m "Semana #: NombreIntegrante - Que fue lo que hizo`
+
+---
 ## Pruebas de ejecución (Proyecto).
+
 **Maven**
+
 ![alt text](docs/imagenes/pruebaEjecucion.png)
 ![alt text](docs/imagenes/pruebaEjecucionJacoco.png)
 ![alt text](docs/imagenes/pruebaEjecucionSonarqube.png)
+
+---
+## Tecnologías utilizadas
+
+- Java 21
+- Spring Boot
+- MongoDB
+- Swagger (OpenAPI)
+- JaCoCo (cobertura de pruebas)
+- SonarQube (análisis estático de código)
+- Docker(Ejecutar la aplicación en contenedores)
+- Maven (gestión de dependencias y build)
+- Azure
+- Kubernetes
+- GitHub Actions
+
+## Arquitectura
+
+El proyecto sigue el patrón MVC (Modelo - Vista - Controlador):
+- Models: Entidades de negocio.
+- Repository: Manejo de persistencia en MongoDB.
+- Services: Lógica de negocio.
+- Controllers: Exposición de endpoints REST.
 
 ---
 
@@ -108,7 +147,7 @@ Group es un modulo de alto nivel por lo que no estamos dependiendo de los modulo
 define el flujo usando y implementando la interfaz de observer asi trabaja con abstracciones no con clases concretas.
 
 
-## Diagrama de secuencia.
+## Diagramas de secuencia.
 
 ![DiagramaSecuencia](docs/uml/secuenceDiagram.png)
 Diagramas basados en casos de uso principales del sistema SIRHA:
@@ -141,51 +180,7 @@ Con esta estructura nos aseguramos:
 - Mantener la integridad (las claves foráneas aseguran que una solicitud no se cree para un grupo inexistente)
 - Flexibilidad (es un sistema con tendencia a crecer, sin necesidad de modificar lo que hay).
 - Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
-
----
-
-## Implementación autenticación usuario - pruebas (Parte de evidencia)
-
-![alt text](docs/imagenes/ImplementacioAutenticacion.png)
-
-![alt text](docs/imagenes/PruebaAu.png)
-
-## Endpoints y Swagger
-
-- SWAGGER UI:
-
-![alt text](docs/imagenes/endpoints.jpeg)
-
-- Prueba swagger utilizando h2:
-
-![alt text](docs/imagenes/PruebaSwagger.png)
-
-Se realizo la prueba para ver como respondia la base y la autenticación.
-
-- Configuración Swagger:
-
-![alt text](docs/imagenes/Swagger.png)
-
-
-## Cobertura JACOCO y SonarQube
-
-[Ver el reporte (PDF)](docs/pdf/sonarqube.pdf)
-
-- Como se evidencia las pruebas cubren gran parte del proyecto verificando asi la funcionalidad y mantenimiento del código
-
-
----
-
-## Semana 8
-
-___
-
-Kubernets:
-
-[Ver el reporte (PDF)](docs/pdf/Kubernets.pdf)
-
-
-___
+_ _ _
 
 
 ### DOCKERIZACIÓN DE LA APPI
@@ -228,6 +223,23 @@ robinson677/pawpatrol-back:0.0.5
 
 --- 
 
-## Tablero de JIRA:
+## DESPLIEGUE API KUBERNETES
 
-https://pawpatrol-1.atlassian.net/jira/software/projects/SCRUM/boards/1/backlog
+Kubernets:
+
+[Ver el reporte (PDF)](docs/pdf/Kubernets.pdf)
+
+- Una vez tenemos la imagen de Docker y verificamos de que se compila y genera el .jar, la probamos localmente:
+
+docker build -t pawpatrol:1.0 .
+docker run -p 8080:8080 pawpatrol:1.0
+
+- Ahora aqui se crean arhcivos de Kubernetes (deployment, service).yaml, con el fin de describir la configuracion de los recursos a desplegar (puerto, copias, imagen docker). Aplicamos los archivos:
+
+kubectl apply -f kubernetes/deployment.yaml
+kubectl apply -f kubernetes/service.yaml
+
+- luego abrimos en el navegador localhost para verificar el funcionamiento de los enpoints definidos.
+
+
+
