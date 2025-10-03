@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 import eci.edu.dosw.proyecto.models.Group;
 import eci.edu.dosw.proyecto.models.GroupObserver;
 
+/**
+ * Clase servicio que implementa el patron observer para generar la alerta cuando un grupo se actualiza.
+ */
 @Service
 public class AlertService implements GroupObserver {
     @Override

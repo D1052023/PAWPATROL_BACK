@@ -1,0 +1,12 @@
+.dockerignore
+target
+!target/PAWPATROL_BACK-0.0.5.jar
+
+.git
+.gitignore
+.mvn
+.vscode
+.idea
+*.iml
+.DS_Store
+**/*.class

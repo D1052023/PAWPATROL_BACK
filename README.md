@@ -166,16 +166,12 @@ Se realizo la prueba para ver como respondia la base y la autenticación.
 
 ![alt text](docs/imagenes/Swagger.png)
 
-## Base de datos:
-
-
 
 ## Cobertura JACOCO y SonarQube
 
-[Ver el reporte (PDF)](docs/imagenes/sonarqube.pdf)
+[Ver el reporte (PDF)](docs/pdf/sonarqube.pdf)
 
 - Como se evidencia las pruebas cubren gran parte del proyecto verificando asi la funcionalidad y mantenimiento del código
-
 
 
 ---
@@ -183,6 +179,14 @@ Se realizo la prueba para ver como respondia la base y la autenticación.
 ## Semana 8
 
 ___
+
+Kubernets:
+
+[Ver el reporte (PDF)](docs/pdf/Kubernets.pdf)
+
+
+___
+
 
 ### DOCKERIZACIÓN DE LA APPI
 
