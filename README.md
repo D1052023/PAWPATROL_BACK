@@ -58,22 +58,55 @@ Se realizo el diagrama identificando los subcomponentes que interactuan con el c
 ---
 
 ## Diagrama de clases.
+
 ![alt text](docs/uml/diagramaClases.drawio.png)
 
-El diagrama de clases aplica varios patrones de diseño:
-- Strategy en las validaciones de solicitudes
-- Observer para las notificaciones
-- Facade en la clase principal Proyecto 
-- Factory Method de forma implícita en la jerarquía de User.
-
-En cuanto a los principios SOLID, se cumple:
-
-- S al dar una unica responsabilidad a cada clase
-- O al permitir agregar validaciones y notificadores sin modificar el nucleo
-- L en la herencia de User y sus subclases
-- I al definir interfaces específicas como ILoginService o ValidationStrategy
-- D al depender de abstracciones en lugar de implementaciones concretas.
 ---
+
+### **Patrones de diseño:**
+
+---
+
+#### **Observer**
+
+Group actúa como el que notifica cambios cuando se llena o alcanza el 90% de capacidad, mientras que GroupObserverService reacciona a esas notificaciones generando alertas o guardando en la base de datos. Asi Group solo gestiona los cupos, y los observadores se encargan de las alertas.
+
+
+#### **Factory Method**
+Se uso ya que nos permitió evitar centralizar la lógica de la validación de los usurios ya que cada uno al entrar en la aplicación SIRHA navega y interactua solo con lo que es de su rol asi evitamos que se mezcle lo que un decano puede hacer y lo que puede hacer un estudiante dentro de la app.
+
+
+---
+
+### **Principios SOLID:**
+---
+
+#### **Single Responsability:**
+
+- Student se encarga de modelar la informacion del estudiante y gestiona su horario de clases a través de la clase Schedule.
+
+- Request maneja las solicitudes que hacen los estudiantes. Contiene tanto los datos del estudiante como de la facultad, con todo lo necesario para procesar cada una y utiliza HistoryEntry para llevar un registro del historial de cambios de cada solicitud.
+
+- La clase Denary junto con su servicio se ocupan de las operaciones básicas CRUD de las solicitudes que reciben de los estudiantes.
+
+- Group representa un grupo de asignatura y controla el número máximo de estudiantes que puede tener.
+
+
+#### **Open/Closed:**
+Podemos extender la clase abstracta de usuarios para incluir a mas tipo de estos ya que cada uno se logea de igual forma pero cambia lo que pueden
+hacer dentro de la aplicación SIRHA, asi no modificamos user ya que es la clase en donde establecemos el método de validar el login para los otros usuarios.
+
+
+#### **Interface Segregation Principle:**
+
+Se diseño una interfaz concreta y con un unico metodo para establecer un contrato de alertas con Group ya que
+implementa un observador que notifica si un grupo esta próximo o ya esta lleno.
+
+#### **Dependency Inversion Principle:**
+
+Group es un modulo de alto nivel por lo que no estamos dependiendo de los modulos de bajo nivel ya que
+define el flujo usando y implementando la interfaz de observer asi trabaja con abstracciones no con clases concretas.
+
 
 ## Diagrama de secuencia.
 
@@ -108,3 +141,89 @@ Con esta estructura nos aseguramos:
 - Mantener la integridad (las claves foráneas aseguran que una solicitud no se cree para un grupo inexistente)
 - Flexibilidad (es un sistema con tendencia a crecer, sin necesidad de modificar lo que hay).
 - Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
+
+---
+
+## Implementación autenticación usuario - pruebas (Parte de evidencia)
+
+![alt text](docs/imagenes/ImplementacioAutenticacion.png)
+
+![alt text](docs/imagenes/PruebaAu.png)
+
+## Endpoints y Swagger
+
+- SWAGGER UI:
+
+![alt text](docs/imagenes/endpoints.jpeg)
+
+- Prueba swagger utilizando h2:
+
+![alt text](docs/imagenes/PruebaSwagger.png)
+
+Se realizo la prueba para ver como respondia la base y la autenticación.
+
+- Configuración Swagger:
+
+![alt text](docs/imagenes/Swagger.png)
+
+## Base de datos:
+
+
+
+## Cobertura JACOCO y SonarQube
+
+[Ver el reporte (PDF)](docs/imagenes/sonarqube.pdf)
+
+- Como se evidencia las pruebas cubren gran parte del proyecto verificando asi la funcionalidad y mantenimiento del código
+
+
+
+---
+
+## Semana 8
+
+___
+
+### DOCKERIZACIÓN DE LA APPI
+
+*Video:*
+
+https://youtu.be/QJJyAQXGyAM
+
+
+
+1. Se Creo el archivo Dockerfile en IntelliJ y se ajusto el path a JDK 21 y se verifico el
+   .jar del proyecto que es `PAWPATROL_BACK-0.0.5.jar`
+2. Luego se creo un .dockerignore para no almacenar cosas innecesarias en el proyecto
+3. Y otro archivo .yml para usar nuestro proyecto de manera local y con mongo docker-compose.local
+4. Posteriormente se descargo  mongo con el comando  `docker pull mongo:6.0`
+5. Compilamos el proyecto  con  `mvn -DskipTests clean package`
+6. Levantamos el Docker con el comando:  `docker compose -f docker-compose.local.yml up -d --build`
+7. Luego subimos nuestra imagen a Docker Hub: https://hub.docker.com/repositories/robinson677?_gl=1*habqp2*_gcl_au*MzI4MDkxODgwLjE3NTcxMzc2OTM.*_ga*NTIxOTAwOTExLjE3NTcxMzc2OTM.*_ga_XJWPQMJYHQ*czE3NTkzODQzNDQkbzQkZzEkdDE3NTkzODUzMDckajYwJGwwJGgw
+8. Hice login Write-Output `Mi token | docker login --username robinson677 --password-stdin`
+9. Y casi finalizando se creo la imagen `docker build -t robinson677/pawpatrol-back:0.0.5 .`
+10. Finalmente se le hizo push Haz push:  `docker push robin123/pawpatrol-back:0.0.5`
+11.  Si se quiere probar la imagen:
+
+
+docker pull robinson677/pawpatrol-back:0.0.5
+docker run --rm -p 8080:8080 `
+  -e SPRING_DATA_MONGODB_URI="mongodb://<host>:27017/sirha" `
+-e SPRING_PROFILES_ACTIVE=docker `
+robinson677/pawpatrol-back:0.0.5
+
+---
+
+**Evidencia en Docker Desktop:**
+
+![alt text](docs/imagenes/dockerEvidencia1.png)
+
+**Evidencia de la imagen en Docker Hub:**
+
+![alt text](docs/imagenes/dockerEvidencia2.png)
+
+--- 
+
+## Tablero de JIRA:
+
+https://pawpatrol-1.atlassian.net/jira/software/projects/SCRUM/boards/1/backlog
