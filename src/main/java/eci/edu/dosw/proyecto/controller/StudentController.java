@@ -1,9 +1,7 @@
 package eci.edu.dosw.proyecto.controller;
 
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
-import eci.edu.dosw.proyecto.enums.AcademicTrafficLight;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.services.StudentService;
 import jakarta.validation.Valid;
@@ -58,19 +56,10 @@ public class StudentController {
         return studentService.partialUpdateStudent(id, studentDTO);
     }
 
-    @GetMapping("/{id}/schedule")
-    public StudentDTO getStudentSchedule(@PathVariable Integer id, @RequestParam int semester) {
-        return studentService.getStudentSchedule(id, semester);
-    }
 
     @GetMapping("/{id}/requests")
     public List<ChangeRequestDTO> getStudentRequests(@PathVariable int id) {
         return studentService.getStudentRequests(id);
-    }
-
-    @GetMapping("/{id}/scheduleTrafficLight")
-    public List<ScheduleEntryDTO> getStudentScheduleByTrafficLight(@PathVariable int id, @RequestParam int semester, @RequestParam AcademicTrafficLight light) {
-        return studentService.getStudentScheduleByTrafficLight(id, semester, light);
     }
 
     @GetMapping("/{id}/requestsStatus")

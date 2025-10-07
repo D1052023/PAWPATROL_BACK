@@ -13,11 +13,9 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface StudentMapper {
 
-    @Mapping(target = "schedule", ignore = true)
     StudentDTO toDTO(Student student);
 
     @Mapping(target = "role", ignore = true)
-    @Mapping(target = "schedule", ignore = true)
     @Mapping(target = "requests", ignore = true)
     Student toEntity(StudentDTO studentDTO);
 

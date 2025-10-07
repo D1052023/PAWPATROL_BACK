@@ -17,6 +17,7 @@ public interface SubjectMapper {
     SubjectDTO toDTO(Subject subject);
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "faculty", ignore = true)
     Subject toModel(SubjectDTO dto);
 
     List<SubjectDTO> toDTOList(List<Subject> subjects);

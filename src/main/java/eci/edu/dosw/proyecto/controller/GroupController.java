@@ -41,7 +41,7 @@ public class GroupController {
 
     @PatchMapping("/{id}")
     public GroupDTO partialUpdateGroup(@PathVariable String id, @RequestBody GroupDTO groupDTO) {
-        return groupService.updateGroup(id, groupDTO);
+        return groupService.partialUpdateGroup(id, groupDTO);
     }
 
     @DeleteMapping("/{id}")
@@ -56,7 +56,17 @@ public class GroupController {
     }
 
     @GetMapping("/{id}/waitlist")
-    public List<Integer> getWaitlist(@PathVariable String groupId) {
-        return groupService.getWaitlist(groupId);
+    public List<Integer> getWaitlist(@PathVariable String id) {
+        return groupService.getWaitlist(id);
+    }
+
+    @GetMapping("/teacher/{teacherId}")
+    public List<GroupDTO> getGroupsByTeacher(@PathVariable int teacherId) {
+        return groupService.getGroupsByTeacher(teacherId);
+    }
+
+    @GetMapping("/subject/{subjectId}")
+    public List<GroupDTO> getGroupsBySubject(@PathVariable String subjectId) {
+        return groupService.getGroupsBySubject(subjectId);
     }
 }

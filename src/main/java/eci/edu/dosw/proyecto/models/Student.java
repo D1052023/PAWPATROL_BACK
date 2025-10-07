@@ -3,6 +3,7 @@ package eci.edu.dosw.proyecto.models;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import eci.edu.dosw.proyecto.enums.AcademicTrafficLight;
+import eci.edu.dosw.proyecto.enums.Career;
 import eci.edu.dosw.proyecto.enums.Curriculum;
 import eci.edu.dosw.proyecto.enums.Role;
 
@@ -20,12 +21,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class Student extends User {
 
-    private String career;
+    private Career career;
     private int semester;
     private Curriculum curriculum;
     private AcademicTrafficLight academicTrafficLight = AcademicTrafficLight.GREEN;
-
-    private List<ScheduleEntry> schedule = new ArrayList<>();
     private List<ChangeRequest> requests = new ArrayList<>();
 
 

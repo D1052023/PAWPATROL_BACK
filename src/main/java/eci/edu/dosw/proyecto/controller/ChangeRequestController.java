@@ -4,6 +4,9 @@ import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.services.ChangeRequestService;
 import jakarta.validation.Valid;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,13 +18,10 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/students/{studentId}/requests")
+@RequiredArgsConstructor
 public class ChangeRequestController {
 
     private final ChangeRequestService changeRequestService;
-
-    public ChangeRequestController(ChangeRequestService changeRequestService) {
-        this.changeRequestService = changeRequestService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

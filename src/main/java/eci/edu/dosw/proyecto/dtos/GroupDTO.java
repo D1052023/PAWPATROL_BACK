@@ -18,13 +18,12 @@ import lombok.NoArgsConstructor;
 public class GroupDTO {
     private String groupId;
     private String name;
-    private SubjectDTO subject;               
-    private String teacher;
+    private String subjectId;               
+    private int teacher;
     private int maximumCapacity;
     private int currentCapacity;
     private Curriculum curriculum; 
     private List<ScheduleEntryDTO> schedule; 
     private GroupStatus groupStatus;  
     private List<Integer> waitlist = new ArrayList<>();
-
 }

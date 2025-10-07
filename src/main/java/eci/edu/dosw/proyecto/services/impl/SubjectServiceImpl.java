@@ -1,6 +1,9 @@
 package eci.edu.dosw.proyecto.services.impl;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -8,9 +11,11 @@ import java.util.List;
 
 import eci.edu.dosw.proyecto.services.SubjectService;
 import eci.edu.dosw.proyecto.models.Subject;
+import eci.edu.dosw.proyecto.models.Teacher;
 import eci.edu.dosw.proyecto.dtos.SubjectDTO;
 import eci.edu.dosw.proyecto.mappers.SubjectMapper;
 import eci.edu.dosw.proyecto.repositories.SubjectRepository;
+import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 
 
 /**
@@ -21,16 +26,24 @@ import eci.edu.dosw.proyecto.repositories.SubjectRepository;
 public class SubjectServiceImpl implements SubjectService {
 
     private final SubjectRepository subjectRepository;
+    private final TeacherRepository teacherRepository;
+
     private final SubjectMapper subjectMapper;
 
     @Override
     public SubjectDTO createSubject(SubjectDTO dto) {
+        Teacher teacher = teacherRepository.findById(dto.getTeacherId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado"));
+
         Subject subject = subjectMapper.toModel(dto);
+        subject.setFaculty(teacher.getFaculty());
         subject.setCreatedAt(LocalDateTime.now());
         subject.setUpdatedAt(LocalDateTime.now());
+
         subject = subjectRepository.save(subject);
         return subjectMapper.toDTO(subject);
     }
+
 
     @Override
     public List<SubjectDTO> getAllSubjects() {
@@ -81,6 +94,16 @@ public class SubjectServiceImpl implements SubjectService {
 
         existing = subjectRepository.save(existing);
         return subjectMapper.toDTO(existing);
+    }
+
+    @Override
+    public List<SubjectDTO> getSubjectsByTeacher(int teacherId) {
+        if (!teacherRepository.existsById(teacherId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado");
+        }
+
+        List<Subject> subjects = subjectRepository.findByTeacherId(teacherId);
+        return subjectMapper.toDTOList(subjects);
     }
 
 }

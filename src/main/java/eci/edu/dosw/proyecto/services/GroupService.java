@@ -14,5 +14,8 @@ public interface GroupService {
     GroupDTO updateGroup(String groupId, GroupDTO dto);
     void deleteGroup(String groupId);
     GroupDTO updateCapacity(String groupId, int newCurrentCapacity);
+    GroupDTO partialUpdateGroup(String groupId, GroupDTO dto);
     List<Integer> getWaitlist(String groupId);
+    List<GroupDTO> getGroupsByTeacher(int teacherId);
+    List<GroupDTO> getGroupsBySubject(String subjectId);
 }

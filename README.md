@@ -11,26 +11,18 @@
 
 ---
 
-## Estrategia de Versinamiento y ramas.
+## Estrategia de Versionamiento y ramas.
 
 **Template ramas**
-`feature/proyecto_JuanCaballero_OscarSanchez_DiegoChavarro_RobinsonPortela_SantiagoPalacios_Semana#`
+`feature/Tarea_Integrante`
+
 - main: Versión estable para PREPROD
 - develop: Rama principal de desarrollo
 - bugix/*: Manejo de errores
 - release/*: Manejo de versiones.
 
-**Template Ramas**
-`commit -m "Semana #: NombreIntegrante - Que fue lo que hizo`
-
----
-## Pruebas de ejecución (Proyecto).
-
-**Maven**
-
-![alt text](docs/imagenes/pruebaEjecucion.png)
-![alt text](docs/imagenes/pruebaEjecucionJacoco.png)
-![alt text](docs/imagenes/pruebaEjecucionSonarqube.png)
+**Template Commits**
+`feature: Tarea - Acción Realizada`
 
 ---
 ## Tecnologías utilizadas
@@ -50,29 +42,50 @@
 ## Arquitectura
 
 El proyecto sigue el patrón MVC (Modelo - Vista - Controlador):
-- Models: Entidades de negocio.
-- Repository: Manejo de persistencia en MongoDB.
-- Services: Lógica de negocio.
-- Controllers: Exposición de endpoints REST.
+
+- Models: Entidades de negocio es decir , los objetos que representan la infomación central que maneja la aplicación como lo son los tipos de usuarios, materias, grupos, horarios.
+
+- Repository: Manejo de persistencia en MongoDB, encargado del acceso y manejo de datos. Aqui se implementan operaciones de persistencia, encontrar, actulizar, eliminar documentos que nos permite abstraer la lógica de la base de datos del resto de la aplicación.
+
+- Services: Lógica de negocio de la aplicación. Aqui se definen las operaciones y funcionalidades que que combinan y transforman datos, aplicando las reglas de negocio y coordina la interacción entre los modelos, los controladores y los repositorios.
+
+- Controllers: Exposición de endpoints REST que permiten la comunicación con el usuario. Los controladores reciben solicitudes HTTP, delegan la ejecución de la lógica al servicio correspondiente y le devulva respuestas al usuario.
 
 ---
 
 ## Diagrama de contexto.
-![alt text](docs/uml/diagramaContexto.drawio.png)
+![alt text](docs/uml/DiagramaContexto.png)
 
-Se realizo el diagrama de Contexto identificando los autores y identificando como interactuan con el sistema de SIRHA
+El diagrama de contexto muestra el  sistema central SIRHA y sus relaciones con los actores externos que interactúan con el. SIRAH centraliza la gestion de solicitudes de cambio de horario, aplica las reglas de negocio definidas por la institución y coordina validaciones y autorizaciones.
 
+**Interacciones generales:**
+
+- Secretaría Académica: Configura periodos académicos y fechas limite para permitir que un estudiante haga su solicitud.
+
+- Estudiantes: Consultan horarios disponibles y registran solicitudes de cambio. Reciben notificaciones/respuestas sobre el estado de sus peticiones.
+
+- Docentes:  Consultan sus horarios y grupos asignados para verificar afectaciones o disponibilidades. Normalmente no realizan cambios desde SIRHA, solo consultan.
+
+- Decanatura: Supervisa y valida solicitudes, resolviendo conflictos complejos que el sistema no pueda resolver automáticamente (p. ej. choques entre asignaturas o limitaciones de recursos).
 ---
 
 ## Diagrama de casos de uso.
-![alt text](docs/uml/diagramaCasos.drawio.png)
+![alt text](docs/uml/DiagramaCasosUso.png)
 
-Se realizo el diagrama de casos de uso identificando todos los actores del sistema de horarios, se identifico lo que puede hacer cada uno y se relaciona con las acciones de otros actores
+Deffine la interacción de los usarios dentro del sistema de SIRHA.
 
+**Algunos de ellos y sus interacciones son:**
+
+- Estudiante: Donde este usuario puede hacer consultas ya sea sobre su solicitud, horario según semestres, grupo y su capacidad, y creación de solicitudes según el caso.
+
+- Decanatura: Este usario se le permite consultar información sobre le estudiante, responder solicitudes según su facultad y tipo de solicitud (si es excepcional), consultar las alertas sobre un grupo que este al limite de su capacidad, se le permite asignar profesores capacidad en materias y grupos, crear y consultar reportes sobre un estudiante cantidad de solicitudes.
+
+- Secretaria Académica: Establecer periodos para responder solicitudes y crear solicitudes, consultar solicitudes generalmente o dependiendo del estudiante, prioridad, estado y demás.
 ---
 
-## Diagrama de componentes simple.
-![alt text](docs/uml/diagramaCS.drawio.png)
+## Diagrama de componentes general.
+
+![alt text](docs/uml/DiagramaComponentesGeneral.png)
 
 Se realizo el diagrama identificando los componentes del sistema, identificando 2.
 
@@ -82,13 +95,13 @@ Se realizo el diagrama identificando los componentes del sistema, identificando 
 ---
 
 ## Diagrama de componentes especificos.
-![alt text](docs/uml/diagramaCE.drawio.png)
+![alt text](docs/uml/DiagramaComponentesEspecifico.png)
 
 Se realizo el diagrama identificando los subcomponentes que interactuan con el componente backend
 
 - Apis: En su interior se observa todas las iteraciones para la creacion de las APIs.
 - GestorMaterias: En su interior maneja todos los componentes que se reciben con la gestion de materias
-- GestoAcademico: En su interior maneja todos los componentes que se reciben con la gestion de cada usuario
+- GestorAcademico: En su interior maneja todos los componentes que se reciben con la gestion de cada usuario
 - Seguridad: En su interior maneja todos los componentes que se encargan de la seguridad del sistema
 - GestorReportes: En su interior maneja todos los componentes que se encarga de la logica de los reportes del sistema
 - GestorSolicitud: En su interior maneja todos los componentes que se reciben con la gestion de cada solucitud
@@ -98,13 +111,9 @@ Se realizo el diagrama identificando los subcomponentes que interactuan con el c
 
 ## Diagrama de clases.
 
-![alt text](docs/uml/diagramaClases.drawio.png)
-
----
+![alt text](docs/uml/DiagramaClases.png)
 
 ### **Patrones de diseño:**
-
----
 
 #### **Observer**
 
@@ -114,11 +123,9 @@ Group actúa como el que notifica cambios cuando se llena o alcanza el 90% de ca
 #### **Factory Method**
 Se uso ya que nos permitió evitar centralizar la lógica de la validación de los usurios ya que cada uno al entrar en la aplicación SIRHA navega y interactua solo con lo que es de su rol asi evitamos que se mezcle lo que un decano puede hacer y lo que puede hacer un estudiante dentro de la app.
 
-
 ---
 
 ### **Principios SOLID:**
----
 
 #### **Single Responsability:**
 
@@ -149,7 +156,7 @@ define el flujo usando y implementando la interfaz de observer asi trabaja con a
 
 ## Diagramas de secuencia.
 
-![DiagramaSecuencia](docs/uml/secuenceDiagram.png)
+![DiagramaSecuencia](docs/uml/DiagramaSecuencia.png)
 Diagramas basados en casos de uso principales del sistema SIRHA:
 - Login / Autenticación de usuario
 - Gestión de usuarios (validar/crear usuario)

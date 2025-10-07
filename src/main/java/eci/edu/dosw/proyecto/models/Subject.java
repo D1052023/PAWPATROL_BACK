@@ -3,9 +3,11 @@ package eci.edu.dosw.proyecto.models;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import eci.edu.dosw.proyecto.enums.Curriculum;
+import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.SubjectStatus;
 import eci.edu.dosw.proyecto.enums.SubjectType;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Document(collection = "subjects")
 public class Subject {
+    @Id
     private String subjectId;
     private String name;
     private int credits;
@@ -28,6 +31,9 @@ public class Subject {
     private SubjectStatus subjectStatus;
     private List<String> prerequisites;
     private String description;
+
+    private int teacherId;
+    private Faculty faculty;
     
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

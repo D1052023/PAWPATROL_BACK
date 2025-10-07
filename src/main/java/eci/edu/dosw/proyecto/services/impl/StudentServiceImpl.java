@@ -1,12 +1,9 @@
 package eci.edu.dosw.proyecto.services.impl;
 
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
-import eci.edu.dosw.proyecto.enums.AcademicTrafficLight;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
-import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
 import eci.edu.dosw.proyecto.mappers.StudentMapper;
 import eci.edu.dosw.proyecto.models.Student;
 import eci.edu.dosw.proyecto.repositories.ChangeRequestRepository;
@@ -29,7 +26,6 @@ public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
     private final StudentMapper studentMapper;
-    private final ScheduleEntryMapper scheduleEntryMapper;
     private final ChangeRequestRepository changeRequestRepository;
     private final ChangeRequestMapper changeRequestMapper;
 
@@ -102,42 +98,7 @@ public class StudentServiceImpl implements StudentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado con email: " + email);
         }
         return student;
-    }
-
-    private AcademicTrafficLight calculateTrafficLight(List<ScheduleEntryDTO> schedule) {
-        boolean hasRed = schedule.stream()
-                                .anyMatch(s -> s.getStatus() == AcademicTrafficLight.RED);
-        if (hasRed) return AcademicTrafficLight.RED;
-        boolean hasBlue = schedule.stream()
-                                .anyMatch(s -> s.getStatus() == AcademicTrafficLight.BLUE);
-        if (hasBlue) return AcademicTrafficLight.BLUE;
-        return AcademicTrafficLight.GREEN;
-    }
-
-    @Override
-    public StudentDTO getStudentSchedule(int studentId, int semester) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado"));
-
-        List<ScheduleEntryDTO> schedule = student.getSchedule().stream()
-        .filter(s -> s.getSemester() == semester)
-        .map(scheduleEntryMapper::toDTO) 
-        .toList();
-
-
-        AcademicTrafficLight trafficLight = calculateTrafficLight(schedule);
-
-        StudentDTO dto = new StudentDTO();
-        dto.setId(student.getId());
-        dto.setName(student.getName());
-        dto.setEmail(student.getEmail());
-        dto.setCareer(student.getCareer());
-        dto.setSemester(semester);
-        dto.setCurriculum(student.getCurriculum());
-        dto.setSchedule(schedule);
-        dto.setAcademicTrafficLight(trafficLight);
-
-        return dto;
+ 
     }
 
     @Override
@@ -151,18 +112,6 @@ public class StudentServiceImpl implements StudentService {
                 .toList();
 
         return requests;
-    }
-
-    @Override
-    public List<ScheduleEntryDTO> getStudentScheduleByTrafficLight(int studentId, int semester, AcademicTrafficLight light) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado"));
-
-        return student.getSchedule().stream()
-                .filter(s -> s.getSemester() == semester) 
-                .map(scheduleEntryMapper::toDTO)
-                .filter(dto -> dto.getStatus() == light) 
-                .toList();
     }
 
     @Override

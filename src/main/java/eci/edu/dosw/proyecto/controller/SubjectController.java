@@ -50,4 +50,10 @@ public class SubjectController {
     public void deleteSubject(@PathVariable String id) {
         subjectService.deleteSubject(id);
     }
+
+    @GetMapping("/teacher/{teacherId}")
+    public List<SubjectDTO> getSubjectsByTeacher(@PathVariable int teacherId) {
+        return subjectService.getSubjectsByTeacher(teacherId);
+    }
+
 }

@@ -1,8 +1,7 @@
 package eci.edu.dosw.proyecto.dtos;
 
-import java.util.List;
-
 import eci.edu.dosw.proyecto.enums.AcademicTrafficLight;
+import eci.edu.dosw.proyecto.enums.Career;
 import eci.edu.dosw.proyecto.enums.Curriculum;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -17,10 +16,8 @@ public class StudentDTO {
     private String name;
     @NotBlank
     private String email;
-    @NotBlank
-    private String career;
+    private Career career;
     private int semester;
     private Curriculum curriculum;
     private AcademicTrafficLight academicTrafficLight;
-    private List<ScheduleEntryDTO> schedule;
 }

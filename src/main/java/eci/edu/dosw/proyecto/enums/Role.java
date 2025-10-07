@@ -7,5 +7,6 @@ public enum Role {
     STUDENT,
     SECRETARIAT,
     DEANERY,
-    ADMIN 
+    ADMIN,
+    TEACHER
 }

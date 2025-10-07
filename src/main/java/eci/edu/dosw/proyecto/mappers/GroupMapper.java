@@ -13,9 +13,9 @@ import eci.edu.dosw.proyecto.dtos.GroupDTO;
  */
 @Mapper(componentModel = "spring")
 public interface GroupMapper {
-    
+
     GroupDTO toDTO(Group group);
-    
+
     @Mapping(target = "observers", ignore = true)
     @Mapping(target = "subject.createdAt", ignore = true)
     @Mapping(target = "subject.updatedAt", ignore = true)
