@@ -4,11 +4,15 @@ import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.dtos.RequestDatesDTO;
 import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
 import eci.edu.dosw.proyecto.dtos.SecretariatDTO;
+import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
+import eci.edu.dosw.proyecto.services.GroupService;
 import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.SecretariatService;
+import eci.edu.dosw.proyecto.services.StudentService;
+
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -30,6 +34,8 @@ public class SecretariatController {
 
     private final SecretariatService secretariatService;
     private final HistoryService historyService;
+    private final GroupService groupService;
+    private final StudentService studentService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -66,8 +72,7 @@ public class SecretariatController {
     }
 
     @PostMapping("/requests/{requestId}/respond")
-    public ResponseEntity<ChangeRequestDTO> respondRequestBySecretariat(@PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision,
-                                                                        @RequestParam(required = false) LocalDateTime startDate, @RequestParam(required = false) LocalDateTime endDate) {
+    public ResponseEntity<ChangeRequestDTO> respondRequestBySecretariat(@PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision, @RequestParam(required = false) LocalDateTime startDate, @RequestParam(required = false) LocalDateTime endDate) {
         RequestDatesDTO dates = new RequestDatesDTO(startDate, endDate);
         return ResponseEntity.ok(secretariatService.respondRequestBySecretariat(requestId, decision, dates));
     }
@@ -84,6 +89,24 @@ public class SecretariatController {
         return historyService.getHistory(requestId);
     }
 
+    @GetMapping("/groups/{groupId}/MaxCapacity")
+    public int getMaxCapacity(@PathVariable String groupId) {
+        return groupService.getMaxCapacity(groupId);
+    }
 
+    @GetMapping("/groups/{groupId}/CurrentCapacity")
+    public int getCurrentCapacity(@PathVariable String groupId) {
+        return groupService.getCurrentCapacity(groupId);
+    }
+
+    @GetMapping("/groups/{groupId}/waitingList")
+    public List<Integer> getWaitingList(@PathVariable String groupId) {
+        return groupService.getWaitlist(groupId);
+    }
+
+    @GetMapping("/students/{studentId}")
+    public StudentDTO getStudentInfo(@PathVariable int studentId) {
+        return studentService.getStudentById(studentId);
+    }
 
 }

@@ -18,4 +18,9 @@ public interface GroupService {
     List<Integer> getWaitlist(String groupId);
     List<GroupDTO> getGroupsByTeacher(int teacherId);
     List<GroupDTO> getGroupsBySubject(String subjectId);
+    int getMaxCapacity(String groupId);
+    int getCurrentCapacity(String groupId);
+    GroupDTO assignTeacherToGroup(String groupId, int teacherId);
+    GroupDTO removeTeacherFromGroup(String groupId);
+
 }

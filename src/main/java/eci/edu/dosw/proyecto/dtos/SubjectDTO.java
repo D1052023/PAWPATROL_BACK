@@ -26,6 +26,9 @@ public class SubjectDTO {
     private SubjectStatus subjectStatus;
     private List<String> prerequisites;
 
+    private int maximumCapacity; 
+    private int currentCapacity;
+
     private int teacherId;
     private Faculty faculty;
 

@@ -3,6 +3,7 @@ package eci.edu.dosw.proyecto.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -55,5 +56,13 @@ public class SubjectController {
     public List<SubjectDTO> getSubjectsByTeacher(@PathVariable int teacherId) {
         return subjectService.getSubjectsByTeacher(teacherId);
     }
+
+    @PatchMapping("/{subjectId}/capacity")
+    public ResponseEntity<SubjectDTO> updateSubjectCapacity(@PathVariable String subjectId, @RequestParam int newCapacity) {
+        SubjectDTO dto = new SubjectDTO();
+        dto.setMaximumCapacity(newCapacity);
+        return ResponseEntity.ok(subjectService.partialUpdateSubject(subjectId, dto));
+    }
+
 
 }

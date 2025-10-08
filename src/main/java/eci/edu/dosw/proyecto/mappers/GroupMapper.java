@@ -16,6 +16,7 @@ public interface GroupMapper {
 
     GroupDTO toDTO(Group group);
 
+    @Mapping(target = "teacher", ignore = true)
     @Mapping(target = "observers", ignore = true)
     @Mapping(target = "subject.createdAt", ignore = true)
     @Mapping(target = "subject.updatedAt", ignore = true)

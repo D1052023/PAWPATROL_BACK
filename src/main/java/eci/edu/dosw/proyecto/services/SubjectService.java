@@ -15,5 +15,4 @@ public interface SubjectService {
     void deleteSubject(String subjectId);
     SubjectDTO partialUpdateSubject(String subjectId, SubjectDTO dto);
     List<SubjectDTO> getSubjectsByTeacher(int teacherId); 
-
 }

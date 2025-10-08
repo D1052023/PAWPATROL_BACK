@@ -14,7 +14,7 @@
 ## Estrategia de Versionamiento y ramas.
 
 **Template ramas**
-`feature/Tarea_Integrante`
+`feature/Path-Tarea`
 
 - main: Versión estable para PREPROD
 - develop: Rama principal de desarrollo

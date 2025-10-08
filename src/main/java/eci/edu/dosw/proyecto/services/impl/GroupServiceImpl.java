@@ -5,9 +5,11 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.GroupService;
 import eci.edu.dosw.proyecto.repositories.GroupRepository;
 import eci.edu.dosw.proyecto.repositories.SubjectRepository;
+import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 import eci.edu.dosw.proyecto.dtos.GroupDTO;
 import eci.edu.dosw.proyecto.models.Group;
 import eci.edu.dosw.proyecto.models.Subject;
@@ -20,6 +22,8 @@ public class GroupServiceImpl implements GroupService {
 
     private final GroupRepository groupRepository;
     private final SubjectRepository subjectRepository;
+    private final TeacherRepository teacherRepository;
+    private final AlertService alertService;
     private final GroupMapper groupMapper;
     private final ScheduleEntryMapper scheduleEntryMapper;
 
@@ -27,17 +31,36 @@ public class GroupServiceImpl implements GroupService {
     public GroupDTO createGroup(GroupDTO dto) {
         Group group = groupMapper.toModel(dto);
 
-        if (group.getSubjectId() != null) {
-            Subject subject = subjectRepository.findBySubjectId(group.getSubjectId())
-                    .orElseThrow(() -> new RuntimeException("Materia no encontrada"));
-            if (subject.getCurriculum() != group.getCurriculum()) {
-                throw new RuntimeException("La materia de ese pensum no corresponde a la del pensum del grupo");
-            }
+        if (group.getSubjectId() == null || group.getSubjectId().isEmpty()) {
+            throw new RuntimeException("Debe especificar el ID de la materia para crear el grupo");
         }
+
+        Subject subject = subjectRepository.findBySubjectId(group.getSubjectId())
+                .orElseThrow(() -> new RuntimeException("Materia no encontrada"));
+
+        if (subject.getCurriculum() != group.getCurriculum()) {
+            throw new RuntimeException("La materia de ese pensum no corresponde a la del grupo");
+        }
+
+        if (subject.getMaximumCapacity() <= 0) {
+            throw new RuntimeException("La materia no tiene cupo total asignado, no se pueden crear grupos todavía");
+        }
+
+        int totalCuposGrupos = groupRepository.findBySubjectId(subject.getSubjectId())
+                .stream()
+                .mapToInt(Group::getMaximumCapacity)
+                .sum();
+
+        if (totalCuposGrupos + group.getMaximumCapacity() > subject.getMaximumCapacity()) {
+            throw new RuntimeException("La suma de los cupos de los grupos excede el cupo total permitido para la materia");
+        }
+
+        group.attach(alertService);
 
         group = groupRepository.save(group);
         return groupMapper.toDTO(group);
     }
+
 
     @Override
     public List<GroupDTO> getAllGroups() {
@@ -59,13 +82,31 @@ public class GroupServiceImpl implements GroupService {
         Group existing = groupRepository.findByGroupId(groupId)
                 .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
 
-        if (dto.getName() != null) existing.setName(dto.getName());
-        if (dto.getTeacher() != 0) existing.setTeacher(dto.getTeacher());
-        if (dto.getMaximumCapacity() != 0) existing.setMaximumCapacity(dto.getMaximumCapacity());
+        if (dto.getMaximumCapacity() != 0) {
+            Subject subject = subjectRepository.findBySubjectId(existing.getSubjectId())
+                    .orElseThrow(() -> new RuntimeException("Materia no encontrada"));
+
+            final String currentGroupId = existing.getGroupId();
+
+            int totalCuposGrupos = groupRepository.findBySubjectId(subject.getSubjectId())
+                    .stream()
+                    .filter(g -> !g.getGroupId().equals(currentGroupId))
+                    .mapToInt(Group::getMaximumCapacity)
+                    .sum();
+
+            if (totalCuposGrupos + dto.getMaximumCapacity() > subject.getMaximumCapacity()) {
+                throw new RuntimeException("La suma de los cupos de los grupos excede el cupo total permitido para la materia");
+            }
+
+            existing.setMaximumCapacity(dto.getMaximumCapacity());
+        }
+
         if (dto.getCurrentCapacity() != 0) existing.setCurrentCapacity(dto.getCurrentCapacity());
+        if (dto.getName() != null) existing.setName(dto.getName());
         if (dto.getSchedule() != null) existing.setSchedule(scheduleEntryMapper.toModelList(dto.getSchedule()));
-        if (dto.getSubjectId() != null) existing.setSubjectId(dto.getSubjectId());
         if (dto.getCurriculum() != null) existing.setCurriculum(dto.getCurriculum());
+
+        existing.attach(alertService);
 
         existing = groupRepository.save(existing);
         return groupMapper.toDTO(existing);
@@ -100,13 +141,14 @@ public class GroupServiceImpl implements GroupService {
                 .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
 
         if (dto.getName() != null) existing.setName(dto.getName());
-        if (dto.getTeacher() != 0) existing.setTeacher(dto.getTeacher());
         if (dto.getMaximumCapacity() != 0) existing.setMaximumCapacity(dto.getMaximumCapacity());
         if (dto.getCurrentCapacity() != 0) existing.setCurrentCapacity(dto.getCurrentCapacity());
         if (dto.getSchedule() != null) existing.setSchedule(scheduleEntryMapper.toModelList(dto.getSchedule()));
         if (dto.getSubjectId() != null) existing.setSubjectId(dto.getSubjectId());
         if (dto.getCurriculum() != null) existing.setCurriculum(dto.getCurriculum());
         if (dto.getGroupStatus() != null) existing.setGroupStatus(dto.getGroupStatus());
+
+        existing.attach(alertService);
 
         existing = groupRepository.save(existing);
         return groupMapper.toDTO(existing);
@@ -127,4 +169,51 @@ public class GroupServiceImpl implements GroupService {
                 .map(groupMapper::toDTO)
                 .toList();
     }
+
+    @Override
+    public int getMaxCapacity(String groupId) {
+        Group group = groupRepository.findByGroupId(groupId)
+                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        return group.getMaximumCapacity();
+    }
+
+    @Override
+    public int getCurrentCapacity(String groupId) {
+        Group group = groupRepository.findByGroupId(groupId)
+                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        return group.getCurrentCapacity();
+    }
+
+    @Override
+    public GroupDTO assignTeacherToGroup(String groupId, int teacherId) {
+        Group group = groupRepository.findByGroupId(groupId)
+                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+
+        if (!teacherRepository.existsById(teacherId)) {
+            throw new RuntimeException("Profesor no encontrado");
+        }
+
+        if (group.getTeacher() != 0) {
+            throw new RuntimeException("El grupo ya tiene un profesor asignado");
+        }
+
+        group.setTeacher(teacherId);
+        groupRepository.save(group);
+        return groupMapper.toDTO(group);
+    }
+
+    @Override
+    public GroupDTO removeTeacherFromGroup(String groupId) {
+        Group group = groupRepository.findByGroupId(groupId)
+                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+
+        if (group.getTeacher() == 0) {
+            throw new RuntimeException("El grupo no tiene un profesor asignado");
+        }
+
+        group.setTeacher(0);
+        groupRepository.save(group);
+        return groupMapper.toDTO(group);
+    }
+
 }

@@ -10,10 +10,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import eci.edu.dosw.proyecto.services.SubjectService;
+import eci.edu.dosw.proyecto.models.Group;
 import eci.edu.dosw.proyecto.models.Subject;
 import eci.edu.dosw.proyecto.models.Teacher;
 import eci.edu.dosw.proyecto.dtos.SubjectDTO;
 import eci.edu.dosw.proyecto.mappers.SubjectMapper;
+import eci.edu.dosw.proyecto.repositories.GroupRepository;
 import eci.edu.dosw.proyecto.repositories.SubjectRepository;
 import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 
@@ -27,6 +29,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     private final SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
+    private final GroupRepository groupRepository;
 
     private final SubjectMapper subjectMapper;
 
@@ -88,13 +91,25 @@ public class SubjectServiceImpl implements SubjectService {
         if (dto.getSubjectStatus() != null) existing.setSubjectStatus(dto.getSubjectStatus());
         if (dto.getPrerequisites() != null) existing.setPrerequisites(dto.getPrerequisites());
         if (dto.getDescription() != null) existing.setDescription(dto.getDescription());
-        
-        existing.setCreatedAt(LocalDateTime.now());
-        existing.setUpdatedAt(LocalDateTime.now());
 
+        if (dto.getMaximumCapacity() != 0) {
+            int totalCuposGrupos = groupRepository.findBySubjectId(existing.getSubjectId())
+                    .stream()
+                    .mapToInt(Group::getMaximumCapacity)
+                    .sum();
+
+            if (dto.getMaximumCapacity() < totalCuposGrupos) {
+                throw new RuntimeException("El nuevo cupo máximo es menor que la suma de los grupos existentes");
+            }
+
+            existing.setMaximumCapacity(dto.getMaximumCapacity());
+        }
+
+        existing.setUpdatedAt(LocalDateTime.now());
         existing = subjectRepository.save(existing);
         return subjectMapper.toDTO(existing);
     }
+
 
     @Override
     public List<SubjectDTO> getSubjectsByTeacher(int teacherId) {

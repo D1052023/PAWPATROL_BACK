@@ -32,6 +32,9 @@ public class Subject {
     private List<String> prerequisites;
     private String description;
 
+    private int maximumCapacity; 
+    private int currentCapacity;
+
     private int teacherId;
     private Faculty faculty;
     

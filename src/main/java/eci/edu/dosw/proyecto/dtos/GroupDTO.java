@@ -19,7 +19,6 @@ public class GroupDTO {
     private String groupId;
     private String name;
     private String subjectId;               
-    private int teacher;
     private int maximumCapacity;
     private int currentCapacity;
     private Curriculum curriculum; 
