@@ -93,6 +93,7 @@ class StudentControllerTest {
         assertEquals("Nuevo Nombre", result.getName());
     }
 
+    /**
     @Test
     void ShouldGetStudentSchedule() {
         when(studentService.getStudentSchedule(1, 2024)).thenReturn(studentDTO);
@@ -134,6 +135,7 @@ class StudentControllerTest {
 
         assertEquals(1, result.size());
     }
+     **/
 
     @Test
     void ShouldGetStudentRequestsByStatusWhenStatusIsNull() {

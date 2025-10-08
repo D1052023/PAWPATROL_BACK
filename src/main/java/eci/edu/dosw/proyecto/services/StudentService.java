@@ -21,4 +21,5 @@ public interface StudentService {
     Student getStudentByEmail(String email);
     List<ChangeRequestDTO> getStudentRequests(int studentId);
     List<ChangeRequestDTO> getStudentRequestsByStatus(int studentId, RequestStatus status);
+    StudentDTO getStudentSchedule(int studentId, int semester);
 }

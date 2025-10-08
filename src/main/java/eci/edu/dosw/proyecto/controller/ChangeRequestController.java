@@ -1,8 +1,10 @@
 package eci.edu.dosw.proyecto.controller;
 
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
+import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.services.ChangeRequestService;
+import eci.edu.dosw.proyecto.services.StudentService;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.UUID;
 public class ChangeRequestController {
 
     private final ChangeRequestService changeRequestService;
+    private final StudentService studentService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,6 +41,21 @@ public class ChangeRequestController {
     public ChangeRequestDTO getRequestById(@PathVariable Integer studentId, @PathVariable UUID requestId) {
         return changeRequestService.getRequestById(studentId, requestId);
     }
+
+    @GetMapping("/{id}/schedule/current")
+    public StudentDTO getCurrentSchedule(@PathVariable Integer id, @RequestParam(required = false) Integer semester) {
+        if (semester == null) {
+            StudentDTO student = studentService.getStudentById(id);
+            semester = student.getSemester();
+        }
+        return studentService.getStudentSchedule(id, semester);
+    }
+
+    @GetMapping("/{id}/schedule/previous")
+    public StudentDTO getPreviousSchedule(@PathVariable Integer id, @RequestParam int semester) {
+        return studentService.getStudentSchedule(id, semester);
+    }
+
 
     @GetMapping("/status")
     public List<ChangeRequestDTO> getRequestsByStudentAndStatus(@PathVariable Integer studentId, @RequestParam(required = false) RequestStatus status) {

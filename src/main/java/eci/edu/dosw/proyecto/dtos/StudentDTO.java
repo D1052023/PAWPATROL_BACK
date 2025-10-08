@@ -6,6 +6,8 @@ import eci.edu.dosw.proyecto.enums.Curriculum;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Clase DTO que maneja la informacón que va a manejar el estudiante.
  */
@@ -20,4 +22,6 @@ public class StudentDTO {
     private int semester;
     private Curriculum curriculum;
     private AcademicTrafficLight academicTrafficLight;
+    private List<ScheduleEntryDTO> schedule;
+    private List<ChangeRequestDTO> requests;
 }

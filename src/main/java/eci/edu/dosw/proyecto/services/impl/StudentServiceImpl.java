@@ -1,10 +1,13 @@
 package eci.edu.dosw.proyecto.services.impl;
 
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
+import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
+import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
 import eci.edu.dosw.proyecto.mappers.StudentMapper;
+import eci.edu.dosw.proyecto.models.ScheduleEntry;
 import eci.edu.dosw.proyecto.models.Student;
 import eci.edu.dosw.proyecto.repositories.ChangeRequestRepository;
 import eci.edu.dosw.proyecto.repositories.StudentRepository;
@@ -28,6 +31,7 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
     private final ChangeRequestRepository changeRequestRepository;
     private final ChangeRequestMapper changeRequestMapper;
+    private final ScheduleEntryMapper scheduleEntryMapper;
 
 
     @Override
@@ -126,5 +130,31 @@ public class StudentServiceImpl implements StudentService {
                                     .toList();
     }
 
+    @Override
+    public StudentDTO getStudentSchedule(int studentId, int semester) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado"));
+
+        List<ScheduleEntryDTO> schedule = (student.getSchedule() == null ? List.<ScheduleEntry>of() : student.getSchedule()).stream()
+                .filter(s -> s.getSemester() == semester)
+                .map(scheduleEntryMapper::toDTO)
+                .toList();
+
+        StudentDTO dto = new StudentDTO();
+        dto.setId(student.getId());
+        dto.setName(student.getName());
+        dto.setEmail(student.getEmail());
+        dto.setCareer(student.getCareer());
+        dto.setSemester(semester);
+        dto.setCurriculum(student.getCurriculum());
+        dto.setSchedule(schedule);
+
+
+        if (student.getRequests() != null) {
+            dto.setRequests(changeRequestMapper.toDTOList(student.getRequests()));
+        }
+
+        return dto;
+    }
 
 }
