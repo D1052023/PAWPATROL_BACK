@@ -69,4 +69,17 @@ public class ChangeRequestController {
     public List<ChangeRequestHistory> getRequestHistory(@PathVariable Integer studentId, @PathVariable UUID requestId) {
         return historyService.getHistory(requestId);
     }
+
+    @PutMapping("/{requestId}")
+    public ChangeRequestDTO updateRequest(@PathVariable Integer studentId,
+                                          @PathVariable UUID requestId,
+                                          @RequestBody ChangeRequestDTO requestDTO) {
+        return changeRequestService.updateChangeRequest(studentId, requestId, requestDTO);
+    }
+
+    @DeleteMapping("/{requestId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRequest(@PathVariable Integer studentId, @PathVariable UUID requestId) {
+        changeRequestService.deleteChangeRequest(studentId, requestId);
+    }
 }

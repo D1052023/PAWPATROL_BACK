@@ -248,4 +248,85 @@ public class DeaneryServiceImpl implements DeaneryService {
                 .toList();
     }
 
+    @Override
+    public ChangeRequestDTO updateRequestAsDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates) {
+        Deanery deanery = deaneryRepository.findById(deaneryId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Decanato no encontrado"));
+
+        ChangeRequest request = changeRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+
+        LocalDateTime now = LocalDateTime.now();
+        if (dates != null && dates.getStartDate() != null && dates.getEndDate() != null) {
+            if (now.isBefore(dates.getStartDate()) || now.isAfter(dates.getEndDate())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "No se pueden gestionar solicitudes fuera del periodo académico habilitado");
+            }
+        }
+
+        if (request.getFaculty() != deanery.getFaculty()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No puede gestionar solicitudes de otra facultad");
+        }
+
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud ya fue procesada");
+        }
+
+        if (decision.getObservations() != null) {
+            request.setObservations(decision.getObservations());
+        }
+
+        if (decision.getStatus() != null) {
+            request.setStatus(decision.getStatus());
+            request.setUpdatedAt(LocalDateTime.now());
+            request.setProcessedBy("DEANERY");
+
+            if (decision.getStatus() == RequestStatus.APPROVED) {
+                processApprovedRequest(request, decision, deaneryId);
+            }
+
+            changeRequestRepository.save(request);
+            historyService.addHistoryEvent(request.getId(), "DEANERY",
+                    decision.getStatus().name(), decisionToNote(decision), "DEANERY:" + deaneryId);
+        } else {
+            request.setUpdatedAt(LocalDateTime.now());
+            changeRequestRepository.save(request);
+            historyService.addHistoryEvent(request.getId(), "DEANERY", "UPDATED",
+                    "Solicitud actualizada por decanatura", "DEANERY:" + deaneryId);
+        }
+
+        return changeRequestMapper.toDTO(request);
+    }
+
+    @Override
+    public void deleteRequestAsDeanery(int deaneryId, UUID requestId) {
+        Deanery deanery = deaneryRepository.findById(deaneryId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Decanato no encontrado"));
+
+        ChangeRequest request = changeRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+
+        if (request.getFaculty() != deanery.getFaculty()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puede eliminar solicitudes de otra facultad");
+        }
+
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sólo solicitudes en estado PENDING pueden ser eliminadas");
+        }
+
+        if (request.getTargetGroup() != null) {
+            groupRepository.findByGroupId(request.getTargetGroup())
+                    .ifPresent(g -> {
+                        if (g.getWaitlist() != null) {
+                            g.getWaitlist().removeIf(id -> id.equals(request.getStudentId()));
+                            groupRepository.save(g);
+                        }
+                    });
+        }
+
+        changeRequestRepository.deleteById(requestId);
+        historyService.addHistoryEvent(requestId, "DEANERY", "DELETED", "Solicitud eliminada por decanatura", "DEANERY:" + deaneryId);
+    }
+
 }

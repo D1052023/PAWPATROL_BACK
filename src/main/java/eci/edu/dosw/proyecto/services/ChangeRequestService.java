@@ -13,4 +13,6 @@ public interface ChangeRequestService {
     ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestDTO requestDTO);
     List<ChangeRequestDTO> getAllRequestsByStudent(Integer studentId);
     ChangeRequestDTO getRequestById(Integer studentId, UUID requestId);
+    ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestDTO dto);
+    void deleteChangeRequest(Integer studentId, UUID requestId);
 }

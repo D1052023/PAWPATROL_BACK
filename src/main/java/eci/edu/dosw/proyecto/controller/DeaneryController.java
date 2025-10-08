@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -107,4 +108,17 @@ public class DeaneryController {
         return studentService.getStudentById(studentId);
     }
 
+    @PutMapping("/{deaneryId}/requests/{requestId}")
+    public ChangeRequestDTO updateRequestAsDeanery(@PathVariable int deaneryId, @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision,
+                                                   @RequestParam(required = false) LocalDateTime startDate,
+                                                   @RequestParam(required = false) LocalDateTime endDate) {
+        RequestDatesDTO dates = new RequestDatesDTO(startDate, endDate);
+        return deaneryService.updateRequestAsDeanery(deaneryId, requestId, decision, dates);
+    }
+
+    @DeleteMapping("/{deaneryId}/requests/{requestId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRequestAsDeanery(@PathVariable int deaneryId, @PathVariable UUID requestId) {
+        deaneryService.deleteRequestAsDeanery(deaneryId, requestId);
+    }
 }

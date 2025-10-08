@@ -164,4 +164,66 @@ public class SecretariatServiceImpl implements SecretariatService {
                 .toList();
     }
 
+    @Override
+    public ChangeRequestDTO updateRequestAsSecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates) {
+        ChangeRequest request = changeRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+
+        LocalDateTime now = LocalDateTime.now();
+        if (requestDates != null && requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
+            if (now.isBefore(requestDates.getStartDate()) || now.isAfter(requestDates.getEndDate())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Fuera del periodo habilitado para responder solicitudes");
+            }
+        }
+
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud ya fue procesada");
+        }
+
+        if (decision.getObservations() != null) {
+            request.setObservations(decision.getObservations());
+        }
+
+        if (decision.getStatus() != null) {
+            request.setStatus(decision.getStatus());
+            request.setProcessedBy("SECRETARIAT");
+            request.setUpdatedAt(LocalDateTime.now());
+
+            if (decision.getStatus() == RequestStatus.APPROVED) {
+                return respondRequestBySecretariat(requestId, decision, requestDates);
+            }
+        } else {
+            request.setUpdatedAt(LocalDateTime.now());
+            changeRequestRepository.save(request);
+            historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "UPDATED",
+                    "Solicitud actualizada por secretaría", "SECRETARIAT");
+        }
+
+        return changeRequestMapper.toDTO(request);
+    }
+
+    @Override
+    public void deleteRequestAsSecretariat(UUID requestId) {
+        ChangeRequest request = changeRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sólo solicitudes en estado PENDING pueden ser eliminadas");
+        }
+
+        if (request.getTargetGroup() != null) {
+            groupRepository.findByGroupId(request.getTargetGroup())
+                    .ifPresent(g -> {
+                        if (g.getWaitlist() != null) {
+                            g.getWaitlist().removeIf(id -> id.equals(request.getStudentId()));
+                            groupRepository.save(g);
+                        }
+                    });
+        }
+
+        changeRequestRepository.deleteById(requestId);
+        historyService.addHistoryEvent(requestId, "SECRETARIAT", "DELETED", "Solicitud eliminada por secretaría", "SECRETARIAT");
+    }
+
+
 }

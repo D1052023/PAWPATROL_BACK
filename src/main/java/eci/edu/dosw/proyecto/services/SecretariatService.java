@@ -24,4 +24,6 @@ public interface SecretariatService {
     void updateRequestDates(int id, LocalDateTime startDate, LocalDateTime endDate);
     ChangeRequestDTO respondRequestBySecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates);
     List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status);
+    ChangeRequestDTO updateRequestAsSecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates);
+    void deleteRequestAsSecretariat(UUID requestId);
 }

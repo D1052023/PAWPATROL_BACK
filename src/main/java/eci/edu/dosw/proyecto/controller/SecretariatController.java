@@ -109,4 +109,18 @@ public class SecretariatController {
         return studentService.getStudentById(studentId);
     }
 
+    @PutMapping("/requests/{requestId}")
+    public ChangeRequestDTO updateRequestAsSecretariat(@PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision,
+                                                       @RequestParam(required = false) LocalDateTime startDate,
+                                                       @RequestParam(required = false) LocalDateTime endDate) {
+        RequestDatesDTO dates = new RequestDatesDTO(startDate, endDate);
+        return secretariatService.updateRequestAsSecretariat(requestId, decision, dates);
+    }
+
+    @DeleteMapping("/requests/{requestId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRequestAsSecretariat(@PathVariable UUID requestId) {
+        secretariatService.deleteRequestAsSecretariat(requestId);
+    }
+
 }

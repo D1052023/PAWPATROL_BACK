@@ -22,4 +22,6 @@ public interface DeaneryService {
     void deleteDeanery(int id);
     ChangeRequestDTO respondRequestByDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates);
     List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status);
+    ChangeRequestDTO updateRequestAsDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates);
+    void deleteRequestAsDeanery(int deaneryId, UUID requestId);
 }

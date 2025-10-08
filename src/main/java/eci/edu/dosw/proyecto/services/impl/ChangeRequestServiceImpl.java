@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -176,5 +177,119 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             case IBTC_01 -> Faculty.INGENIERIA_DE_BIOTECNOLOGIA;
         };
     }
+
+    @Override
+    public ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestDTO dto) {
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Estudiante no encontrado con id: " + studentId));
+
+        ChangeRequest request = changeRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Solicitud no encontrada: " + requestId));
+
+        if (!Objects.equals(request.getStudentId(), studentId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Esta solicitud no pertenece al estudiante con id: " + studentId);
+        }
+
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Sólo solicitudes en estado PENDING pueden ser actualizadas");
+        }
+
+        if (dto.getObservations() != null) {
+            request.setObservations(dto.getObservations());
+        }
+
+        if (dto.getTargetSubject() != null && !dto.getTargetSubject().isBlank()) {
+            Subject targetSubject = subjectRepository.findBySubjectId(dto.getTargetSubject())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Materia objetivo no encontrada"));
+            if (!student.getCurriculum().equals(targetSubject.getCurriculum())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Materia objetivo del pensum no coincide con el pensum del estudiante");
+            }
+            request.setTargetSubject(targetSubject.getSubjectId());
+            request.setFaculty(mapCurriculumToFaculty(targetSubject.getCurriculum()));
+        }
+
+        if (dto.getTargetGroup() != null && !dto.getTargetGroup().isBlank()) {
+            Group targetGroup = groupRepository.findByGroupId(dto.getTargetGroup())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Grupo objetivo no encontrado"));
+            if (!student.getCurriculum().equals(targetGroup.getCurriculum())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Grupo objetivo del pensum no coincide con el pensum del estudiante");
+            }
+
+            if (request.getTargetGroup() != null) {
+                groupRepository.findByGroupId(request.getTargetGroup())
+                        .ifPresent(g -> {
+                            if (g.getWaitlist() != null) g.getWaitlist().removeIf(id -> id.equals(studentId));
+                            groupRepository.save(g);
+                        });
+            }
+
+            if (targetGroup.getWaitlist() == null) targetGroup.setWaitlist(new ArrayList<>());
+            if (!targetGroup.getWaitlist().contains(studentId)) {
+                targetGroup.getWaitlist().add(studentId);
+                groupRepository.save(targetGroup);
+            }
+            request.setTargetGroup(targetGroup.getGroupId());
+        }
+
+        request.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        ChangeRequest saved = changeRequestRepository.save(request);
+
+        historyService.addHistoryEvent(saved.getId(), "STUDENT", "STUDENT_UPDATED",
+                "Solicitud actualizada por estudiante", "STUDENT:" + studentId);
+
+        return changeRequestMapper.toDTO(saved);
+    }
+
+    @Override
+    public void deleteChangeRequest(Integer studentId, UUID requestId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Estudiante no encontrado con id: " + studentId));
+
+        ChangeRequest request = changeRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Solicitud no encontrada: " + requestId));
+
+        if (!Objects.equals(request.getStudentId(), studentId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Esta solicitud no pertenece al estudiante con id: " + studentId);
+        }
+
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Sólo solicitudes en estado PENDING pueden ser eliminadas");
+        }
+
+        if (request.getTargetGroup() != null) {
+            groupRepository.findByGroupId(request.getTargetGroup())
+                    .ifPresent(g -> {
+                        if (g.getWaitlist() != null) {
+                            g.getWaitlist().removeIf(id -> id.equals(studentId));
+                            groupRepository.save(g);
+                        }
+                    });
+        }
+
+        if (student.getRequests() != null) {
+            student.getRequests().removeIf(r -> r.getId().equals(requestId));
+            studentRepository.save(student);
+        }
+
+        changeRequestRepository.deleteById(requestId);
+
+        historyService.addHistoryEvent(requestId, "STUDENT", "DELETED",
+                "Solicitud eliminada por estudiante", "STUDENT:" + studentId);
+    }
+
+
 
 }
