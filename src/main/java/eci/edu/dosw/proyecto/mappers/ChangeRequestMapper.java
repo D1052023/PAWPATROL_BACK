@@ -20,7 +20,6 @@ public interface ChangeRequestMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "studentId", ignore = true)
-    @Mapping(target = "faculty", ignore = true)
     @Mapping(target = "priority", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "id", ignore = true)

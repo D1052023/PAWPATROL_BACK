@@ -6,6 +6,7 @@ package eci.edu.dosw.proyecto.enums;
 public enum RequestStatus {
     PENDING,
     IN_REVIEW,
+    SENT_TO_DEANERY,
     APPROVED,
     REJECTED
 }

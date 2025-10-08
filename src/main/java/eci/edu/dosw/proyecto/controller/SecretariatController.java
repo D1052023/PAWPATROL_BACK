@@ -6,6 +6,8 @@ import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
 import eci.edu.dosw.proyecto.dtos.SecretariatDTO;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
+import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
+import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.SecretariatService;
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class SecretariatController {
 
     private final SecretariatService secretariatService;
+    private final HistoryService historyService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -64,7 +67,7 @@ public class SecretariatController {
 
     @PostMapping("/requests/{requestId}/respond")
     public ResponseEntity<ChangeRequestDTO> respondRequestBySecretariat(@PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision,
-            @RequestParam(required = false) LocalDateTime startDate, @RequestParam(required = false) LocalDateTime endDate) {
+                                                                        @RequestParam(required = false) LocalDateTime startDate, @RequestParam(required = false) LocalDateTime endDate) {
         RequestDatesDTO dates = new RequestDatesDTO(startDate, endDate);
         return ResponseEntity.ok(secretariatService.respondRequestBySecretariat(requestId, decision, dates));
     }
@@ -74,6 +77,13 @@ public class SecretariatController {
         List<ChangeRequestDTO> requests = secretariatService.getRequestsByFacultyAndStatus(faculty, status);
         return ResponseEntity.ok(requests);
     }
+
+
+    @GetMapping("/{requestId}/history")
+    public List<ChangeRequestHistory> getRequestHistory(@PathVariable UUID requestId) {
+        return historyService.getHistory(requestId);
+    }
+
 
 
 }

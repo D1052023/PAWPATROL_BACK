@@ -3,7 +3,9 @@ package eci.edu.dosw.proyecto.controller;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
+import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
 import eci.edu.dosw.proyecto.services.ChangeRequestService;
+import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.StudentService;
 import jakarta.validation.Valid;
 
@@ -25,6 +27,7 @@ public class ChangeRequestController {
 
     private final ChangeRequestService changeRequestService;
     private final StudentService studentService;
+    private final HistoryService historyService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -62,4 +65,8 @@ public class ChangeRequestController {
         return changeRequestService.getAllRequestsByStudent(studentId);
     }
 
+    @GetMapping("/{requestId}/history")
+    public List<ChangeRequestHistory> getRequestHistory(@PathVariable Integer studentId, @PathVariable UUID requestId) {
+        return historyService.getHistory(requestId);
+    }
 }

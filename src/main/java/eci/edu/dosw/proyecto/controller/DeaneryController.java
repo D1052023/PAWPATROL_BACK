@@ -6,7 +6,9 @@ import eci.edu.dosw.proyecto.dtos.RequestDatesDTO;
 import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
+import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
 import eci.edu.dosw.proyecto.services.DeaneryService;
+import eci.edu.dosw.proyecto.services.HistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ import java.util.UUID;
 public class DeaneryController {
 
     private final DeaneryService deaneryService;
+    private final HistoryService historyService;
 
     @PostMapping
     public ResponseEntity<DeaneryDTO> createDeanery(@RequestBody DeaneryDTO deaneryDTO) {
@@ -72,6 +75,11 @@ public class DeaneryController {
     ) {
         List<ChangeRequestDTO> requests = deaneryService.getRequestsByFacultyAndStatus(faculty, status);
         return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/{requestId}/history")
+    public List<ChangeRequestHistory> getRequestHistory(@PathVariable UUID requestId) {
+        return historyService.getHistory(requestId);
     }
 
 }

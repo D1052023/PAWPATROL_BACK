@@ -2,6 +2,7 @@ package eci.edu.dosw.proyecto.dtos;
 
 import java.util.UUID;
 
+import eci.edu.dosw.proyecto.enums.Faculty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -23,5 +24,6 @@ public class ChangeRequestDTO {
     @NotBlank
     private String studentName;
     private String observations;
+    private Faculty faculty;
 
 }

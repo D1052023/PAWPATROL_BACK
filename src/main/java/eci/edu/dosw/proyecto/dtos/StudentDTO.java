@@ -24,4 +24,5 @@ public class StudentDTO {
     private AcademicTrafficLight academicTrafficLight;
     private List<ScheduleEntryDTO> schedule;
     private List<ChangeRequestDTO> requests;
+    private List<String> enrolledSubjects;
 }

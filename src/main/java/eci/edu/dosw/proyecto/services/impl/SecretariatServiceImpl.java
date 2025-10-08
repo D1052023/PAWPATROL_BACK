@@ -15,6 +15,7 @@ import eci.edu.dosw.proyecto.repositories.ChangeRequestRepository;
 import eci.edu.dosw.proyecto.repositories.GroupRepository;
 import eci.edu.dosw.proyecto.repositories.SecretariatRepository;
 import eci.edu.dosw.proyecto.services.AlertService;
+import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.SecretariatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class SecretariatServiceImpl implements SecretariatService {
     private final ChangeRequestMapper changeRequestMapper;
     private final GroupRepository groupRepository;
     private final AlertService alertService;
+    private final HistoryService historyService;
 
     @Override
     public SecretariatDTO getSecretariatById(int id) {
@@ -134,14 +136,25 @@ public class SecretariatServiceImpl implements SecretariatService {
             }
 
             targetGroup.enrollStudent();
-            currentGroup.getWaitlist().remove(request.getStudentId());
+
+            if (currentGroup.getWaitlist() != null) {
+                currentGroup.getWaitlist().removeIf(id -> id.equals(request.getStudentId()));
+            }
+
             groupRepository.save(currentGroup);
             groupRepository.save(targetGroup);
         }
 
         changeRequestRepository.save(request);
+        historyService.addHistoryEvent(request.getId(), "SECRETARIAT", decision.getStatus().name(),
+                decision.getObservations() == null ? "" : decision.getObservations(), "SECRETARIAT");
+        if (decision.getStatus() == RequestStatus.APPROVED) {
+            historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "STUDENT_SCHEDULE_UPDATED",
+                    "Horario actualizado al aprobar la solicitud", "SECRETARIAT");
+        }
         return changeRequestMapper.toDTO(request);
     }
+
 
     @Override
     public List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status) {

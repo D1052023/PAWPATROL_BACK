@@ -27,6 +27,7 @@ public class Student extends User {
     private AcademicTrafficLight academicTrafficLight = AcademicTrafficLight.GREEN;
     private List<ChangeRequest> requests = new ArrayList<>();
     private List<ScheduleEntry> schedule = new ArrayList<>();
+    private List<String> enrolledSubjects = new ArrayList<>();
 
 
     public Student() {

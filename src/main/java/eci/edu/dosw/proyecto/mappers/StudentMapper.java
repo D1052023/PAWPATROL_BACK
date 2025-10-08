@@ -10,12 +10,16 @@ import java.util.List;
 /**
  * Interfaz que mappea los DTO y Entity de los estudiantes.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {ScheduleEntryMapper.class, ChangeRequestMapper.class})
 public interface StudentMapper {
 
+    @Mapping(target = "schedule", source = "schedule")
+    @Mapping(target = "requests", source = "requests")
+    @Mapping(target = "enrolledSubjects", source = "enrolledSubjects")
     StudentDTO toDTO(Student student);
 
     @Mapping(target = "role", ignore = true)
+    @Mapping(target = "schedule", ignore = true)
     @Mapping(target = "requests", ignore = true)
     Student toEntity(StudentDTO studentDTO);
 
