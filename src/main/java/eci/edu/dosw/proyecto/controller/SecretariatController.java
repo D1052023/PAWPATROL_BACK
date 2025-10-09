@@ -119,7 +119,7 @@ public class SecretariatController {
         secretariatService.deleteRequestAsSecretariat(requestId);
     }
 
-    @PostMapping("/requests/{requestId}/respond")
+    @PostMapping("/requests/{requestId}/respondInfo")
     public ResponseEntity<ChangeRequestDTO> respondRequestBySecretariat(@PathVariable UUID requestId,
                                                                         @RequestBody RespondRequestInfo body) {
         return ResponseEntity.ok(secretariatService.respondRequestBySecretariat(requestId, body.getDecision(), body.getDates()));

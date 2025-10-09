@@ -118,7 +118,7 @@ public class DeaneryController {
         deaneryService.deleteRequestAsDeanery(deaneryId, requestId);
     }
 
-    @PostMapping("/{deaneryId}/requests/{requestId}/respond")
+    @PostMapping("/{deaneryId}/requests/{requestId}/respondInfo")
     public ResponseEntity<ChangeRequestDTO> respondRequestByDeanery(@PathVariable int deaneryId, @PathVariable UUID requestId,
                                                                     @RequestBody RespondRequestInfo body) {
         return ResponseEntity.ok(deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates()));
