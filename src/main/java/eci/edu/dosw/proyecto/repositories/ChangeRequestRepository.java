@@ -17,4 +17,8 @@ import java.util.UUID;
 public interface ChangeRequestRepository extends MongoRepository<ChangeRequest, UUID> {
     List<ChangeRequest> findByStudentId(Integer studentId);
     List<ChangeRequest> findByFacultyAndStatus(Faculty faculty, RequestStatus status);
+    List<ChangeRequest> findByFacultyOrderByPriorityAsc(Faculty faculty);
+    List<ChangeRequest> findByFacultyAndPriorityOrderByPriorityAsc(Faculty faculty, int priority);
+    List<ChangeRequest> findAllByOrderByPriorityAsc();
+    List<ChangeRequest> findByPriorityOrderByPriorityAsc(int priority);
 }

@@ -24,4 +24,9 @@ public interface DeaneryService {
     List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status);
     ChangeRequestDTO updateRequestAsDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates);
     void deleteRequestAsDeanery(int deaneryId, UUID requestId);
+    List<ChangeRequestDTO> getRequestsByFacultyOrderedByPriority(Faculty faculty);
+    List<ChangeRequestDTO> getRequestsByFacultyAndPriority(Faculty faculty, int priority);
+    List<ChangeRequestDTO> getAllRequestsOrderedByPriority();
+    List<ChangeRequestDTO> getAllRequestsByPriority(int priority);
+    List<ChangeRequestDTO> searchRequestsByFacultyAndOrPriority(Faculty faculty, Integer priority);
 }

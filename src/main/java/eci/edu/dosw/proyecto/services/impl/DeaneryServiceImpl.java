@@ -356,4 +356,42 @@ public class DeaneryServiceImpl implements DeaneryService {
         historyService.addHistoryEvent(requestId, "DEANERY", "DELETED", "Solicitud eliminada por decanatura", "DEANERY:" + deaneryId);
     }
 
+
+    @Override
+    public List<ChangeRequestDTO> getRequestsByFacultyOrderedByPriority(Faculty faculty) {
+        List<ChangeRequest> requests = changeRequestRepository.findByFacultyOrderByPriorityAsc(faculty);
+        return requests.stream().map(changeRequestMapper::toDTO).toList();
+    }
+
+    @Override
+    public List<ChangeRequestDTO> getRequestsByFacultyAndPriority(Faculty faculty, int priority) {
+        List<ChangeRequest> requests = changeRequestRepository.findByFacultyAndPriorityOrderByPriorityAsc(faculty, priority);
+        return requests.stream().map(changeRequestMapper::toDTO).toList();
+    }
+
+    @Override
+    public List<ChangeRequestDTO> getAllRequestsOrderedByPriority() {
+        List<ChangeRequest> requests = changeRequestRepository.findAllByOrderByPriorityAsc();
+        return requests.stream().map(changeRequestMapper::toDTO).toList();
+    }
+
+    @Override
+    public List<ChangeRequestDTO> getAllRequestsByPriority(int priority) {
+        List<ChangeRequest> requests = changeRequestRepository.findByPriorityOrderByPriorityAsc(priority);
+        return requests.stream().map(changeRequestMapper::toDTO).toList();
+    }
+
+    @Override
+    public List<ChangeRequestDTO> searchRequestsByFacultyAndOrPriority(Faculty faculty, Integer priority) {
+        if (faculty != null && priority != null) {
+            return getRequestsByFacultyAndPriority(faculty, priority);
+        } else if (faculty != null) {
+            return getRequestsByFacultyOrderedByPriority(faculty);
+        } else if (priority != null) {
+            return getAllRequestsByPriority(priority);
+        } else {
+            return getAllRequestsOrderedByPriority();
+        }
+    }
+
 }

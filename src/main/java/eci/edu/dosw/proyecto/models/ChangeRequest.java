@@ -43,6 +43,15 @@ public class ChangeRequest {
     private String processedBy; 
     private int priority;
 
+    private boolean exceptional = false;
+    private String exceptionalReason;
+    private String exceptionalRequestedBy;
+    private LocalDateTime exceptionalRequestedAt;
+    private Boolean exceptionalApproved;
+    private String exceptionalApprovedBy;
+    private LocalDateTime exceptionalApprovedAt;
+    private LocalDateTime exceptionalResolutionDeadline;
+
     public ChangeRequest(String currentSubject, String targetSubject, String observations) {
         this.currentSubject = currentSubject;
         this.targetSubject = targetSubject;

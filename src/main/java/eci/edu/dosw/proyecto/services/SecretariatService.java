@@ -26,4 +26,9 @@ public interface SecretariatService {
     List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status);
     ChangeRequestDTO updateRequestAsSecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates);
     void deleteRequestAsSecretariat(UUID requestId);
+    List<ChangeRequestDTO> getRequestsByFacultyOrderedByPriority(Faculty faculty);
+    List<ChangeRequestDTO> getRequestsByFacultyAndPriority(Faculty faculty, int priority);
+    List<ChangeRequestDTO> getAllRequestsOrderedByPriority();
+    List<ChangeRequestDTO> getAllRequestsByPriority(int priority);
+    List<ChangeRequestDTO> searchRequestsByFacultyAndOrPriority(Faculty faculty, Integer priority);
 }

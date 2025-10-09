@@ -124,4 +124,35 @@ public class DeaneryController {
         return ResponseEntity.ok(deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates()));
     }
 
+
+    @GetMapping("/requests/faculty/{faculty}/priority/{priority}")
+    public ResponseEntity<List<ChangeRequestDTO>> getRequestsByFacultyAndPriority(@PathVariable Faculty faculty,
+                                                                                  @PathVariable int priority) {
+        List<ChangeRequestDTO> requests = deaneryService.getRequestsByFacultyAndPriority(faculty, priority);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/requests/faculty/{faculty}/priority")
+    public ResponseEntity<List<ChangeRequestDTO>> getRequestsByFacultyOrderedByPriority(@PathVariable Faculty faculty) {
+        List<ChangeRequestDTO> requests = deaneryService.getRequestsByFacultyOrderedByPriority(faculty);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/requests/search")
+    public ResponseEntity<List<ChangeRequestDTO>> searchRequests(@RequestParam(required = false) Faculty faculty,
+                                                                 @RequestParam(required = false) Integer priority) {
+        List<ChangeRequestDTO> requests = deaneryService.searchRequestsByFacultyAndOrPriority(faculty, priority);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/requests/priority")
+    public ResponseEntity<List<ChangeRequestDTO>> getAllOrderedByPriority() {
+        return ResponseEntity.ok(deaneryService.getAllRequestsOrderedByPriority());
+    }
+
+    @GetMapping("/requests/priority/{priority}")
+    public ResponseEntity<List<ChangeRequestDTO>> getAllByPriority(@PathVariable int priority) {
+        return ResponseEntity.ok(deaneryService.getAllRequestsByPriority(priority));
+    }
+
 }

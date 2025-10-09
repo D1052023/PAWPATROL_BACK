@@ -125,4 +125,27 @@ public class SecretariatController {
         return ResponseEntity.ok(secretariatService.respondRequestBySecretariat(requestId, body.getDecision(), body.getDates()));
     }
 
+    @GetMapping("/requests/faculty/{faculty}/priority")
+    public ResponseEntity<List<ChangeRequestDTO>> getRequestsByFacultyOrderedByPriority(@PathVariable Faculty faculty) {
+        List<ChangeRequestDTO> requests = secretariatService.getRequestsByFacultyOrderedByPriority(faculty);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/requests/search")
+    public ResponseEntity<List<ChangeRequestDTO>> searchRequests(@RequestParam(required = false) Faculty faculty,
+                                                                 @RequestParam(required = false) Integer priority) {
+        List<ChangeRequestDTO> requests = secretariatService.searchRequestsByFacultyAndOrPriority(faculty, priority);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/requests/priority")
+    public ResponseEntity<List<ChangeRequestDTO>> getAllOrderedByPriority() {
+        return ResponseEntity.ok(secretariatService.getAllRequestsOrderedByPriority());
+    }
+
+    @GetMapping("/requests/priority/{priority}")
+    public ResponseEntity<List<ChangeRequestDTO>> getAllByPriority(@PathVariable int priority) {
+        return ResponseEntity.ok(secretariatService.getAllRequestsByPriority(priority));
+    }
+
 }
