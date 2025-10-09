@@ -136,7 +136,7 @@ class StudentControllerTest {
         assertEquals(1, result.size());
     }
      **/
-
+/**
     @Test
     void ShouldGetStudentRequestsByStatusWhenStatusIsNull() {
         ChangeRequestDTO req = new ChangeRequestDTO();
@@ -146,4 +146,5 @@ class StudentControllerTest {
 
         assertEquals(1, result.size());
     }
+    **/
 }

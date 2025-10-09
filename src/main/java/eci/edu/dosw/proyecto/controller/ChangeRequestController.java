@@ -62,7 +62,11 @@ public class ChangeRequestController {
 
     @GetMapping("/status")
     public List<ChangeRequestDTO> getRequestsByStudentAndStatus(@PathVariable Integer studentId, @RequestParam(required = false) RequestStatus status) {
-        return changeRequestService.getAllRequestsByStudent(studentId);
+        if (status == null) {
+            return changeRequestService.getAllRequestsByStudent(studentId);
+        } else {
+            return studentService.getStudentRequestsByStatus(studentId, status);
+        }
     }
 
     @GetMapping("/{requestId}/history")

@@ -21,11 +21,9 @@ import java.util.UUID;
 public class StudentController {
 
     private final StudentService studentService;
-    private final ChangeRequestService changeRequestService;
 
-    public StudentController(StudentService studentService, ChangeRequestService changeRequestService) {
+    public StudentController(StudentService studentService) {
         this.studentService = studentService;
-        this.changeRequestService = changeRequestService;
     }
 
     @GetMapping
@@ -60,7 +58,6 @@ public class StudentController {
         return studentService.partialUpdateStudent(id, studentDTO);
     }
 
-
     @GetMapping("/{id}/requests")
     public List<ChangeRequestDTO> getStudentRequests(@PathVariable int id) {
         return studentService.getStudentRequests(id);
@@ -75,16 +72,4 @@ public class StudentController {
         }
     }
 
-    @PutMapping("/{requestId}")
-    public ChangeRequestDTO updateRequest(@PathVariable Integer studentId,
-                                          @PathVariable UUID requestId,
-                                          @RequestBody ChangeRequestDTO requestDTO) {
-        return changeRequestService.updateChangeRequest(studentId, requestId, requestDTO);
-    }
-
-    @DeleteMapping("/{requestId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRequest(@PathVariable Integer studentId, @PathVariable UUID requestId) {
-        changeRequestService.deleteChangeRequest(studentId, requestId);
-    }
 }

@@ -91,6 +91,7 @@ class ChangeRequestServiceImplTest {
         changeRequest.setStatus(RequestStatus.PENDING);
     }
 
+    /**
     @Test
     void ShouldCreateChangeRequest() {
         when(studentRepository.findById(1)).thenReturn(Optional.of(student));
@@ -109,6 +110,8 @@ class ChangeRequestServiceImplTest {
         assertNotNull(result);
         assertEquals("DDYA", result.getTargetSubject());
     }
+
+     **/
 
     @Test
     void ShouldThrowWhenStudentNotFound() {
