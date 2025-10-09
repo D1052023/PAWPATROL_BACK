@@ -7,6 +7,7 @@ public enum RequestStatus {
     PENDING,
     IN_REVIEW,
     SENT_TO_DEANERY,
+    REQUEST_ADDITIONAL_INFO,
     APPROVED,
     REJECTED
 }

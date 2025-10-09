@@ -1,10 +1,6 @@
 package eci.edu.dosw.proyecto.controller;
 
-import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.DeaneryDTO;
-import eci.edu.dosw.proyecto.dtos.RequestDatesDTO;
-import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
-import eci.edu.dosw.proyecto.dtos.StudentDTO;
+import eci.edu.dosw.proyecto.dtos.*;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
@@ -121,4 +117,11 @@ public class DeaneryController {
     public void deleteRequestAsDeanery(@PathVariable int deaneryId, @PathVariable UUID requestId) {
         deaneryService.deleteRequestAsDeanery(deaneryId, requestId);
     }
+
+    @PostMapping("/{deaneryId}/requests/{requestId}/respond")
+    public ResponseEntity<ChangeRequestDTO> respondRequestByDeanery(@PathVariable int deaneryId, @PathVariable UUID requestId,
+                                                                    @RequestBody RespondRequestInfo body) {
+        return ResponseEntity.ok(deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates()));
+    }
+
 }

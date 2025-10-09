@@ -112,6 +112,31 @@ public class SecretariatServiceImpl implements SecretariatService {
             }
         }
 
+        if (decision.getRequestAdditionalInfo() != null && decision.getRequestAdditionalInfo()) {
+            request.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
+            request.setUpdatedAt(LocalDateTime.now());
+            request.setProcessedBy("SECRETARIAT");
+
+            if (decision.getAdditionalInfoRequestMessage() != null) {
+                String prevObs = request.getObservations() == null ? "" : request.getObservations() + " | ";
+                request.setObservations(prevObs + "SOLICITUD INFO: " + decision.getAdditionalInfoRequestMessage());
+            }
+
+            changeRequestRepository.save(request);
+
+            StringBuilder note = new StringBuilder("Se solicitó información adicional");
+            if (decision.getAdditionalInfoRequestMessage() != null) {
+                note.append(": ").append(decision.getAdditionalInfoRequestMessage());
+            }
+            if (decision.getInfoDueDate() != null) {
+                note.append(" (Plazo: ").append(decision.getInfoDueDate().toString()).append(")");
+            }
+
+            historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "REQUEST_ADDITIONAL_INFO",
+                    note.toString(), "SECRETARIAT");
+
+        }
+
         request.setStatus(decision.getStatus());
         request.setUpdatedAt(now);
         request.setProcessedBy("SECRETARIAT");

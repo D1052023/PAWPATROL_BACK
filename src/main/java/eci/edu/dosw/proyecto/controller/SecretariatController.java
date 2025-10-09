@@ -1,10 +1,6 @@
 package eci.edu.dosw.proyecto.controller;
 
-import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.RequestDatesDTO;
-import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
-import eci.edu.dosw.proyecto.dtos.SecretariatDTO;
-import eci.edu.dosw.proyecto.dtos.StudentDTO;
+import eci.edu.dosw.proyecto.dtos.*;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
@@ -121,6 +117,12 @@ public class SecretariatController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteRequestAsSecretariat(@PathVariable UUID requestId) {
         secretariatService.deleteRequestAsSecretariat(requestId);
+    }
+
+    @PostMapping("/requests/{requestId}/respond")
+    public ResponseEntity<ChangeRequestDTO> respondRequestBySecretariat(@PathVariable UUID requestId,
+                                                                        @RequestBody RespondRequestInfo body) {
+        return ResponseEntity.ok(secretariatService.respondRequestBySecretariat(requestId, body.getDecision(), body.getDates()));
     }
 
 }
