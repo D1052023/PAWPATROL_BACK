@@ -17,6 +17,7 @@ import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.DeaneryService;
 
 import eci.edu.dosw.proyecto.services.HistoryService;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,7 @@ public class DeaneryServiceImpl implements DeaneryService {
     private final AlertService alertService;
     private final StudentRepository studentRepository;
     private final HistoryService historyService;
+    private final MessageExceptions message;
 
 
     @Override
@@ -55,16 +57,13 @@ public class DeaneryServiceImpl implements DeaneryService {
 
     @Override
     public DeaneryDTO getDeaneryById(int id) {
-        Deanery deanery = deaneryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Decan@ no encontrado con id: " + id));
+        Deanery deanery = message.findDeaneryOrThrow(id);
         return deaneryMapper.toDTO(deanery);
     }
 
     @Override
     public DeaneryDTO getDeaneryByFaculty(Faculty faculty) {
-        Deanery deanery = deaneryRepository.findByFaculty(faculty)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró un decan@ para la facultad: " + faculty));
+        Deanery deanery = message.findDeaneryByFacultyOrThrow(faculty);
         return deaneryMapper.toDTO(deanery);
     }
 
@@ -77,8 +76,7 @@ public class DeaneryServiceImpl implements DeaneryService {
 
     @Override
     public DeaneryDTO updateDeanery(int id, DeaneryDTO deaneryDTO) {
-        Deanery existingDeanery = deaneryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Decan@ no encontrado con id: " + id));
+        Deanery existingDeanery = message.findDeaneryOrThrow(id);
 
         existingDeanery.setName(deaneryDTO.getName());
         existingDeanery.setEmail(deaneryDTO.getEmail());
@@ -89,34 +87,22 @@ public class DeaneryServiceImpl implements DeaneryService {
 
     @Override
     public void deleteDeanery(int id) {
-        if (!deaneryRepository.existsById(id)) {
-            throw new RuntimeException("Decan@ no encontrado con id: " + id);
-        }
+        message.findDeaneryOrThrow(id);
         deaneryRepository.deleteById(id);
     }
 
     @Override
     public ChangeRequestDTO respondRequestByDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates) {
-        Deanery deanery = deaneryRepository.findById(deaneryId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Decanato no encontrado"));
+        Deanery deanery = message.findDeaneryOrThrow(deaneryId);
 
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(dates.getStartDate()) || now.isAfter(dates.getEndDate())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "No se pueden gestionar solicitudes fuera del periodo académico habilitado");
-        }
-
-        if (request.getFaculty() != deanery.getFaculty()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "No puede gestionar solicitudes de otra facultad");
-        }
-
-        if (request.getStatus() != RequestStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud ya fue procesada");
-        }
+        message.ensureResolutionDeadlineNotExceeded(request, now);
+        message.ensureDatesProvided(dates);
+        message.ensureNowWithinDates(now, dates);
+        message.ensureDeaneryFacultyMatches(deanery, request);
+        message.ensureRequestPending(request);
 
         if (decision.getRequestAdditionalInfo() != null && decision.getRequestAdditionalInfo()) {
             request.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
@@ -144,8 +130,6 @@ public class DeaneryServiceImpl implements DeaneryService {
             return changeRequestMapper.toDTO(request);
         }
 
-
-
         request.setStatus(decision.getStatus());
         request.setUpdatedAt(LocalDateTime.now());
         request.setProcessedBy("DEANERY");
@@ -158,27 +142,17 @@ public class DeaneryServiceImpl implements DeaneryService {
         }
 
         changeRequestRepository.save(request);
-
         return changeRequestMapper.toDTO(request);
     }
 
-    private void processApprovedRequest(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
+    public void processApprovedRequest(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
 
-        Group currentGroup = groupRepository.findByGroupId(request.getCurrentGroup())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Grupo actual no encontrado: " + request.getCurrentGroup()));
+        Group currentGroup = message.findGroupOrThrow(request.getCurrentGroup());
 
-        Group targetGroup = groupRepository.findByGroupId(request.getTargetGroup())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Grupo destino no encontrado: " + request.getTargetGroup()));
-
+        Group targetGroup = message.findGroupOrThrow(request.getTargetGroup());
         targetGroup.attach(alertService);
 
-        if (targetGroup.getCurrentCapacity() >= targetGroup.getMaximumCapacity()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "El grupo ya alcanzó su capacidad máxima");
-        }
-
+        message.ensureGroupHasCapacity(targetGroup);
 
         targetGroup.setCurrentCapacity(targetGroup.getCurrentCapacity() + 1);
         targetGroup.enrollStudent();
@@ -190,9 +164,7 @@ public class DeaneryServiceImpl implements DeaneryService {
         groupRepository.save(currentGroup);
         groupRepository.save(targetGroup);
 
-        Student student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Estudiante no encontrado: " + request.getStudentId()));
+        Student student = message.findStudentOrThrow(request.getStudentId());
 
         if (student.getSchedule() == null) {
             student.setSchedule(new ArrayList<>());
@@ -277,11 +249,8 @@ public class DeaneryServiceImpl implements DeaneryService {
 
     @Override
     public ChangeRequestDTO updateRequestAsDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates) {
-        Deanery deanery = deaneryRepository.findById(deaneryId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Decanato no encontrado"));
-
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+        Deanery deanery = message.findDeaneryOrThrow(deaneryId);
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
         LocalDateTime now = LocalDateTime.now();
         if (dates != null && dates.getStartDate() != null && dates.getEndDate() != null) {
@@ -291,18 +260,10 @@ public class DeaneryServiceImpl implements DeaneryService {
             }
         }
 
-        if (request.getFaculty() != deanery.getFaculty()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "No puede gestionar solicitudes de otra facultad");
-        }
+        message.ensureNowWithinDatesIfPresent(now, dates);
+        message.ensureDeaneryFacultyMatches(deanery, request);
+        message.ensureRequestPending(request);
 
-        if (request.getStatus() != RequestStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud ya fue procesada");
-        }
-
-        if (decision.getObservations() != null) {
-            request.setObservations(decision.getObservations());
-        }
 
         if (decision.getStatus() != null) {
             request.setStatus(decision.getStatus());
@@ -328,19 +289,12 @@ public class DeaneryServiceImpl implements DeaneryService {
 
     @Override
     public void deleteRequestAsDeanery(int deaneryId, UUID requestId) {
-        Deanery deanery = deaneryRepository.findById(deaneryId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Decanato no encontrado"));
+        Deanery deanery = message.findDeaneryOrThrow(deaneryId);
 
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
-        if (request.getFaculty() != deanery.getFaculty()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puede eliminar solicitudes de otra facultad");
-        }
-
-        if (request.getStatus() != RequestStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sólo solicitudes en estado PENDING pueden ser eliminadas");
-        }
+        message.ensureDeaneryFacultyMatches(deanery, request);
+        message.ensureRequestPending(request);
 
         if (request.getTargetGroup() != null) {
             groupRepository.findByGroupId(request.getTargetGroup())

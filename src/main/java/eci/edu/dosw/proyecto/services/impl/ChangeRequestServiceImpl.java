@@ -1,29 +1,25 @@
 package eci.edu.dosw.proyecto.services.impl;
 
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
+import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
 import eci.edu.dosw.proyecto.enums.Curriculum;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
-import eci.edu.dosw.proyecto.models.ChangeRequest;
-import eci.edu.dosw.proyecto.models.Student;
-import eci.edu.dosw.proyecto.models.Subject;
-import eci.edu.dosw.proyecto.models.Group;
-import eci.edu.dosw.proyecto.models.Secretariat;
-import eci.edu.dosw.proyecto.repositories.ChangeRequestRepository;
-import eci.edu.dosw.proyecto.repositories.StudentRepository;
-import eci.edu.dosw.proyecto.repositories.SubjectRepository;
-import eci.edu.dosw.proyecto.repositories.GroupRepository;
-import eci.edu.dosw.proyecto.repositories.SecretariatRepository;
+import eci.edu.dosw.proyecto.models.*;
+import eci.edu.dosw.proyecto.repositories.*;
 import eci.edu.dosw.proyecto.services.ChangeRequestService;
 
+import eci.edu.dosw.proyecto.services.DeaneryService;
 import eci.edu.dosw.proyecto.services.HistoryService;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -45,45 +41,30 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final ChangeRequestMapper changeRequestMapper;
     private final SecretariatRepository secretariatRepository;
     private final HistoryService historyService;
+    private final DeaneryRepository deaneryRepository;
+    private final DeaneryService deaneryService;
+    private final MessageExceptions message;
 
     @Override
     public ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestDTO requestDTO) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Estudiante no encontrado con id: " + studentId));
-
+        Student student = message.findStudentOrThrow(studentId);
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
 
-        Secretariat sec = secretariatRepository
-                .findFirstByRequestStartDateBeforeAndRequestEndDateAfter(now, now)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "No hay Secretaría con período activo"));
-        if (sec == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "No hay Secretaría activa. Período esperado entre X y Y");
-        }
+        Secretariat sec = message.findActiveSecretariatOrThrow(now);
 
-        Subject currentSubject = subjectRepository.findBySubjectId(requestDTO.getCurrentSubject())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Materia actual no encontrada"));
-        Subject targetSubject = subjectRepository.findBySubjectId(requestDTO.getTargetSubject())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Materia objetivo no encontrada"));
+        Subject currentSubject = message.findSubjectOrThrow(requestDTO.getCurrentSubject());
+        Subject targetSubject = message.findSubjectOrThrow(requestDTO.getTargetSubject());
 
-        Group currentGroup = groupRepository.findByGroupId(requestDTO.getCurrentGroup())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo actual no encontrado"));
+        Group currentGroup = message.findGroupOrThrow(requestDTO.getCurrentGroup());
+        Group targetGroup = message.findGroupOrThrow(requestDTO.getTargetGroup());
 
-        Group targetGroup = groupRepository.findByGroupId(requestDTO.getTargetGroup())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo objetivo no encontrado"));
-
-        if (!student.getCurriculum().equals(targetSubject.getCurriculum())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Materia objetivo del pensum no coincide con el pensum del estudiante");
-        }
-        if (!student.getCurriculum().equals(targetGroup.getCurriculum())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Grupo objetivo del pensum no coincide con el pensum del estudiante");
-        }
+        message.ensureCurriculumMatchesStudent(student, targetSubject);
+        message.ensureCurriculumMatchesStudentGroup(student, targetGroup);
 
         ChangeRequest request = changeRequestMapper.toEntity(requestDTO);
+        request.setCreatedAt(now);
+        request.setUpdatedAt(now);
+        request.setResolutionDeadline(addBusinessDays(now, 5));
         request.setId(UUID.randomUUID());
         request.setStudentId(student.getId());
         request.setStudentName(student.getName());
@@ -131,21 +112,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
     @Override
     public List<ChangeRequestDTO> getAllRequestsByStudent(Integer studentId) {
-        if (!studentRepository.existsById(studentId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado con id: " + studentId);
-        }
+        message.findStudentOrThrow(studentId);
         return changeRequestMapper.toDTOList(changeRequestRepository.findByStudentId(studentId));
     }
 
     @Override
     public ChangeRequestDTO getRequestById(Integer studentId, UUID requestId) {
-        if (!studentRepository.existsById(studentId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado con id: " + studentId);
-        }
-
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitación de cambio no encontrada: " + requestId));
-
+        message.findStudentOrThrow(studentId);
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
         if (request.getStudentId() != studentId) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Esta solicitud no pertenece al estudiante con id: " + studentId);
         }
@@ -181,48 +155,28 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Override
     public ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestDTO dto) {
 
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Estudiante no encontrado con id: " + studentId));
+        Student student = message.findStudentOrThrow(studentId);
 
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Solicitud no encontrada: " + requestId));
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
-        if (!Objects.equals(request.getStudentId(), studentId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Esta solicitud no pertenece al estudiante con id: " + studentId);
-        }
+        message.ensureStudentOwnsRequest(request, studentId);
+        message.ensureRequestPending(request);
 
-        if (request.getStatus() != RequestStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Sólo solicitudes en estado PENDING pueden ser actualizadas");
-        }
 
         if (dto.getObservations() != null) {
             request.setObservations(dto.getObservations());
         }
 
         if (dto.getTargetSubject() != null && !dto.getTargetSubject().isBlank()) {
-            Subject targetSubject = subjectRepository.findBySubjectId(dto.getTargetSubject())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Materia objetivo no encontrada"));
-            if (!student.getCurriculum().equals(targetSubject.getCurriculum())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Materia objetivo del pensum no coincide con el pensum del estudiante");
-            }
+            Subject targetSubject = message.findSubjectOrThrow(dto.getTargetSubject());
+            message.ensureCurriculumMatchesStudent(student,  targetSubject);
             request.setTargetSubject(targetSubject.getSubjectId());
             request.setFaculty(mapCurriculumToFaculty(targetSubject.getCurriculum()));
         }
 
         if (dto.getTargetGroup() != null && !dto.getTargetGroup().isBlank()) {
-            Group targetGroup = groupRepository.findByGroupId(dto.getTargetGroup())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Grupo objetivo no encontrado"));
-            if (!student.getCurriculum().equals(targetGroup.getCurriculum())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Grupo objetivo del pensum no coincide con el pensum del estudiante");
-            }
+            Group targetGroup = message.findGroupOrThrow(dto.getTargetGroup());
+            message.ensureCurriculumMatchesStudentGroup(student,  targetGroup);
 
             if (request.getTargetGroup() != null) {
                 groupRepository.findByGroupId(request.getTargetGroup())
@@ -251,23 +205,12 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
     @Override
     public void deleteChangeRequest(Integer studentId, UUID requestId) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Estudiante no encontrado con id: " + studentId));
+        Student student = message.findStudentOrThrow(studentId);
 
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Solicitud no encontrada: " + requestId));
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
+        message.ensureStudentOwnsRequest(request, studentId);
 
-        if (!Objects.equals(request.getStudentId(), studentId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Esta solicitud no pertenece al estudiante con id: " + studentId);
-        }
-
-        if (request.getStatus() != RequestStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Sólo solicitudes en estado PENDING pueden ser eliminadas");
-        }
+        message.ensureRequestPending(request);
 
         if (request.getTargetGroup() != null) {
             groupRepository.findByGroupId(request.getTargetGroup())
@@ -290,6 +233,122 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 "Solicitud eliminada por estudiante", "STUDENT:" + studentId);
     }
 
+
+    /**
+     * Dias habiles para solicitudes
+     * @param start
+     * @param businessDays
+     * @return
+     */
+    private LocalDateTime addBusinessDays(LocalDateTime start, int businessDays) {
+        LocalDateTime d = start;
+        int added = 0;
+        while (added < businessDays) {
+            d = d.plusDays(1);
+            DayOfWeek dow = d.getDayOfWeek();
+            if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY) {
+                added++;
+            }
+        }
+        return d;
+    }
+
+    @Override
+    public ChangeRequestDTO requestExceptionalReview(Integer studentId, UUID requestId, String reason) {
+        Student student = message.findStudentOrThrow(studentId);
+
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
+        message.ensureStudentOwnsRequest(request, studentId);
+
+        request.setExceptional(true);
+        request.setExceptionalReason(reason);
+        String requestedBy = "STUDENT:" + studentId;
+        request.setExceptionalRequestedBy(requestedBy);
+        request.setExceptionalRequestedAt(LocalDateTime.now());
+        request.setExceptionalResolutionDeadline(addBusinessDays(LocalDateTime.now(), 5));
+
+        changeRequestRepository.save(request);
+
+        historyService.addHistoryEvent(request.getId(), requestedBy, "EXCEPTION_REQUESTED", reason, requestedBy);
+
+        return changeRequestMapper.toDTO(request);
+    }
+
+    @Override
+    public List<ChangeRequestDTO> getExceptionalRequestsByDeanery(int deaneryId) {
+        Deanery deanery = message.findDeaneryOrThrow(deaneryId);
+        List<ChangeRequest> requests = changeRequestRepository.findByFacultyAndExceptionalTrue(deanery.getFaculty());
+        return requests.stream().map(changeRequestMapper::toDTO).toList();
+    }
+
+
+
+    @Override
+    public List<ChangeRequestDTO> getExceptionalRequestsByStudent(Integer studentId) {
+        message.findStudentOrThrow(studentId);
+        List<ChangeRequest> requests = changeRequestRepository.findByStudentIdAndExceptionalTrue(studentId);
+        return requests.stream().map(changeRequestMapper::toDTO).toList();
+    }
+
+    @Override
+    public List<ChangeRequestDTO> getAllExceptionalRequests() {
+        List<ChangeRequest> requests = changeRequestRepository.findByExceptionalTrue();
+        return requests.stream().map(changeRequestMapper::toDTO).toList();
+    }
+
+    @Override
+    public ChangeRequestDTO approveExceptionalRequest(int approverId, UUID requestId, boolean approve, String observations) {
+        var deaneryOpt = deaneryRepository.findById(approverId);
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
+
+        message.ensureIsExceptional(request);
+        message.ensureFacultyMatches(deaneryOpt, request);
+
+        request.setExceptionalApproved(approve);
+        String approverTag = deaneryOpt.isPresent() ? "DEANERY:" + approverId : "ADMIN:" + approverId;
+        request.setExceptionalApprovedBy(approverTag);
+        request.setExceptionalApprovedAt(LocalDateTime.now());
+
+        if (!approve) {
+            request.setStatus(RequestStatus.REJECTED);
+            request.setUpdatedAt(LocalDateTime.now());
+        } else {
+            request.setStatus(RequestStatus.APPROVED);
+            request.setUpdatedAt(LocalDateTime.now());
+            request.setProcessedBy(deaneryOpt.isPresent() ? "DEANERY" : "ADMIN");
+
+            RequestDecisionDTO decisionDto = new RequestDecisionDTO();
+            decisionDto.setStatus(RequestStatus.APPROVED);
+            decisionDto.setObservations(observations == null ? "" : observations);
+            deaneryService.processApprovedRequest(request, decisionDto, approverId);
+        }
+
+        changeRequestRepository.save(request);
+
+        historyService.addHistoryEvent(
+                request.getId(),
+                approverTag,
+                approve ? "EXCEPTION_APPROVED" : "EXCEPTION_REJECTED",
+                observations == null ? "" : observations,
+                approverTag
+        );
+
+        return changeRequestMapper.toDTO(request);
+    }
+
+
+    @Override
+    public List<ChangeRequestDTO> getExceptionalRequestsByStudentForDeanery(int deaneryId, Integer studentId) {
+        Deanery deanery = message.findDeaneryOrThrow(deaneryId);
+        message.findStudentOrThrow(studentId);
+
+        List<ChangeRequest> studentExceptional = changeRequestRepository.findByStudentIdAndExceptionalTrue(studentId);
+        List<ChangeRequest> filtered = studentExceptional.stream()
+                .filter(cr -> cr.getFaculty() == deanery.getFaculty())
+                .toList();
+
+        return filtered.stream().map(changeRequestMapper::toDTO).toList();
+    }
 
 
 }

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -85,5 +86,18 @@ public class ChangeRequestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteRequest(@PathVariable Integer studentId, @PathVariable UUID requestId) {
         changeRequestService.deleteChangeRequest(studentId, requestId);
+    }
+
+    @PostMapping("/{requestId}/exception")
+    public ResponseEntity<ChangeRequestDTO> requestExceptional(
+            @PathVariable Integer studentId,
+            @PathVariable UUID requestId,
+            @RequestParam(required = false) String reason) {
+        return ResponseEntity.ok(changeRequestService.requestExceptionalReview(studentId, requestId, reason));
+    }
+
+    @GetMapping("/exceptional")
+    public ResponseEntity<List<ChangeRequestDTO>> getExceptionalByStudent(@PathVariable Integer studentId) {
+        return ResponseEntity.ok(changeRequestService.getExceptionalRequestsByStudent(studentId));
     }
 }

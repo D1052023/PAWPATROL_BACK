@@ -1,9 +1,11 @@
 package eci.edu.dosw.proyecto.dtos;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import eci.edu.dosw.proyecto.enums.Faculty;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 
@@ -25,5 +27,15 @@ public class ChangeRequestDTO {
     private String studentName;
     private String observations;
     private Faculty faculty;
+    @NotNull
+    private LocalDateTime resolutionDeadline;
+    private boolean exceptional;
+    private String exceptionalReason;
+    private String exceptionalRequestedBy;
+    private LocalDateTime exceptionalRequestedAt;
+    private Boolean exceptionalApproved;
+    private String exceptionalApprovedBy;
+    private LocalDateTime exceptionalApprovedAt;
+    private LocalDateTime exceptionalResolutionDeadline;
 
 }

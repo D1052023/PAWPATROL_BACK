@@ -17,6 +17,7 @@ import eci.edu.dosw.proyecto.repositories.SecretariatRepository;
 import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.SecretariatService;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -40,11 +41,11 @@ public class SecretariatServiceImpl implements SecretariatService {
     private final GroupRepository groupRepository;
     private final AlertService alertService;
     private final HistoryService historyService;
+    private final MessageExceptions message;
 
     @Override
     public SecretariatDTO getSecretariatById(int id) {
-        Secretariat sec = secretariatRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Secretari@ no encontrad@ con id: " + id));
+        Secretariat sec = message.findSecretariatOrThrow(id);
         return secretariatMapper.toDTO(sec);
     }
 
@@ -65,9 +66,7 @@ public class SecretariatServiceImpl implements SecretariatService {
 
     @Override
     public SecretariatDTO updateSecretariat(int id, SecretariatDTO dto) {
-        Secretariat sec = secretariatRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Secretari@ no encontrad@ con id: " + id));
-
+        Secretariat sec = message.findSecretariatOrThrow(id);
         if(dto.getName() != null) sec.setName(dto.getName());
         if(dto.getEmail() != null) sec.setEmail(dto.getEmail());
         if(dto.getRequestStartDate() != null) sec.setRequestStartDate(dto.getRequestStartDate());
@@ -79,9 +78,7 @@ public class SecretariatServiceImpl implements SecretariatService {
 
     @Override
     public void updateRequestDates(int id, LocalDateTime startDate, LocalDateTime endDate) {
-        Secretariat sec = secretariatRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Secretari@ no encontrad@ con id: " + id));
-
+        Secretariat sec = message.findSecretariatOrThrow(id);
         sec.setRequestStartDate(startDate);
         sec.setRequestEndDate(endDate);
 
@@ -90,9 +87,7 @@ public class SecretariatServiceImpl implements SecretariatService {
 
     @Override
     public void deleteSecretariat(int id) {
-        if (!secretariatRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Secretari@ no encontrad@ con id: " + id);
-        }
+        message.findSecretariatOrThrow(id);
         secretariatRepository.deleteById(id);
     }
 
@@ -101,15 +96,11 @@ public class SecretariatServiceImpl implements SecretariatService {
         ChangeRequest request = changeRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
 
-        if (request.getStatus() != RequestStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud ya fue procesada");
-        }
+        message.ensureRequestPending(request);
 
         LocalDateTime now = LocalDateTime.now();
         if (requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
-            if (now.isBefore(requestDates.getStartDate()) || now.isAfter(requestDates.getEndDate())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Fuera del periodo habilitado para responder solicitudes");
-            }
+            message.ensureNowWithinDatesIfPresent(LocalDateTime.now(), requestDates);
         }
 
         if (decision.getRequestAdditionalInfo() != null && decision.getRequestAdditionalInfo()) {
@@ -146,20 +137,11 @@ public class SecretariatServiceImpl implements SecretariatService {
         }
 
         if (decision.getStatus() == RequestStatus.APPROVED) {
-            Group currentGroup = groupRepository.findById(request.getCurrentGroup())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Grupo actual no encontrado: " + request.getCurrentGroup()));
-
-            Group targetGroup = groupRepository.findById(request.getTargetGroup())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Grupo destino no encontrado: " + request.getTargetGroup()));
+            Group currentGroup = message.findGroupOrThrow(request.getCurrentGroup());
+            Group targetGroup =  message.findGroupOrThrow(request.getTargetGroup());
 
             targetGroup.attach(alertService);
-
-            if (targetGroup.getCurrentCapacity() >= targetGroup.getMaximumCapacity()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El grupo destino ya está lleno");
-            }
-
+            message.ensureGroupHasCapacity(targetGroup);
             targetGroup.enrollStudent();
 
             if (currentGroup.getWaitlist() != null) {
@@ -191,19 +173,14 @@ public class SecretariatServiceImpl implements SecretariatService {
 
     @Override
     public ChangeRequestDTO updateRequestAsSecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates) {
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
         LocalDateTime now = LocalDateTime.now();
         if (requestDates != null && requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
-            if (now.isBefore(requestDates.getStartDate()) || now.isAfter(requestDates.getEndDate())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Fuera del periodo habilitado para responder solicitudes");
-            }
+            message.ensureNowWithinDatesIfPresent(now, requestDates);
         }
 
-        if (request.getStatus() != RequestStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud ya fue procesada");
-        }
+        message.ensureRequestPending(request);
 
         if (decision.getObservations() != null) {
             request.setObservations(decision.getObservations());
@@ -229,12 +206,9 @@ public class SecretariatServiceImpl implements SecretariatService {
 
     @Override
     public void deleteRequestAsSecretariat(UUID requestId) {
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
-        if (request.getStatus() != RequestStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sólo solicitudes en estado PENDING pueden ser eliminadas");
-        }
+        message.ensureRequestPending(request);
 
         if (request.getTargetGroup() != null) {
             groupRepository.findByGroupId(request.getTargetGroup())

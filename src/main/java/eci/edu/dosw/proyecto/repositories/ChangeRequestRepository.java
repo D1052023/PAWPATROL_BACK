@@ -21,4 +21,9 @@ public interface ChangeRequestRepository extends MongoRepository<ChangeRequest, 
     List<ChangeRequest> findByFacultyAndPriorityOrderByPriorityAsc(Faculty faculty, int priority);
     List<ChangeRequest> findAllByOrderByPriorityAsc();
     List<ChangeRequest> findByPriorityOrderByPriorityAsc(int priority);
+    List<ChangeRequest> findByExceptionalTrue();
+    List<ChangeRequest> findByStudentIdAndExceptionalTrue(Integer studentId);
+    List<ChangeRequest> findByFacultyAndExceptionalTrue(Faculty faculty);
+    List<ChangeRequest> findByExceptionalTrueOrderByPriorityAsc();
+
 }

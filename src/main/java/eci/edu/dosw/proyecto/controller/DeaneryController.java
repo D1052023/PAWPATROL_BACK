@@ -4,10 +4,7 @@ import eci.edu.dosw.proyecto.dtos.*;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
-import eci.edu.dosw.proyecto.services.DeaneryService;
-import eci.edu.dosw.proyecto.services.GroupService;
-import eci.edu.dosw.proyecto.services.HistoryService;
-import eci.edu.dosw.proyecto.services.StudentService;
+import eci.edu.dosw.proyecto.services.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +26,7 @@ public class DeaneryController {
     private final HistoryService historyService;
     private final GroupService groupService;
     private final StudentService studentService;
+    private final ChangeRequestService changeRequestService;
 
     @PostMapping
     public ResponseEntity<DeaneryDTO> createDeanery(@RequestBody DeaneryDTO deaneryDTO) {
@@ -153,6 +151,32 @@ public class DeaneryController {
     @GetMapping("/requests/priority/{priority}")
     public ResponseEntity<List<ChangeRequestDTO>> getAllByPriority(@PathVariable int priority) {
         return ResponseEntity.ok(deaneryService.getAllRequestsByPriority(priority));
+    }
+
+    @GetMapping("/{deaneryId}/requests/exceptional")
+    public ResponseEntity<List<ChangeRequestDTO>> getExceptionalByDeanery(@PathVariable int deaneryId) {
+        return ResponseEntity.ok(changeRequestService.getExceptionalRequestsByDeanery(deaneryId));
+    }
+
+    @PostMapping("/{deaneryId}/requests/{requestId}/exception/approve")
+    public ResponseEntity<ChangeRequestDTO> approveExceptional(@PathVariable int deaneryId,
+                                                               @PathVariable UUID requestId,
+                                                               @RequestParam boolean approve,
+                                                               @RequestParam(required = false) String observations) {
+        return ResponseEntity.ok(changeRequestService.approveExceptionalRequest(deaneryId, requestId, approve, observations));
+    }
+
+    @GetMapping("/{deaneryId}/students/{studentId}/requests/exceptional")
+    public ResponseEntity<List<ChangeRequestDTO>> getExceptionalRequestsForStudentByDeanery(
+            @PathVariable int deaneryId,
+            @PathVariable Integer studentId) {
+        return ResponseEntity.ok(changeRequestService.getExceptionalRequestsByStudentForDeanery(deaneryId, studentId)
+        );
+    }
+
+    @GetMapping("/requests/exceptional")
+    public ResponseEntity<List<ChangeRequestDTO>> getAllExceptionalRequests() {
+        return ResponseEntity.ok(changeRequestService.getAllExceptionalRequests());
     }
 
 }

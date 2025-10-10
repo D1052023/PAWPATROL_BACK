@@ -43,6 +43,7 @@ public class ChangeRequest {
     private String processedBy; 
     private int priority;
 
+    private LocalDateTime resolutionDeadline;
     private boolean exceptional = false;
     private String exceptionalReason;
     private String exceptionalRequestedBy;

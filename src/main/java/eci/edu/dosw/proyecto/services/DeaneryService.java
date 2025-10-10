@@ -6,6 +6,7 @@ import eci.edu.dosw.proyecto.dtos.RequestDatesDTO;
 import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
+import eci.edu.dosw.proyecto.models.ChangeRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +22,7 @@ public interface DeaneryService {
     DeaneryDTO updateDeanery(int id, DeaneryDTO deaneryDTO);
     void deleteDeanery(int id);
     ChangeRequestDTO respondRequestByDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates);
+    void processApprovedRequest(ChangeRequest request, RequestDecisionDTO decision, int deaneryId);
     List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status);
     ChangeRequestDTO updateRequestAsDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates);
     void deleteRequestAsDeanery(int deaneryId, UUID requestId);
