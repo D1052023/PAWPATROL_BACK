@@ -1,5 +1,6 @@
 package eci.edu.dosw.proyecto.controller;
 
+import eci.edu.dosw.proyecto.dtos.AcademicPlanDTO;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
@@ -8,6 +9,7 @@ import eci.edu.dosw.proyecto.services.StudentService;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -72,4 +74,8 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/{studentId}/academic-plan")
+    public ResponseEntity<AcademicPlanDTO> getAcademicPlan(@PathVariable Integer studentId) {
+        return ResponseEntity.ok(studentService.getAcademicPlan(studentId));
+    }
 }

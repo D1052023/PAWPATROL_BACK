@@ -1,24 +1,30 @@
 package eci.edu.dosw.proyecto.services.impl;
 
+import eci.edu.dosw.proyecto.dtos.AcademicPlanDTO;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
+import eci.edu.dosw.proyecto.mappers.AcademicPlanMapper;
 import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
 import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
 import eci.edu.dosw.proyecto.mappers.StudentMapper;
 import eci.edu.dosw.proyecto.models.ScheduleEntry;
 import eci.edu.dosw.proyecto.models.Student;
+import eci.edu.dosw.proyecto.models.Subject;
 import eci.edu.dosw.proyecto.repositories.ChangeRequestRepository;
 import eci.edu.dosw.proyecto.repositories.StudentRepository;
+import eci.edu.dosw.proyecto.repositories.SubjectRepository;
 import eci.edu.dosw.proyecto.services.StudentService;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Clase servicio que implementa la interfaz y maneja la lógica del estudiante.
@@ -30,8 +36,11 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final StudentMapper studentMapper;
     private final ChangeRequestRepository changeRequestRepository;
+    private final AcademicPlanMapper academicPlanMapper;
+    private final SubjectRepository subjectRepository;
     private final ChangeRequestMapper changeRequestMapper;
     private final ScheduleEntryMapper scheduleEntryMapper;
+    private final MessageExceptions message;
 
 
     @Override
@@ -157,4 +166,72 @@ public class StudentServiceImpl implements StudentService {
         return dto;
     }
 
+
+    @Override
+    public AcademicPlanDTO getAcademicPlan(Integer studentId) {
+
+        Student student = message.findStudentOrThrow(studentId);
+        AcademicPlanDTO dto = academicPlanMapper.toDto(student);
+
+        List<Subject> planSubjects = Collections.emptyList();
+        if (student.getCurriculum() != null) {
+            planSubjects = Optional.ofNullable(subjectRepository.findByCurriculum(student.getCurriculum()))
+                    .orElse(Collections.emptyList());
+        }
+
+        int totalCourses = planSubjects.size();
+        dto.setTotalCoursesInPlan(totalCourses);
+
+        int creditsPlanSum = planSubjects.stream()
+                .map(Subject::getCredits)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+
+        dto.setCreditsPlan(creditsPlanSum == 0 ? null : (double) creditsPlanSum);
+        List<String> approved = student.getApprovedSubjects() == null ? Collections.emptyList() : student.getApprovedSubjects();
+        List<String> enrolled = student.getEnrolledSubjects() == null ? Collections.emptyList() : student.getEnrolledSubjects();
+        dto.setApprovedCourses(approved.size());
+        dto.setEnrolledSubjectsCount(enrolled.size());
+        dto.setEnrolledSubjectIds(new ArrayList<>(enrolled));
+
+
+        Double approvedCredits = student.getApprovedCredits();
+        if (approvedCredits == null) {
+            int acc = 0;
+            for (String sid : approved) {
+                Optional<Subject> opt = subjectRepository.findBySubjectId(sid);
+                if (opt.isPresent()) {
+                    Integer c = opt.get().getCredits();
+                    if (c != null) acc += c;
+                }
+            }
+            approvedCredits = acc == 0 ? null : (double) acc;
+        }
+
+        dto.setApprovedCredits(approvedCredits);
+        dto.setPendingCourses(Math.max(0, totalCourses - dto.getApprovedCourses()));
+
+        if (dto.getCreditsPlan() != null && dto.getApprovedCredits() != null) {
+            dto.setPendingCredits(Math.max(0.0, dto.getCreditsPlan() - dto.getApprovedCredits()));
+        } else {
+            dto.setPendingCredits(null);
+        }
+
+        int enrolledCount = dto.getEnrolledSubjectsCount() == null ? 0 : dto.getEnrolledSubjectsCount();
+        double progress = totalCourses == 0 ? 0.0 : ((double) enrolledCount * 100.0) / totalCourses;
+
+
+        dto.setProgressPercent(Math.round(progress * 100.0) / 100.0);
+        Set<String> done = new HashSet<>();
+        done.addAll(approved);
+        done.addAll(enrolled);
+        List<String> missing = planSubjects.stream()
+                .map(Subject::getSubjectId)
+                .filter(sid -> !done.contains(sid))
+                .collect(Collectors.toList());
+        dto.setMissingSubjectIds(missing);
+
+        return dto;
+    }
 }

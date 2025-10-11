@@ -25,7 +25,7 @@ public class Subject {
     @Id
     private String subjectId;
     private String name;
-    private int credits;
+    private Integer credits;
     private Curriculum curriculum;
     private SubjectType type;
     private SubjectStatus subjectStatus;

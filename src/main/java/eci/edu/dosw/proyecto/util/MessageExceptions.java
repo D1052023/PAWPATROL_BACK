@@ -23,7 +23,7 @@ import java.util.UUID;
  */
 @Component
 @RequiredArgsConstructor
-public class MessageExceptions extends RuntimeException {
+public class MessageExceptions {
 
     private static final Logger LOG = LoggerFactory.getLogger(MessageExceptions.class);
     private static final String STUDENT_NOT_FOUND = "Estudiante no encontrado con id: %s";

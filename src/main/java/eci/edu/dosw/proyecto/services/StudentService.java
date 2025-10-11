@@ -1,6 +1,7 @@
 package eci.edu.dosw.proyecto.services;
 
 
+import eci.edu.dosw.proyecto.dtos.AcademicPlanDTO;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
@@ -22,4 +23,5 @@ public interface StudentService {
     List<ChangeRequestDTO> getStudentRequests(int studentId);
     List<ChangeRequestDTO> getStudentRequestsByStatus(int studentId, RequestStatus status);
     StudentDTO getStudentSchedule(int studentId, int semester);
+    AcademicPlanDTO getAcademicPlan(Integer studentId);
 }

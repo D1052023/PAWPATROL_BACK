@@ -21,13 +21,27 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class Student extends User {
 
+    private String name;
+    private String email;
+    private String documentId;
+    private Curriculum curriculum;
+    private String planCode;
+    private String programName;
     private Career career;
     private int semester;
-    private Curriculum curriculum;
     private AcademicTrafficLight academicTrafficLight = AcademicTrafficLight.GREEN;
     private List<ChangeRequest> requests = new ArrayList<>();
     private List<ScheduleEntry> schedule = new ArrayList<>();
+    private List<String> approvedSubjects;
     private List<String> enrolledSubjects = new ArrayList<>();
+    private Double approvedCredits;
+    private Double gpa;
+    private Double gradeAverage;
+    private Integer semesterToTake;
+    private Integer lastSemester;
+    private String academicSituation;
+    private Integer situationCycle;
+    private Integer admissionCycle;
 
 
     public Student() {
