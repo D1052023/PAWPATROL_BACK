@@ -1,13 +1,24 @@
 package eci.edu.dosw.proyecto.services.impl;
 
 import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
+import eci.edu.dosw.proyecto.models.Group;
 import eci.edu.dosw.proyecto.models.ScheduleEntry;
+import eci.edu.dosw.proyecto.models.Student;
+import eci.edu.dosw.proyecto.models.*;
+import eci.edu.dosw.proyecto.repositories.StudentRepository;
+import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.util.MessageExceptions;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.GroupService;
@@ -15,8 +26,6 @@ import eci.edu.dosw.proyecto.repositories.GroupRepository;
 import eci.edu.dosw.proyecto.repositories.SubjectRepository;
 import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 import eci.edu.dosw.proyecto.dtos.GroupDTO;
-import eci.edu.dosw.proyecto.models.Group;
-import eci.edu.dosw.proyecto.models.Subject;
 import eci.edu.dosw.proyecto.mappers.GroupMapper;
 import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
 
@@ -27,10 +36,13 @@ public class GroupServiceImpl implements GroupService {
     private final GroupRepository groupRepository;
     private final SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
+    private final MongoTemplate mongoTemplate;
     private final AlertService alertService;
     private final GroupMapper groupMapper;
     private final ScheduleEntryMapper scheduleEntryMapper;
     private final MessageExceptions message;
+    private final StudentRepository studentRepository;
+    private final HistoryService historyService;
 
     @Override
     public GroupDTO createGroup(GroupDTO dto) {
@@ -190,7 +202,7 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public int getEnrolledCount(String groupId) {
         Group g = message.findGroupOrThrow(groupId);
-        return g.getCurrentCapacity() == null ? 0 : g.getCurrentCapacity();
+        return Math.max(0, g.getCurrentCapacity());
     }
 
     @Override
@@ -255,4 +267,116 @@ public class GroupServiceImpl implements GroupService {
             groupRepository.save(g);
         }
     }
+
+
+    @Override
+    public GroupDTO assignStudentToGroup(String groupId, int studentId) {
+
+        Student student = message.findStudentOrThrow(studentId);
+        Group group = message.findGroupOrThrow(groupId);
+        message.ensureCurriculumMatchesStudentGroup(student, group);
+        message.ensureStudentNotInGroup(student, groupId);
+        message.ensureGroupHasAvailableCapacity(group);
+
+        Query q = Query.query(Criteria.where("groupId").is(groupId)
+                .and("currentCapacity").lt(group.getMaximumCapacity()));
+        Update u = new Update()
+                .inc("currentCapacity", 1)
+                .pull("waitlist", studentId);
+
+        Group updated = mongoTemplate.findAndModify(
+                q, u, FindAndModifyOptions.options().returnNew(true), Group.class
+        );
+
+        message.ensureAtomicUpdateSucceeded(updated, "No se puede inscribir: el grupo está lleno o se actualizó simultáneamente");
+        if (student.getSchedule() == null) student.setSchedule(new ArrayList<>());
+        String subjectId = updated.getSubjectId();
+        if (updated.getSchedule() != null && !updated.getSchedule().isEmpty()) {
+            for (ScheduleEntry se : updated.getSchedule()) {
+                ScheduleEntry newEntry = new ScheduleEntry(
+                        subjectId,
+                        updated.getGroupId(),
+                        se.getDay(),
+                        se.getFrom(),
+                        se.getSemester(),
+                        se.getClassroom(),
+                        se.getTo(),
+                        se.getStatus()
+                );
+
+                boolean exists = student.getSchedule().stream().anyMatch(existing ->
+                        existing.getSubject() != null && existing.getGroup() != null &&
+                                existing.getSubject().equals(newEntry.getSubject()) &&
+                                existing.getGroup().equals(newEntry.getGroup()) &&
+                                existing.getDay().equals(newEntry.getDay()) &&
+                                existing.getFrom().equals(newEntry.getFrom()) &&
+                                existing.getTo().equals(newEntry.getTo())
+                );
+
+                if (!exists) student.getSchedule().add(newEntry);
+            }
+        } else {
+            ScheduleEntry basic = new ScheduleEntry();
+            basic.setSubject(subjectId);
+            basic.setGroup(updated.getGroupId());
+            student.getSchedule().add(basic);
+        }
+
+        if (student.getEnrolledSubjects() == null) student.setEnrolledSubjects(new ArrayList<>());
+        if (subjectId != null && !student.getEnrolledSubjects().contains(subjectId)) {
+            student.getEnrolledSubjects().add(subjectId);
+        }
+
+        studentRepository.save(student);
+        historyService.addHistoryEvent(UUID.randomUUID(), "SYSTEM", "STUDENT_ASSIGNED",
+                "Estudiante " + studentId + " inscrito en grupo " + groupId, "SYSTEM");
+
+        double load = (updated.getCurrentCapacity() * 100.0) / Math.max(1, updated.getMaximumCapacity());
+        if (load >= 90.0) {
+            alertService.update(updated);
+        }
+
+        return groupMapper.toDTO(updated);
+    }
+
+    @Override
+    public GroupDTO removeStudentFromGroup(String groupId, int studentId) {
+        Student student = message.findStudentOrThrow(studentId);
+        Group group = message.findGroupOrThrow(groupId);
+        message.ensureStudentIsInGroup(student, groupId);
+        message.ensureGroupHasCapacityGreaterThanZero(group);
+
+        Query q = Query.query(Criteria.where("groupId").is(groupId)
+                .and("currentCapacity").gt(0));
+        Update u = new Update()
+                .inc("currentCapacity", -1)
+                .pull("waitlist", studentId);
+
+        Group updated = mongoTemplate.findAndModify(
+                q, u, FindAndModifyOptions.options().returnNew(true), Group.class
+        );
+
+        message.ensureAtomicUpdateSucceeded(updated,
+                "No se pudo retirar: capacidad ya en 0 o modificación concurrente");
+
+        if (student.getSchedule() != null) {
+            student.getSchedule().removeIf(se ->
+                    se.getGroup() != null && se.getGroup().equals(groupId));
+        }
+
+        if (student.getEnrolledSubjects() != null) {
+            boolean stillHasSubject = student.getSchedule() != null && student.getSchedule().stream()
+                    .anyMatch(se -> se.getSubject() != null && se.getSubject().equals(group.getSubjectId()));
+            if (!stillHasSubject) {
+                student.getEnrolledSubjects().removeIf(sid -> sid.equals(group.getSubjectId()));
+            }
+        }
+
+        studentRepository.save(student);
+        historyService.addHistoryEvent(UUID.randomUUID(), "SYSTEM", "STUDENT_REMOVED",
+                "Estudiante " + studentId + " retirado de grupo " + groupId, "SYSTEM");
+
+        return groupMapper.toDTO(updated);
+    }
+
 }

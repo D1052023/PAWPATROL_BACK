@@ -30,6 +30,8 @@ public interface GroupService {
     List<ScheduleEntryDTO> updateScheduleForDay(String groupId, String day, List<ScheduleEntryDTO> entries);
     void deleteScheduleGlobal(String groupId);
     void deleteScheduleForDay(String groupId, String day);
+    GroupDTO assignStudentToGroup(String groupId, int studentId);
+    GroupDTO removeStudentFromGroup(String groupId, int studentId);
 
 
 }

@@ -140,4 +140,16 @@ public class GroupController {
         groupService.deleteScheduleForDay(groupId, day);
     }
 
+    @PostMapping("/{groupId}/students/{studentId}")
+    public ResponseEntity<Void> assignStudentToGroup(@PathVariable String groupId, @PathVariable int studentId) {
+        groupService.assignStudentToGroup(groupId, studentId);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/{groupId}/students/{studentId}")
+    public ResponseEntity<Void> removeStudentFromGroup(@PathVariable String groupId, @PathVariable int studentId) {
+        groupService.removeStudentFromGroup(groupId, studentId);
+        return ResponseEntity.noContent().build();
+    }
+
 }
