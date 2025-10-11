@@ -26,9 +26,9 @@ public class Group {
     private String groupId;         
     private String name;            
     private String subjectId;        
-    private int teacher;  
-    private int maximumCapacity;         
-    private int currentCapacity;
+    private Integer teacher;
+    private Integer maximumCapacity;
+    private Integer currentCapacity;
     private Curriculum curriculum;           
     private List<ScheduleEntry> schedule;
     private GroupStatus groupStatus;

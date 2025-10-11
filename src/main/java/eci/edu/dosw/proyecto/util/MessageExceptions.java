@@ -25,6 +25,7 @@ public class MessageExceptions {
     private final SubjectRepository subjectRepository;
     private final GroupRepository groupRepository;
     private final DeaneryRepository deaneryRepository;
+    private final TeacherRepository teacherRepository;
 
     public Student findStudentOrThrow(Integer studentId) {
         return studentRepository.findById(studentId)
@@ -154,6 +155,57 @@ public class MessageExceptions {
         return secretariatRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Secretari@ no encontrad@ con id: " + id));
+    }
+
+    public void ensureSubjectIdProvided(String subjectId) {
+        if (subjectId == null || subjectId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El identificador de la materia es obligatorio");
+        }
+    }
+
+    public void ensureSubjectCurriculumMatchesGroup(Subject subject, Group group) {
+        if (subject == null || group == null) return; // seguridad: otras validaciones deben ocurrir antes
+        if (!subject.getCurriculum().equals(group.getCurriculum())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La materia de ese pensum no corresponde a la del grupo");
+        }
+    }
+
+    public void ensureSubjectHasTotalCapacity(Subject subject) {
+        if (subject == null) return;
+        Integer max = subject.getMaximumCapacity();
+        if (max == null || max <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La materia no tiene cupo total asignado, no se pueden crear grupos todavía");
+        }
+    }
+
+    public void ensureTotalGroupCapacityNotExceeded(int totalCuposGrupos, int newGroupCapacity, Integer subjectMaximumCapacity) {
+        int subjectMax = subjectMaximumCapacity == null ? 0 : subjectMaximumCapacity;
+        if (totalCuposGrupos + newGroupCapacity > subjectMax) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La suma de los cupos de los grupos excede el cupo total permitido para la materia");
+        }
+    }
+
+    public void ensureTeacherExistsOrThrow(int teacherId) {
+        if (!teacherRepository.existsById(teacherId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado");
+        }
+    }
+
+    public void ensureGroupHasNoTeacherAssigned(Group group) {
+        if (group != null && group.getTeacher() != 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El grupo ya tiene un profesor asignado");
+        }
+    }
+
+    public void ensureGroupHasTeacherAssigned(Group group) {
+        if (group == null) return;
+        if (group.getTeacher() == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El grupo no tiene un profesor asignado");
+        }
     }
 
 }

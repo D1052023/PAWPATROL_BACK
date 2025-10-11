@@ -2,6 +2,7 @@ package eci.edu.dosw.proyecto.services;
 
 import java.util.List;
 import eci.edu.dosw.proyecto.dtos.GroupDTO;
+import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 
 /**
  * Interfaz que maneja los métodos para implementar en GroupServiceImpl.
@@ -22,5 +23,13 @@ public interface GroupService {
     int getCurrentCapacity(String groupId);
     GroupDTO assignTeacherToGroup(String groupId, int teacherId);
     GroupDTO removeTeacherFromGroup(String groupId);
+    int getEnrolledCount(String groupId);
+    ScheduleEntryDTO addScheduleEntry(String groupId, ScheduleEntryDTO entry);
+    List<ScheduleEntryDTO> getSchedule(String groupId);
+    List<ScheduleEntryDTO> updateScheduleGlobal(String groupId, List<ScheduleEntryDTO> entries);
+    List<ScheduleEntryDTO> updateScheduleForDay(String groupId, String day, List<ScheduleEntryDTO> entries);
+    void deleteScheduleGlobal(String groupId);
+    void deleteScheduleForDay(String groupId, String day);
+
 
 }

@@ -1,8 +1,12 @@
 package eci.edu.dosw.proyecto.services.impl;
 
+import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
+import eci.edu.dosw.proyecto.models.ScheduleEntry;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import eci.edu.dosw.proyecto.services.AlertService;
@@ -26,34 +30,24 @@ public class GroupServiceImpl implements GroupService {
     private final AlertService alertService;
     private final GroupMapper groupMapper;
     private final ScheduleEntryMapper scheduleEntryMapper;
+    private final MessageExceptions message;
 
     @Override
     public GroupDTO createGroup(GroupDTO dto) {
         Group group = groupMapper.toModel(dto);
 
-        if (group.getSubjectId() == null || group.getSubjectId().isEmpty()) {
-            throw new RuntimeException("Debe especificar el ID de la materia para crear el grupo");
-        }
-
-        Subject subject = subjectRepository.findBySubjectId(group.getSubjectId())
-                .orElseThrow(() -> new RuntimeException("Materia no encontrada"));
-
-        if (subject.getCurriculum() != group.getCurriculum()) {
-            throw new RuntimeException("La materia de ese pensum no corresponde a la del grupo");
-        }
-
-        if (subject.getMaximumCapacity() <= 0) {
-            throw new RuntimeException("La materia no tiene cupo total asignado, no se pueden crear grupos todavía");
-        }
+        message.ensureSubjectIdProvided(group.getSubjectId());
+        Subject subject = message.findSubjectOrThrow(group.getSubjectId());
+        message.ensureSubjectCurriculumMatchesGroup(subject, group);
+        message.ensureSubjectHasTotalCapacity(subject);
 
         int totalCuposGrupos = groupRepository.findBySubjectId(subject.getSubjectId())
                 .stream()
                 .mapToInt(Group::getMaximumCapacity)
                 .sum();
 
-        if (totalCuposGrupos + group.getMaximumCapacity() > subject.getMaximumCapacity()) {
-            throw new RuntimeException("La suma de los cupos de los grupos excede el cupo total permitido para la materia");
-        }
+        int newGroupCapacity = group.getMaximumCapacity() == null ? 0 : group.getMaximumCapacity();
+        message.ensureTotalGroupCapacityNotExceeded(totalCuposGrupos, newGroupCapacity, subject.getMaximumCapacity());
 
         group.attach(alertService);
 
@@ -72,20 +66,16 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public GroupDTO getGroupById(String groupId) {
-        Group group = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group group = message.findGroupOrThrow(groupId);
         return groupMapper.toDTO(group);
     }
 
     @Override
     public GroupDTO updateGroup(String groupId, GroupDTO dto) {
-        Group existing = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group existing = message.findGroupOrThrow(groupId);
 
         if (dto.getMaximumCapacity() != 0) {
-            Subject subject = subjectRepository.findBySubjectId(existing.getSubjectId())
-                    .orElseThrow(() -> new RuntimeException("Materia no encontrada"));
-
+            Subject subject = message.findSubjectOrThrow(existing.getSubjectId());
             final String currentGroupId = existing.getGroupId();
 
             int totalCuposGrupos = groupRepository.findBySubjectId(subject.getSubjectId())
@@ -94,10 +84,8 @@ public class GroupServiceImpl implements GroupService {
                     .mapToInt(Group::getMaximumCapacity)
                     .sum();
 
-            if (totalCuposGrupos + dto.getMaximumCapacity() > subject.getMaximumCapacity()) {
-                throw new RuntimeException("La suma de los cupos de los grupos excede el cupo total permitido para la materia");
-            }
-
+            int newCapacity = dto.getMaximumCapacity();
+            message.ensureTotalGroupCapacityNotExceeded(totalCuposGrupos, newCapacity, subject.getMaximumCapacity());
             existing.setMaximumCapacity(dto.getMaximumCapacity());
         }
 
@@ -114,15 +102,13 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void deleteGroup(String groupId) {
-        Group group = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group group = message.findGroupOrThrow(groupId);
         groupRepository.delete(group);
     }
 
     @Override
     public GroupDTO updateCapacity(String groupId, int newMaximumCapacity) {
-        Group existing = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group existing = message.findGroupOrThrow(groupId);
         existing.setMaximumCapacity(newMaximumCapacity);
         existing = groupRepository.save(existing);
         return groupMapper.toDTO(existing);
@@ -130,15 +116,13 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<Integer> getWaitlist(String groupId) {
-        Group group = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group group = message.findGroupOrThrow(groupId);
         return group.getWaitlist();
     }
 
     @Override
     public GroupDTO partialUpdateGroup(String groupId, GroupDTO dto) {
-        Group existing = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group existing = message.findGroupOrThrow(groupId);
 
         if (dto.getName() != null) existing.setName(dto.getName());
         if (dto.getMaximumCapacity() != 0) existing.setMaximumCapacity(dto.getMaximumCapacity());
@@ -172,31 +156,22 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public int getMaxCapacity(String groupId) {
-        Group group = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group group = message.findGroupOrThrow(groupId);
         return group.getMaximumCapacity();
     }
 
     @Override
     public int getCurrentCapacity(String groupId) {
-        Group group = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group group = message.findGroupOrThrow(groupId);
         return group.getCurrentCapacity();
     }
 
     @Override
     public GroupDTO assignTeacherToGroup(String groupId, int teacherId) {
-        Group group = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group group = message.findGroupOrThrow(groupId);
 
-        if (!teacherRepository.existsById(teacherId)) {
-            throw new RuntimeException("Profesor no encontrado");
-        }
-
-        if (group.getTeacher() != 0) {
-            throw new RuntimeException("El grupo ya tiene un profesor asignado");
-        }
-
+        message.ensureTeacherExistsOrThrow(teacherId);
+        message.ensureGroupHasNoTeacherAssigned(group);
         group.setTeacher(teacherId);
         groupRepository.save(group);
         return groupMapper.toDTO(group);
@@ -204,16 +179,80 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public GroupDTO removeTeacherFromGroup(String groupId) {
-        Group group = groupRepository.findByGroupId(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+        Group group = message.findGroupOrThrow(groupId);
 
-        if (group.getTeacher() == 0) {
-            throw new RuntimeException("El grupo no tiene un profesor asignado");
-        }
-
+        message.ensureGroupHasTeacherAssigned(group);
         group.setTeacher(0);
         groupRepository.save(group);
         return groupMapper.toDTO(group);
     }
 
+    @Override
+    public int getEnrolledCount(String groupId) {
+        Group g = message.findGroupOrThrow(groupId);
+        return g.getCurrentCapacity() == null ? 0 : g.getCurrentCapacity();
+    }
+
+    @Override
+    public ScheduleEntryDTO addScheduleEntry(String groupId, ScheduleEntryDTO entryDto) {
+        Group g = message.findGroupOrThrow(groupId);
+        if (g.getSchedule() == null) g.setSchedule(new ArrayList<>());
+        ScheduleEntry e = scheduleEntryMapper.toModel(entryDto);
+        e.setGroup(groupId);
+        g.getSchedule().add(e);
+
+        groupRepository.save(g);
+
+        return scheduleEntryMapper.toDTO(e);
+    }
+
+    @Override
+    public List<ScheduleEntryDTO> getSchedule(String groupId) {
+        Group g = message.findGroupOrThrow(groupId);
+        if (g.getSchedule() == null) return List.of();
+        return scheduleEntryMapper.toDTOList(g.getSchedule());
+    }
+
+    @Override
+    public List<ScheduleEntryDTO> updateScheduleGlobal(String groupId, List<ScheduleEntryDTO> entries) {
+        Group g = message.findGroupOrThrow(groupId);
+
+        List<ScheduleEntry> newSchedule = (entries == null) ? new ArrayList<>() : scheduleEntryMapper.toModelList(entries);
+        newSchedule.forEach(e -> e.setGroup(groupId));
+        g.setSchedule(newSchedule);
+        groupRepository.save(g);
+        return scheduleEntryMapper.toDTOList(g.getSchedule());
+    }
+
+    @Override
+    public List<ScheduleEntryDTO> updateScheduleForDay(String groupId, String day, List<ScheduleEntryDTO> entries) {
+        Group g = message.findGroupOrThrow(groupId);
+        if (g.getSchedule() == null) g.setSchedule(new ArrayList<>());
+        g.getSchedule().removeIf(se -> se.getDay() != null && se.getDay().equalsIgnoreCase(day));
+
+        if (entries != null && !entries.isEmpty()) {
+            List<ScheduleEntry> mapped = scheduleEntryMapper.toModelList(entries);
+            mapped.forEach(e -> e.setGroup(groupId));
+            g.getSchedule().addAll(mapped);
+        }
+
+        groupRepository.save(g);
+        return scheduleEntryMapper.toDTOList(g.getSchedule());
+    }
+
+    @Override
+    public void deleteScheduleGlobal(String groupId) {
+        Group g = message.findGroupOrThrow(groupId);
+        g.setSchedule(new ArrayList<>());
+        groupRepository.save(g);
+    }
+
+    @Override
+    public void deleteScheduleForDay(String groupId, String day) {
+        Group g = message.findGroupOrThrow(groupId);
+        if (g.getSchedule() != null) {
+            g.getSchedule().removeIf(se -> se.getDay() != null && se.getDay().equalsIgnoreCase(day));
+            groupRepository.save(g);
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package eci.edu.dosw.proyecto.controller;
 
+import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
@@ -67,11 +68,6 @@ public class GroupController {
         return groupService.getGroupsByTeacher(teacherId);
     }
 
-    @GetMapping("/subject/{subjectId}")
-    public List<GroupDTO> getGroupsBySubject(@PathVariable String subjectId) {
-        return groupService.getGroupsBySubject(subjectId);
-    }
-
     @GetMapping("/{groupId}/MaxCapacity")
     public int getMaxCapacity(@PathVariable String groupId) {
         return groupService.getMaxCapacity(groupId);
@@ -95,6 +91,53 @@ public class GroupController {
     @PutMapping("/{groupId}/RemoveTeacher")
     public ResponseEntity<GroupDTO> removeTeacherFromGroup(@PathVariable String groupId) {
         return ResponseEntity.ok(groupService.removeTeacherFromGroup(groupId));
+    }
+
+    @GetMapping("/subject/{subjectId}")
+    public List<GroupDTO> getGroupsBySubject(@PathVariable String subjectId) {
+        return groupService.getGroupsBySubject(subjectId);
+    }
+
+    @GetMapping("/{groupId}/enrolled")
+    public ResponseEntity<Integer> getEnrolledCount(@PathVariable String groupId) {
+        return ResponseEntity.ok(groupService.getEnrolledCount(groupId));
+    }
+
+    @GetMapping("/{groupId}/schedule")
+    public ResponseEntity<List<ScheduleEntryDTO>> getSchedule(@PathVariable String groupId) {
+        return ResponseEntity.ok(groupService.getSchedule(groupId));
+    }
+
+    @PostMapping("/{groupId}/schedule")
+    public ResponseEntity<ScheduleEntryDTO> addScheduleEntry(@PathVariable String groupId,
+                                                             @RequestBody ScheduleEntryDTO entry) {
+        ScheduleEntryDTO created = groupService.addScheduleEntry(groupId, entry);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{groupId}/schedule")
+    public ResponseEntity<List<ScheduleEntryDTO>> updateScheduleGlobal(@PathVariable String groupId,
+                                                                       @RequestBody List<ScheduleEntryDTO> entries) {
+        return ResponseEntity.ok(groupService.updateScheduleGlobal(groupId, entries));
+    }
+
+    @PutMapping("/{groupId}/schedule/day/{day}")
+    public ResponseEntity<List<ScheduleEntryDTO>> updateScheduleForDay(@PathVariable String groupId,
+                                                                       @PathVariable String day,
+                                                                       @RequestBody List<ScheduleEntryDTO> entries) {
+        return ResponseEntity.ok(groupService.updateScheduleForDay(groupId, day, entries));
+    }
+
+    @DeleteMapping("/{groupId}/schedule")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteScheduleGlobal(@PathVariable String groupId) {
+        groupService.deleteScheduleGlobal(groupId);
+    }
+
+    @DeleteMapping("/{groupId}/schedule/day/{day}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteScheduleForDay(@PathVariable String groupId, @PathVariable String day) {
+        groupService.deleteScheduleForDay(groupId, day);
     }
 
 }

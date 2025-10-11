@@ -93,9 +93,7 @@ public class SecretariatServiceImpl implements SecretariatService {
 
     @Override
     public ChangeRequestDTO respondRequestBySecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates) {
-        ChangeRequest request = changeRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada"));
-
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
         message.ensureRequestPending(request);
 
         LocalDateTime now = LocalDateTime.now();
