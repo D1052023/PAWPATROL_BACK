@@ -1,6 +1,7 @@
 package eci.edu.dosw.proyecto.controller;
 
 import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
+import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
@@ -81,6 +82,11 @@ public class GroupController {
     @GetMapping("/{groupId}/WaitingList")
     public List<Integer> getWaitingList(@PathVariable String groupId) {
         return groupService.getWaitlist(groupId);
+    }
+
+    @GetMapping("/{groupId}/waitlist/details")
+    public ResponseEntity<List<StudentDTO>> getWaitlistDetails(@PathVariable String groupId) {
+        return ResponseEntity.ok(groupService.getWaitlistDetails(groupId));
     }
 
     @PutMapping("/{groupId}/AssignTeacher/{teacherId}")

@@ -35,7 +35,7 @@ public class Student extends User {
     private List<String> approvedSubjects;
     private List<String> enrolledSubjects = new ArrayList<>();
     private Double approvedCredits;
-    private Double gpa;
+    private Double accumulativeAverage;
     private Double gradeAverage;
     private Integer semesterToTake;
     private Integer lastSemester;

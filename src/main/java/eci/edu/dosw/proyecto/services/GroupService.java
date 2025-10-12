@@ -3,6 +3,7 @@ package eci.edu.dosw.proyecto.services;
 import java.util.List;
 import eci.edu.dosw.proyecto.dtos.GroupDTO;
 import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
+import eci.edu.dosw.proyecto.dtos.StudentDTO;
 
 /**
  * Interfaz que maneja los métodos para implementar en GroupServiceImpl.
@@ -17,6 +18,7 @@ public interface GroupService {
     GroupDTO updateCapacity(String groupId, int newCurrentCapacity);
     GroupDTO partialUpdateGroup(String groupId, GroupDTO dto);
     List<Integer> getWaitlist(String groupId);
+    List<StudentDTO> getWaitlistDetails(String groupId);
     List<GroupDTO> getGroupsByTeacher(int teacherId);
     List<GroupDTO> getGroupsBySubject(String subjectId);
     int getMaxCapacity(String groupId);

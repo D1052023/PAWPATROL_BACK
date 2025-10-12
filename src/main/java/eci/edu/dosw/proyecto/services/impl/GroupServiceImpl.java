@@ -1,12 +1,14 @@
 package eci.edu.dosw.proyecto.services.impl;
 
 import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
+import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.models.Group;
 import eci.edu.dosw.proyecto.models.ScheduleEntry;
 import eci.edu.dosw.proyecto.models.Student;
 import eci.edu.dosw.proyecto.models.*;
 import eci.edu.dosw.proyecto.repositories.StudentRepository;
 import eci.edu.dosw.proyecto.services.HistoryService;
+import eci.edu.dosw.proyecto.services.StudentService;
 import eci.edu.dosw.proyecto.util.MessageExceptions;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -23,8 +25,6 @@ import java.util.UUID;
 import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.GroupService;
 import eci.edu.dosw.proyecto.repositories.GroupRepository;
-import eci.edu.dosw.proyecto.repositories.SubjectRepository;
-import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 import eci.edu.dosw.proyecto.dtos.GroupDTO;
 import eci.edu.dosw.proyecto.mappers.GroupMapper;
 import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
@@ -34,14 +34,14 @@ import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
 public class GroupServiceImpl implements GroupService {
 
     private final GroupRepository groupRepository;
-    private final SubjectRepository subjectRepository;
-    private final TeacherRepository teacherRepository;
+
     private final MongoTemplate mongoTemplate;
     private final AlertService alertService;
     private final GroupMapper groupMapper;
     private final ScheduleEntryMapper scheduleEntryMapper;
     private final MessageExceptions message;
     private final StudentRepository studentRepository;
+    private final StudentService studentService;
     private final HistoryService historyService;
 
     @Override
@@ -130,6 +130,20 @@ public class GroupServiceImpl implements GroupService {
     public List<Integer> getWaitlist(String groupId) {
         Group group = message.findGroupOrThrow(groupId);
         return group.getWaitlist();
+    }
+
+    @Override
+    public List<StudentDTO> getWaitlistDetails(String groupId) {
+        Group group = message.findGroupOrThrow(groupId);
+        List<Integer> waitlist = group.getWaitlist();
+        if (waitlist == null || waitlist.isEmpty()) return List.of();
+
+        List<StudentDTO> details = new ArrayList<>(waitlist.size());
+        for (Integer studentId : waitlist) {
+            StudentDTO sdto = studentService.getStudentById(studentId);
+            details.add(sdto);
+        }
+        return details;
     }
 
     @Override

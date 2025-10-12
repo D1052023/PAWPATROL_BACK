@@ -27,7 +27,7 @@ public class AcademicPlanDTO {
     private Integer approvedCourses;
     private Double pendingCredits;
     private Integer pendingCourses;
-    private Double gpa;
+    private Double accumulativeAverage;
     private Double gradeAverage;
     private Integer semesterToTake;
     private Integer lastSemesterTaken;
