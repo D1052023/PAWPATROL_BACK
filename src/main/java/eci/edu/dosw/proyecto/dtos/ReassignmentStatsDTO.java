@@ -19,4 +19,6 @@ public class ReassignmentStatsDTO {
     private long pending;
     private long exceptionalRequested;
     private Double avgResolutionHours;
+
+    
 }

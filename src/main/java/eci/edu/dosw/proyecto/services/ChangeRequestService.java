@@ -1,7 +1,6 @@
 package eci.edu.dosw.proyecto.services;
 
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.enums.Faculty;
 
 import java.util.List;
 import java.util.UUID;

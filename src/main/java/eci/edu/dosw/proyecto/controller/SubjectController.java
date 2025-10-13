@@ -64,5 +64,17 @@ public class SubjectController {
         return ResponseEntity.ok(subjectService.partialUpdateSubject(subjectId, dto));
     }
 
+    @PostMapping("/{subjectId}/assign/{studentId}")
+    public ResponseEntity<SubjectDTO> assignStudentToSubject(
+            @PathVariable String subjectId,
+            @PathVariable int studentId) {
+        return ResponseEntity.ok(subjectService.assignStudentToSubject(subjectId, studentId));
+    }
 
+    @DeleteMapping("/{subjectId}/remove/{studentId}")
+    public ResponseEntity<SubjectDTO> removeStudentFromSubject(
+            @PathVariable String subjectId,
+            @PathVariable int studentId) {
+        return ResponseEntity.ok(subjectService.removeStudentFromSubject(subjectId, studentId));
+    }
 }

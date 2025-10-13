@@ -7,15 +7,21 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.SubjectService;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 import eci.edu.dosw.proyecto.models.Group;
+import eci.edu.dosw.proyecto.models.Student;
 import eci.edu.dosw.proyecto.models.Subject;
 import eci.edu.dosw.proyecto.models.Teacher;
 import eci.edu.dosw.proyecto.dtos.SubjectDTO;
 import eci.edu.dosw.proyecto.mappers.SubjectMapper;
 import eci.edu.dosw.proyecto.repositories.GroupRepository;
+import eci.edu.dosw.proyecto.repositories.StudentRepository;
 import eci.edu.dosw.proyecto.repositories.SubjectRepository;
 import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 
@@ -30,8 +36,14 @@ public class SubjectServiceImpl implements SubjectService {
     private final SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
     private final GroupRepository groupRepository;
+    private final StudentRepository studentRepository;
 
     private final SubjectMapper subjectMapper;
+
+    private final HistoryService historyService;
+
+    private final MessageExceptions message;
+    
 
     @Override
     public SubjectDTO createSubject(SubjectDTO dto) {
@@ -119,6 +131,63 @@ public class SubjectServiceImpl implements SubjectService {
 
         List<Subject> subjects = subjectRepository.findByTeacherId(teacherId);
         return subjectMapper.toDTOList(subjects);
+    }
+
+    @Override
+    public SubjectDTO assignStudentToSubject(String subjectId, int studentId) {
+        Subject subject = message.findSubjectOrThrow(subjectId);
+        Student student = message.findStudentOrThrow(studentId);
+
+        message.ensureCurriculumMatchesStudent(student, subject);
+
+        if (student.getEnrolledSubjects() != null && student.getEnrolledSubjects().contains(subjectId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El estudiante ya está inscrito en esta materia");
+        }
+
+        int totalCuposUsados = groupRepository.findBySubjectId(subjectId)
+                .stream()
+                .mapToInt(g -> g.getCurrentCapacity() != null ? g.getCurrentCapacity() : 0)
+                .sum();
+
+        if (totalCuposUsados >= subject.getMaximumCapacity()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La materia ya alcanzó su capacidad máxima");
+        }
+
+        if (student.getEnrolledSubjects() == null) {
+            student.setEnrolledSubjects(new ArrayList<>());
+        }
+        student.getEnrolledSubjects().add(subjectId);
+
+        studentRepository.save(student);
+
+        historyService.addHistoryEvent(UUID.randomUUID(), "SYSTEM", "STUDENT_ASSIGNED",
+                "Estudiante " + studentId + " inscrito en materia " + subjectId, "SYSTEM");
+
+        return subjectMapper.toDTO(subject);
+    }
+
+    @Override
+    public SubjectDTO removeStudentFromSubject(String subjectId, int studentId) {
+        Subject subject = message.findSubjectOrThrow(subjectId);
+        Student student = message.findStudentOrThrow(studentId);
+
+        if (student.getEnrolledSubjects() == null || !student.getEnrolledSubjects().contains(subjectId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El estudiante no está inscrito en esta materia");
+        }
+
+        student.getEnrolledSubjects().removeIf(sid -> sid.equals(subjectId));
+
+        if (student.getSchedule() != null) {
+            student.getSchedule().removeIf(se ->
+                    se.getSubject() != null && se.getSubject().equals(subjectId));
+        }
+
+        studentRepository.save(student);
+
+        historyService.addHistoryEvent(UUID.randomUUID(), "SYSTEM", "STUDENT_REMOVED",
+                "Estudiante " + studentId + " retirado de la materia " + subjectId, "SYSTEM");
+
+        return subjectMapper.toDTO(subject);
     }
 
 }
