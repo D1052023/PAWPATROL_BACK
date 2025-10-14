@@ -25,25 +25,25 @@ public class ReportsController {
 
     @Operation(summary = "Estadísticas por asignatura")
     @GetMapping("/subjects")
-    public ResponseEntity<List<ReassignmentStatsDTO>> bySubject() {
-        return ResponseEntity.ok(reportService.statsBySubject());
+    public List<ReassignmentStatsDTO> bySubject() {
+        return reportService.statsBySubject();
     }
 
     @Operation(summary = "Estadísticas por grupo")
     @GetMapping("/groups")
-    public ResponseEntity<List<ReassignmentStatsDTO>> byGroup() {
-        return ResponseEntity.ok(reportService.statsByGroup());
+    public List<ReassignmentStatsDTO> byGroup() {
+        return reportService.statsByGroup();
     }
 
     @Operation(summary = "Estadísticas por decanería")
     @GetMapping("/deaneries")
-    public ResponseEntity<List<ReassignmentStatsDTO>> byDeanery() {
-        return ResponseEntity.ok(reportService.statsByDeanery());
+    public List<ReassignmentStatsDTO> byDeanery() {
+        return reportService.statsByDeanery();
     }
 
     @Operation(summary = "Estadísticas globales")
     @GetMapping("/global")
-    public ResponseEntity<ReassignmentStatsDTO> global() {
-        return ResponseEntity.ok(reportService.statsGlobal());
+    public ReassignmentStatsDTO global() {
+        return reportService.statsGlobal();
     }
 }

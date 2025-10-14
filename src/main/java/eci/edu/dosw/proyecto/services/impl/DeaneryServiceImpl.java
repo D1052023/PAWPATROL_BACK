@@ -253,12 +253,6 @@ public class DeaneryServiceImpl implements DeaneryService {
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
         LocalDateTime now = LocalDateTime.now();
-        if (dates != null && dates.getStartDate() != null && dates.getEndDate() != null && (now.isBefore(dates.getStartDate()) || now.isAfter(dates.getEndDate()))) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "No se pueden gestionar solicitudes fuera del periodo académico habilitado");
-            }
-        
-
         message.ensureNowWithinDatesIfPresent(now, dates);
         message.ensureDeaneryFacultyMatches(deanery, request);
         message.ensureRequestPending(request);

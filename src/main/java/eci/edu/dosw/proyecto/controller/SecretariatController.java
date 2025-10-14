@@ -79,50 +79,47 @@ public class SecretariatController {
 
     @Operation(summary = "Responder solicitud")
     @PostMapping("/requests/{requestId}/respond")
-    public ResponseEntity<ChangeRequestDTO> respondRequestBySecretariat(@Parameter(description = "ID de la solicitud") @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision,
+    public ChangeRequestDTO respondRequestBySecretariat(@Parameter(description = "ID de la solicitud") @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision,
             @RequestParam(required = false) LocalDateTime startDate, @RequestParam(required = false) LocalDateTime endDate) {
         RequestDatesDTO dates = new RequestDatesDTO(startDate, endDate);
-        return ResponseEntity.ok(secretariatService.respondRequestBySecretariat(requestId, decision, dates));
+        return secretariatService.respondRequestBySecretariat(requestId, decision, dates);
     }
 
     @Operation(summary = "Responder solicitud (info consolidada)")
     @PostMapping("/requests/{requestId}/respondInfo")
-    public ResponseEntity<ChangeRequestDTO> respondRequestBySecretariat(@Parameter(description = "ID de la solicitud") @PathVariable UUID requestId, @RequestBody RespondRequestInfo body) {
-        return ResponseEntity.ok(secretariatService.respondRequestBySecretariat(requestId, body.getDecision(), body.getDates()));
+    public ChangeRequestDTO respondRequestBySecretariat(@Parameter(description = "ID de la solicitud") @PathVariable UUID requestId, @RequestBody RespondRequestInfo body) {
+        return secretariatService.respondRequestBySecretariat(requestId, body.getDecision(), body.getDates());
     }
 
     @Operation(summary = "Obtener solicitudes por facultad y estado")
     @GetMapping("/requests/faculty/{faculty}/status/{status}")
-    public ResponseEntity<List<ChangeRequestDTO>> getRequestsByFacultyAndStatus(@Parameter(description = "Facultad") @PathVariable Faculty faculty,
+    public List<ChangeRequestDTO> getRequestsByFacultyAndStatus(@Parameter(description = "Facultad") @PathVariable Faculty faculty,
             @Parameter(description = "Estado de la solicitud") @PathVariable RequestStatus status) {
-        List<ChangeRequestDTO> requests = secretariatService.getRequestsByFacultyAndStatus(faculty, status);
-        return ResponseEntity.ok(requests);
+        return secretariatService.getRequestsByFacultyAndStatus(faculty, status);
     }
 
     @Operation(summary = "Obtener solicitudes por facultad ordenadas por prioridad")
     @GetMapping("/requests/faculty/{faculty}/priority")
-    public ResponseEntity<List<ChangeRequestDTO>> getRequestsByFacultyOrderedByPriority(@Parameter(description = "Facultad") @PathVariable Faculty faculty) {
-        List<ChangeRequestDTO> requests = secretariatService.getRequestsByFacultyOrderedByPriority(faculty);
-        return ResponseEntity.ok(requests);
+    public List<ChangeRequestDTO> getRequestsByFacultyOrderedByPriority(@Parameter(description = "Facultad") @PathVariable Faculty faculty) {
+        return secretariatService.getRequestsByFacultyOrderedByPriority(faculty);
     }
 
     @Operation(summary = "Buscar solicitudes por filtros")
     @GetMapping("/requests/search")
-    public ResponseEntity<List<ChangeRequestDTO>> searchRequests(@RequestParam(required = false) Faculty faculty, @RequestParam(required = false) Integer priority) {
-        List<ChangeRequestDTO> requests = secretariatService.searchRequestsByFacultyAndOrPriority(faculty, priority);
-        return ResponseEntity.ok(requests);
+    public List<ChangeRequestDTO> searchRequests(@RequestParam(required = false) Faculty faculty, @RequestParam(required = false) Integer priority) {
+        return secretariatService.searchRequestsByFacultyAndOrPriority(faculty, priority);
     }
 
     @Operation(summary = "Listar todas las solicitudes ordenadas por prioridad")
     @GetMapping("/requests/priority")
-    public ResponseEntity<List<ChangeRequestDTO>> getAllOrderedByPriority() {
-        return ResponseEntity.ok(secretariatService.getAllRequestsOrderedByPriority());
+    public List<ChangeRequestDTO> getAllOrderedByPriority() {
+        return secretariatService.getAllRequestsOrderedByPriority();
     }
 
     @Operation(summary = "Listar solicitudes por prioridad específica")
     @GetMapping("/requests/priority/{priority}")
-    public ResponseEntity<List<ChangeRequestDTO>> getAllByPriority(@Parameter(description = "Prioridad") @PathVariable int priority) {
-        return ResponseEntity.ok(secretariatService.getAllRequestsByPriority(priority));
+    public List<ChangeRequestDTO> getAllByPriority(@Parameter(description = "Prioridad") @PathVariable int priority) {
+        return secretariatService.getAllRequestsByPriority(priority);
     }
 
     @Operation(summary = "Consultar historial de solicitud")

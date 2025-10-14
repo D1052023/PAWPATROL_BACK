@@ -80,20 +80,20 @@ public class GroupController {
 
     @GetMapping("/{groupId}/enrolled")
     @Operation(summary = "Obtener número de estudiantes inscritos")
-    public ResponseEntity<Integer> getEnrolledCount(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
-        return ResponseEntity.ok(groupService.getEnrolledCount(groupId));
+    public Integer getEnrolledCount(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
+        return groupService.getEnrolledCount(groupId);
     }
 
     @PutMapping("/{groupId}/AssignTeacher/{teacherId}")
     @Operation(summary = "Asignar profesor a grupo")
-    public ResponseEntity<GroupDTO> assignTeacherToGroup(@Parameter(description = "ID del grupo") @PathVariable String groupId, @Parameter(description = "ID del profesor") @PathVariable int teacherId) {
-        return ResponseEntity.ok(groupService.assignTeacherToGroup(groupId, teacherId));
+    public GroupDTO assignTeacherToGroup(@Parameter(description = "ID del grupo") @PathVariable String groupId, @Parameter(description = "ID del profesor") @PathVariable int teacherId) {
+        return groupService.assignTeacherToGroup(groupId, teacherId);
     }
 
     @PutMapping("/{groupId}/RemoveTeacher")
     @Operation(summary = "Remover profesor de grupo")
-    public ResponseEntity<GroupDTO> removeTeacherFromGroup(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
-        return ResponseEntity.ok(groupService.removeTeacherFromGroup(groupId));
+    public GroupDTO removeTeacherFromGroup(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
+        return groupService.removeTeacherFromGroup(groupId);
     }
 
     @GetMapping("/teacher/{teacherId}")
@@ -110,16 +110,14 @@ public class GroupController {
 
     @PostMapping("/{groupId}/students/{studentId}")
     @Operation(summary = "Asignar estudiante a grupo")
-    public ResponseEntity<Void> assignStudentToGroup(@Parameter(description = "ID del grupo") @PathVariable String groupId, @Parameter(description = "ID del estudiante") @PathVariable int studentId) {
-        groupService.assignStudentToGroup(groupId, studentId);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public GroupDTO assignStudentToGroup(@PathVariable String groupId, @PathVariable int studentId) {
+        return groupService.assignStudentToGroup(groupId, studentId);
     }
 
     @DeleteMapping("/{groupId}/students/{studentId}")
     @Operation(summary = "Remover estudiante de grupo")
-    public ResponseEntity<Void> removeStudentFromGroup(@Parameter(description = "ID del grupo") @PathVariable String groupId, @Parameter(description = "ID del estudiante") @PathVariable int studentId) {
+    public void removeStudentFromGroup(@PathVariable String groupId, @PathVariable int studentId) {
         groupService.removeStudentFromGroup(groupId, studentId);
-        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/waitlist")
@@ -130,34 +128,33 @@ public class GroupController {
 
     @GetMapping("/{groupId}/waitlist")
     @Operation(summary = "Obtener lista de espera detallada")
-    public ResponseEntity<List<StudentDTO>> getWaitlistDetails(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
-        return ResponseEntity.ok(groupService.getWaitlistDetails(groupId));
+    public List<StudentDTO> getWaitlistDetails(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
+        return groupService.getWaitlistDetails(groupId);
     }
 
     @GetMapping("/{groupId}/schedule")
     @Operation(summary = "Obtener horario de grupo")
-    public ResponseEntity<List<ScheduleEntryDTO>> getSchedule(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
-        return ResponseEntity.ok(groupService.getSchedule(groupId));
+    public List<ScheduleEntryDTO> getSchedule(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
+        return groupService.getSchedule(groupId);
     }
 
     @PostMapping("/{groupId}/Addschedule")
     @Operation(summary = "Agregar horario")
-    public ResponseEntity<ScheduleEntryDTO> addScheduleEntry(@Parameter(description = "ID del grupo") @PathVariable String groupId, @RequestBody ScheduleEntryDTO entry) {
-        ScheduleEntryDTO created = groupService.addScheduleEntry(groupId, entry);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    public ScheduleEntryDTO addScheduleEntry(@Parameter(description = "ID del grupo") @PathVariable String groupId, @RequestBody ScheduleEntryDTO entry) {
+        return groupService.addScheduleEntry(groupId, entry);
     }
 
     @PutMapping("/{groupId}/schedule")
     @Operation(summary = "Actualizar horario")
-    public ResponseEntity<List<ScheduleEntryDTO>> updateScheduleGlobal(@Parameter(description = "ID del grupo") @PathVariable String groupId, @RequestBody List<ScheduleEntryDTO> entries) {
-        return ResponseEntity.ok(groupService.updateScheduleGlobal(groupId, entries));
+    public List<ScheduleEntryDTO> updateScheduleGlobal(@Parameter(description = "ID del grupo") @PathVariable String groupId, @RequestBody List<ScheduleEntryDTO> entries) {
+        return groupService.updateScheduleGlobal(groupId, entries);
     }
 
     @PutMapping("/{groupId}/schedule/day/{day}")
     @Operation(summary = "Actualizar horario por día")
-    public ResponseEntity<List<ScheduleEntryDTO>> updateScheduleForDay(@Parameter(description = "ID del grupo") @PathVariable String groupId,
+    public List<ScheduleEntryDTO> updateScheduleForDay(@Parameter(description = "ID del grupo") @PathVariable String groupId,
             @Parameter(description = "Día específico a actualizar") @PathVariable String day, @RequestBody List<ScheduleEntryDTO> entries) {
-        return ResponseEntity.ok(groupService.updateScheduleForDay(groupId, day, entries));
+        return groupService.updateScheduleForDay(groupId, day, entries);
     }
 
     @DeleteMapping("/{groupId}/schedule")

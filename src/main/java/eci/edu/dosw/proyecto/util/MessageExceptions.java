@@ -148,9 +148,10 @@ public class MessageExceptions {
     }
 
     public void ensureNowWithinDates(LocalDateTime now, RequestDatesDTO dates) {
-        if (now.isBefore(dates.getStartDate()) || now.isAfter(dates.getEndDate())) {
+        if (dates != null && dates.getStartDate() != null && dates.getEndDate() != null && (now.isBefore(dates.getStartDate()) || now.isAfter(dates.getEndDate()))) {
             throw forbidden(OUTSIDE_PERIOD);
         }
+
     }
 
     public void ensureDeaneryFacultyMatches(Deanery deanery, ChangeRequest request) {

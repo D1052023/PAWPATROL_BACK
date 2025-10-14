@@ -87,7 +87,7 @@ public class StudentController {
 
     @Operation(summary = "Obtener plan académico de un estudiante")
     @GetMapping("/{studentId}/academic-plan")
-    public ResponseEntity<AcademicPlanDTO> getAcademicPlan(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId) {
-        return ResponseEntity.ok(studentService.getAcademicPlan(studentId));
+    public AcademicPlanDTO getAcademicPlan(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId) {
+        return studentService.getAcademicPlan(studentId);
     }
 }

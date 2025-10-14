@@ -44,8 +44,8 @@ public class ChangeRequestController {
 
     @Operation(summary = "Obtener solicitudes excepcionales de un estudiante")
     @GetMapping("/students/{studentId}/exceptionalRequest")
-    public ResponseEntity<List<ChangeRequestDTO>> getExceptionalByStudent(@PathVariable Integer studentId) {
-        return ResponseEntity.ok(changeRequestService.getExceptionalRequestsByStudent(studentId));
+    public List<ChangeRequestDTO> getExceptionalByStudent(@PathVariable Integer studentId) {
+        return changeRequestService.getExceptionalRequestsByStudent(studentId);
     }
 
     @Operation(summary = "Filtrar solicitudes por estado")
@@ -76,9 +76,9 @@ public class ChangeRequestController {
 
     @Operation(summary = "Solicitar revisión excepcional")
     @PostMapping("/{requestId}/students/{studentId}/requestExceptional")
-    public ResponseEntity<ChangeRequestDTO> requestExceptional(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, 
+    public ChangeRequestDTO requestExceptional(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId,
             @Parameter(description = "id de la solicitud") @PathVariable UUID requestId, @Parameter(description = "Razón de la solicitud") @RequestParam(required = false) String reason) {
-        return ResponseEntity.ok(changeRequestService.requestExceptionalReview(studentId, requestId, reason));
+        return changeRequestService.requestExceptionalReview(studentId, requestId, reason);
     }
 
     @Operation(summary = "Consultar una solicitud específica")

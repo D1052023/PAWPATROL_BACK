@@ -34,20 +34,20 @@ public class DeaneryController {
 
     @Operation(summary = "Crear decano/a")
     @PostMapping
-    public ResponseEntity<DeaneryDTO> createDeanery(@RequestBody DeaneryDTO deaneryDTO) {
-        return new ResponseEntity<>(deaneryService.createDeanery(deaneryDTO), HttpStatus.CREATED);
+    public DeaneryDTO createDeanery(@RequestBody DeaneryDTO deaneryDTO) {
+        return deaneryService.createDeanery(deaneryDTO);
     }
 
     @Operation(summary = "Listar todos los decanos/as")
     @GetMapping
-    public ResponseEntity<List<DeaneryDTO>> getAllDeaneries() {
-        return ResponseEntity.ok(deaneryService.getAllDeaneries());
+    public List<DeaneryDTO> getAllDeaneries() {
+        return deaneryService.getAllDeaneries();
     }
 
     @Operation(summary = "Obtener decano/a por ID")
     @GetMapping("/{deaneryId}")
-    public ResponseEntity<DeaneryDTO> getDeaneryById(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId) {
-        return ResponseEntity.ok(deaneryService.getDeaneryById(deaneryId));
+    public DeaneryDTO getDeaneryById(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId) {
+        return deaneryService.getDeaneryById(deaneryId);
     }
 
     @Operation(summary = "Obtener decano/a por facultad")
@@ -58,29 +58,28 @@ public class DeaneryController {
 
     @Operation(summary = "Actualizar decano/a")
     @PutMapping("/{deaneryId}")
-    public ResponseEntity<DeaneryDTO> updateDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId, @RequestBody DeaneryDTO deaneryDTO) {
-        return ResponseEntity.ok(deaneryService.updateDeanery(deaneryId, deaneryDTO));
+    public DeaneryDTO updateDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId, @RequestBody DeaneryDTO deaneryDTO) {
+        return deaneryService.updateDeanery(deaneryId, deaneryDTO);
     }
 
     @Operation(summary = "Eliminar decano/a")
     @DeleteMapping("/{deaneryId}")
-    public ResponseEntity<Void> deleteDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId) {
+    public void deleteDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId) {
         deaneryService.deleteDeanery(deaneryId);
-        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Responder solicitud")
     @PostMapping("/{deaneryId}/requests/{requestId}/respond")
-    public ResponseEntity<ChangeRequestDTO> respondRequestByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
+    public ChangeRequestDTO respondRequestByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
             @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision, @RequestBody RequestDatesDTO dates) {
-        return ResponseEntity.ok(deaneryService.respondRequestByDeanery(deaneryId, requestId, decision, dates));
+        return deaneryService.respondRequestByDeanery(deaneryId, requestId, decision, dates);
     }
 
     @Operation(summary = "Responder solicitud (info consolidada)")
     @PostMapping("/{deaneryId}/requests/{requestId}/respondInfo")
-    public ResponseEntity<ChangeRequestDTO> respondRequestByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
+    public ChangeRequestDTO respondRequestByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
             @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RespondRequestInfo body) {
-        return ResponseEntity.ok(deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates()));
+        return deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates());
     }
 
     @Operation(summary = "Actualizar solicitud como decano/a")
@@ -101,66 +100,67 @@ public class DeaneryController {
 
     @Operation(summary = "Solicitudes por facultad y estado")
     @GetMapping("/requests/faculty/{faculty}/status/{status}")
-    public ResponseEntity<List<ChangeRequestDTO>> getRequestsByFacultyAndStatus(@Parameter(description = "Facultad a filtrar") @PathVariable Faculty faculty,
+    public List<ChangeRequestDTO>  getRequestsByFacultyAndStatus(@Parameter(description = "Facultad a filtrar") @PathVariable Faculty faculty,
             @Parameter(description = "Estado de la solicitud") @PathVariable RequestStatus status) {
-        return ResponseEntity.ok(deaneryService.getRequestsByFacultyAndStatus(faculty, status));
+        return deaneryService.getRequestsByFacultyAndStatus(faculty, status);
     }
 
     @Operation(summary = "Solicitudes por facultad y prioridad")
     @GetMapping("/requests/faculty/{faculty}/priority/{priority}")
-    public ResponseEntity<List<ChangeRequestDTO>> getRequestsByFacultyAndPriority(@Parameter(description = "Facultad a filtrar") @PathVariable Faculty faculty,
+    public  List<ChangeRequestDTO>  getRequestsByFacultyAndPriority(@Parameter(description = "Facultad a filtrar") @PathVariable Faculty faculty,
             @Parameter(description = "Nivel de prioridad") @PathVariable int priority) {
-        return ResponseEntity.ok(deaneryService.getRequestsByFacultyAndPriority(faculty, priority));
+        return deaneryService.getRequestsByFacultyAndPriority(faculty, priority);
     }
 
     @Operation(summary = "Solicitudes de facultad ordenadas por prioridad")
     @GetMapping("/requests/faculty/{faculty}/priority")
-    public ResponseEntity<List<ChangeRequestDTO>> getRequestsByFacultyOrderedByPriority(@Parameter(description = "Facultad a consultar") @PathVariable Faculty faculty) {
-        return ResponseEntity.ok(deaneryService.getRequestsByFacultyOrderedByPriority(faculty));
+    public List<ChangeRequestDTO> getRequestsByFacultyOrderedByPriority(@Parameter(description = "Facultad a consultar") @PathVariable Faculty faculty) {
+        return deaneryService.getRequestsByFacultyOrderedByPriority(faculty);
     }
 
     @Operation(summary = "Buscar solicitudes por filtros")
     @GetMapping("/requests/search")
-    public ResponseEntity<List<ChangeRequestDTO>> searchRequests(@RequestParam(required = false) Faculty faculty, @RequestParam(required = false) Integer priority) {
-        return ResponseEntity.ok(deaneryService.searchRequestsByFacultyAndOrPriority(faculty, priority));
+    public List<ChangeRequestDTO>  searchRequests(@RequestParam(required = false) Faculty faculty, @RequestParam(required = false) Integer priority) {
+        return deaneryService.searchRequestsByFacultyAndOrPriority(faculty, priority);
     }
 
     @Operation(summary = "Listar todas las solicitudes ordenadas por prioridad")
     @GetMapping("/requests/priority")
-    public ResponseEntity<List<ChangeRequestDTO>> getAllOrderedByPriority() {
-        return ResponseEntity.ok(deaneryService.getAllRequestsOrderedByPriority());
+    public List<ChangeRequestDTO> getAllOrderedByPriority() {
+        return deaneryService.getAllRequestsOrderedByPriority();
     }
+
 
     @Operation(summary = "Listar solicitudes por prioridad específica")
     @GetMapping("/requests/priority/{priority}")
-    public ResponseEntity<List<ChangeRequestDTO>> getAllByPriority(@PathVariable int priority) {
-        return ResponseEntity.ok(deaneryService.getAllRequestsByPriority(priority));
+    public List<ChangeRequestDTO> getAllByPriority(@PathVariable int priority) {
+        return deaneryService.getAllRequestsByPriority(priority);
     }
 
     @Operation(summary = "Solicitudes excepcionales de un decano/a")
     @GetMapping("/{deaneryId}/requests/exceptional")
-    public ResponseEntity<List<ChangeRequestDTO>> getExceptionalByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId) {
-        return ResponseEntity.ok(changeRequestService.getExceptionalRequestsByDeanery(deaneryId));
+    public List<ChangeRequestDTO> getExceptionalByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId) {
+        return changeRequestService.getExceptionalRequestsByDeanery(deaneryId);
     }
 
     @Operation(summary = "Aprobar o rechazar solicitud excepcional")
     @PostMapping("/{deaneryId}/requests/{requestId}")
-    public ResponseEntity<ChangeRequestDTO> approveExceptional(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
+    public ChangeRequestDTO approveExceptional(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
             @Parameter(description = "ID de la solicitud excepcional") @PathVariable UUID requestId, @RequestParam boolean approve, @RequestParam(required = false) String observations) {
-        return ResponseEntity.ok(changeRequestService.approveExceptionalRequest(deaneryId, requestId, approve, observations));
+        return changeRequestService.approveExceptionalRequest(deaneryId, requestId, approve, observations);
     }
 
     @Operation(summary = "Solicitudes excepcionales de un estudiante")
     @GetMapping("/{deaneryId}/students/{studentId}/requests/exceptional")
-    public ResponseEntity<List<ChangeRequestDTO>> getExceptionalRequestsForStudentByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
+    public List<ChangeRequestDTO>  getExceptionalRequestsForStudentByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
             @Parameter(description = "ID del estudiante") @PathVariable Integer studentId) {
-        return ResponseEntity.ok(changeRequestService.getExceptionalRequestsByStudentForDeanery(deaneryId, studentId));
+        return changeRequestService.getExceptionalRequestsByStudentForDeanery(deaneryId, studentId);
     }
 
     @Operation(summary = "Listar todas las solicitudes excepcionales")
     @GetMapping("/requests/exceptional")
-    public ResponseEntity<List<ChangeRequestDTO>> getAllExceptionalRequests() {
-        return ResponseEntity.ok(changeRequestService.getAllExceptionalRequests());
+    public List<ChangeRequestDTO> getAllExceptionalRequests() {
+        return changeRequestService.getAllExceptionalRequests();
     }
 
     @Operation(summary = "Consultar información de estudiante")

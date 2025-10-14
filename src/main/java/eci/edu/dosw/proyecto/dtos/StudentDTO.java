@@ -25,4 +25,5 @@ public class StudentDTO {
     private List<ScheduleEntryDTO> schedule;
     private List<ChangeRequestDTO> requests;
     private List<String> enrolledSubjects;
+    private List<String> approvedSubjects;
 }

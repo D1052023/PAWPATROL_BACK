@@ -1,6 +1,7 @@
 package eci.edu.dosw.proyecto.dtos;
 
 import eci.edu.dosw.proyecto.enums.Curriculum;
+import eci.edu.dosw.proyecto.enums.Faculty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,8 +20,7 @@ public class AcademicPlanDTO {
     private String documentId;
     private String email;
     private Curriculum curriculum;
-    private String planCode;
-    private String programName;
+    private Faculty programName;
     private Double creditsPlan;
     private Integer totalCoursesInPlan;
     private Double approvedCredits;
