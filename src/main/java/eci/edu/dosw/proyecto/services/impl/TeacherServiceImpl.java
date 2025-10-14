@@ -2,7 +2,6 @@ package eci.edu.dosw.proyecto.services.impl;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,6 +15,9 @@ import eci.edu.dosw.proyecto.mappers.TeacherMapper;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Clase servicio que implementa la interfaz y maneja la lógica de los profesores.
+ */
 @Service
 @RequiredArgsConstructor
 public class TeacherServiceImpl implements TeacherService {
@@ -35,7 +37,7 @@ public class TeacherServiceImpl implements TeacherService {
         return teacherRepository.findAll()
                 .stream()
                 .map(teacherMapper::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

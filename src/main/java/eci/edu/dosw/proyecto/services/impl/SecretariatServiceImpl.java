@@ -1,5 +1,13 @@
 package eci.edu.dosw.proyecto.services.impl;
 
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.dtos.RequestDatesDTO;
 import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
@@ -18,14 +26,7 @@ import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.SecretariatService;
 import eci.edu.dosw.proyecto.util.MessageExceptions;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Clase que implementa la interfaz y maneja la lógica de secretaria académica.

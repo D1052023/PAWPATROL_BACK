@@ -7,7 +7,7 @@ import java.util.UUID;
 import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
 
 /**
- * Intefaz para el historial de las solicitudes realizadas
+ * Interfaz para el repositorio del historial de solicitudes.
  */
 @Repository
 public interface ChangeRequestHistoryRepository extends MongoRepository<ChangeRequestHistory, String> {

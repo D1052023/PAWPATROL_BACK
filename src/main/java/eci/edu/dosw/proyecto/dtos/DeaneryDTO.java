@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Clase DTO para la información de un Decan@
+ * Clase DTO para la información de un Decan@.
  */
 @Data
 @NoArgsConstructor

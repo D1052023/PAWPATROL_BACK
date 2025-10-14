@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Interfaz que mappea los DTO y Entity de los estudiantes.
  */
-@Mapper(componentModel = "spring", uses = {ScheduleEntryMapper.class, ChangeRequestMapper.class})
+@Mapper(componentModel = "spring")
 public interface StudentMapper {
 
     @Mapping(target = "schedule", source = "schedule")

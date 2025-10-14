@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Interfaz que maneja los metodos que va a imlementar solicitudes de cambio.
+ * Interfaz que maneja los métodos que va a imlementar solicitudes de cambio.
  */
 public interface ChangeRequestService {
 

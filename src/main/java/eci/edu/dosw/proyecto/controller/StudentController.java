@@ -1,72 +1,76 @@
 package eci.edu.dosw.proyecto.controller;
 
-import eci.edu.dosw.proyecto.dtos.AcademicPlanDTO;
-import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.StudentDTO;
-import eci.edu.dosw.proyecto.enums.RequestStatus;
-import eci.edu.dosw.proyecto.services.ChangeRequestService;
-import eci.edu.dosw.proyecto.services.StudentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+
 import jakarta.validation.Valid;
+
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
+
+import eci.edu.dosw.proyecto.dtos.AcademicPlanDTO;
+import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
+import eci.edu.dosw.proyecto.dtos.StudentDTO;
+import eci.edu.dosw.proyecto.enums.RequestStatus;
+import eci.edu.dosw.proyecto.services.StudentService;
 
 /**
- * Clase controlador para manejar el CRUD de estudaintes y sus funcionalidades.
+ * Clase controlador para manejar el CRUD de estudiantes y sus funcionalidades.
  */
 @RestController
 @RequestMapping("/students")
+@RequiredArgsConstructor
 public class StudentController {
 
     private final StudentService studentService;
 
-    public StudentController(StudentService studentService) {
-        this.studentService = studentService;
+    @Operation(summary = "Crear un nuevo estudiante")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public StudentDTO createStudent(@Parameter(description = "Datos del estudiante a crear") @Valid @RequestBody StudentDTO studentDTO) {
+        return studentService.createStudent(studentDTO);
     }
 
+    @Operation(summary = "Listar todos los estudiantes")
     @GetMapping
     public List<StudentDTO> getAllStudents() {
         return studentService.getAllStudents();
     }
 
+    @Operation(summary = "Obtener estudiante por ID")
     @GetMapping("/{id}")
-    public StudentDTO getStudentById(@PathVariable Integer id) {
+    public StudentDTO getStudentById(@Parameter(description = "ID del estudiante") @PathVariable Integer id) {
         return studentService.getStudentById(id);
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public StudentDTO createStudent(@Valid @RequestBody StudentDTO studentDTO) {
-        return studentService.createStudent(studentDTO);
-    }
-
+    @Operation(summary = "Actualizar estudiante completamente")
     @PutMapping("/{id}")
-    public StudentDTO updateStudent(@PathVariable Integer id, @Valid @RequestBody StudentDTO updatedStudentDTO) {
+    public StudentDTO updateStudent(@Parameter(description = "ID del estudiante a actualizar") @PathVariable Integer id,
+            @Parameter(description = "Datos actualizados del estudiante") @Valid @RequestBody StudentDTO updatedStudentDTO) {
         return studentService.updateStudent(id, updatedStudentDTO);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteStudent(@PathVariable Integer id) {
-        studentService.deleteStudent(id);
-    }
-
+    @Operation(summary = "Actualizar parcialmente estudiante")
     @PatchMapping("/{id}")
-    public StudentDTO partialUpdateStudent(@PathVariable Integer id, @RequestBody StudentDTO studentDTO) {
+    public StudentDTO partialUpdateStudent(@Parameter(description = "ID del estudiante a actualizar parcialmente") @PathVariable Integer id,
+            @Parameter(description = "Datos a actualizar") @RequestBody StudentDTO studentDTO) {
         return studentService.partialUpdateStudent(id, studentDTO);
     }
-
+    @Operation(summary = "Obtener todas las solicitudes de un estudiante")
     @GetMapping("/{id}/requests")
-    public List<ChangeRequestDTO> getStudentRequests(@PathVariable int id) {
+    public List<ChangeRequestDTO> getStudentRequests(@Parameter(description = "ID del estudiante") @PathVariable int id) {
         return studentService.getStudentRequests(id);
     }
 
+    @Operation(summary = "Obtener solicitudes de un estudiante filtradas por estado")
     @GetMapping("/{id}/requestsStatus")
-    public List<ChangeRequestDTO> getStudentRequestsByStatus(@PathVariable int id, @RequestParam(required = false) RequestStatus status) {
+    public List<ChangeRequestDTO> getStudentRequestsByStatus(@Parameter(description = "ID del estudiante") @PathVariable int id,
+            @Parameter(description = "Estado de las solicitudes") @RequestParam(required = false) RequestStatus status) {
         if (status != null) {
             return studentService.getStudentRequestsByStatus(id, status);
         } else {
@@ -74,8 +78,16 @@ public class StudentController {
         }
     }
 
+    @Operation(summary = "Eliminar estudiante")
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteStudent(@Parameter(description = "ID del estudiante a eliminar") @PathVariable Integer id) {
+        studentService.deleteStudent(id);
+    }
+
+    @Operation(summary = "Obtener plan académico de un estudiante")
     @GetMapping("/{studentId}/academic-plan")
-    public ResponseEntity<AcademicPlanDTO> getAcademicPlan(@PathVariable Integer studentId) {
+    public ResponseEntity<AcademicPlanDTO> getAcademicPlan(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId) {
         return ResponseEntity.ok(studentService.getAcademicPlan(studentId));
     }
 }

@@ -1,18 +1,5 @@
 package eci.edu.dosw.proyecto.services.impl;
 
-import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
-import eci.edu.dosw.proyecto.enums.Curriculum;
-import eci.edu.dosw.proyecto.enums.Faculty;
-import eci.edu.dosw.proyecto.enums.RequestStatus;
-import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
-import eci.edu.dosw.proyecto.models.*;
-import eci.edu.dosw.proyecto.repositories.*;
-import eci.edu.dosw.proyecto.services.ChangeRequestService;
-
-import eci.edu.dosw.proyecto.services.DeaneryService;
-import eci.edu.dosw.proyecto.services.HistoryService;
-import eci.edu.dosw.proyecto.util.MessageExceptions;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -22,10 +9,23 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
+
+import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
+import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
+import eci.edu.dosw.proyecto.enums.Curriculum;
+import eci.edu.dosw.proyecto.enums.Faculty;
+import eci.edu.dosw.proyecto.enums.RequestStatus;
+import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
+import eci.edu.dosw.proyecto.models.*;
+import eci.edu.dosw.proyecto.repositories.*;
+import eci.edu.dosw.proyecto.services.ChangeRequestService;
+import eci.edu.dosw.proyecto.services.DeaneryService;
+import eci.edu.dosw.proyecto.services.HistoryService;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 
 /**
  * Clase servicio que implementa la interfaz y maneja la lógica de la solicitud de cambio.
@@ -36,10 +36,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
     private final ChangeRequestRepository changeRequestRepository;
     private final StudentRepository studentRepository;
-    private final SubjectRepository subjectRepository;
     private final GroupRepository groupRepository;
     private final ChangeRequestMapper changeRequestMapper;
-    private final SecretariatRepository secretariatRepository;
     private final HistoryService historyService;
     private final DeaneryRepository deaneryRepository;
     private final DeaneryService deaneryService;
@@ -49,8 +47,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     public ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestDTO requestDTO) {
         Student student = message.findStudentOrThrow(studentId);
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-
-        Secretariat sec = message.findActiveSecretariatOrThrow(now);
 
         Subject currentSubject = message.findSubjectOrThrow(requestDTO.getCurrentSubject());
         Subject targetSubject = message.findSubjectOrThrow(requestDTO.getTargetSubject());
@@ -127,11 +123,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         return changeRequestMapper.toDTO(request);
     }
 
-    /**
-     * Pensum con la facultad correspodiente
-     * @param curriculum
-     * @return
-     */
     private Faculty mapCurriculumToFaculty(Curriculum curriculum) {
         return switch (curriculum) {
             case ISIS_14, ISIS_15 -> Faculty.INGENIERIA_DE_SISTEMAS;
@@ -233,13 +224,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 "Solicitud eliminada por estudiante", "STUDENT:" + studentId);
     }
 
-
-    /**
-     * Dias habiles para solicitudes
-     * @param start
-     * @param businessDays
-     * @return
-     */
     private LocalDateTime addBusinessDays(LocalDateTime start, int businessDays) {
         LocalDateTime d = start;
         int added = 0;
@@ -255,8 +239,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
     @Override
     public ChangeRequestDTO requestExceptionalReview(Integer studentId, UUID requestId, String reason) {
-        Student student = message.findStudentOrThrow(studentId);
-
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
         message.ensureStudentOwnsRequest(request, studentId);
 
@@ -349,6 +331,4 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
         return filtered.stream().map(changeRequestMapper::toDTO).toList();
     }
-
-
 }

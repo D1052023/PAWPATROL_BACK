@@ -9,6 +9,9 @@ import eci.edu.dosw.proyecto.enums.Role;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+/**
+ * Clase que maneja la información de los profesores.
+ */
 @Document(collection = "professors")
 @Data
 @EqualsAndHashCode(callSuper = true)

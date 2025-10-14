@@ -1,22 +1,13 @@
 package eci.edu.dosw.proyecto.services.impl;
 
-import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
-import eci.edu.dosw.proyecto.dtos.StudentDTO;
-import eci.edu.dosw.proyecto.models.Group;
-import eci.edu.dosw.proyecto.models.ScheduleEntry;
-import eci.edu.dosw.proyecto.models.Student;
-import eci.edu.dosw.proyecto.models.*;
-import eci.edu.dosw.proyecto.repositories.StudentRepository;
-import eci.edu.dosw.proyecto.services.HistoryService;
-import eci.edu.dosw.proyecto.services.StudentService;
-import eci.edu.dosw.proyecto.util.MessageExceptions;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.query.Query;
+
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +19,16 @@ import eci.edu.dosw.proyecto.repositories.GroupRepository;
 import eci.edu.dosw.proyecto.dtos.GroupDTO;
 import eci.edu.dosw.proyecto.mappers.GroupMapper;
 import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
+import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
+import eci.edu.dosw.proyecto.dtos.StudentDTO;
+import eci.edu.dosw.proyecto.models.Group;
+import eci.edu.dosw.proyecto.models.ScheduleEntry;
+import eci.edu.dosw.proyecto.models.Student;
+import eci.edu.dosw.proyecto.models.*;
+import eci.edu.dosw.proyecto.repositories.StudentRepository;
+import eci.edu.dosw.proyecto.services.HistoryService;
+import eci.edu.dosw.proyecto.services.StudentService;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 
 @Service
 @RequiredArgsConstructor

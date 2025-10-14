@@ -21,12 +21,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class Student extends User {
 
-    private String name;
-    private String email;
-    private String documentId;
     private Curriculum curriculum;
-    private String planCode;
-    private String programName;
     private Career career;
     private int semester;
     private AcademicTrafficLight academicTrafficLight = AcademicTrafficLight.GREEN;

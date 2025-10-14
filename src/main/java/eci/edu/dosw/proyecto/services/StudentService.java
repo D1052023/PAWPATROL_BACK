@@ -1,13 +1,13 @@
 package eci.edu.dosw.proyecto.services;
 
 
+import java.util.List;
+
 import eci.edu.dosw.proyecto.dtos.AcademicPlanDTO;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.models.Student;
-
-import java.util.List;
 
 /**
  * Interfaz que maneja los métodos para implementar en StudentServiceImpl.
@@ -23,5 +23,6 @@ public interface StudentService {
     List<ChangeRequestDTO> getStudentRequests(int studentId);
     List<ChangeRequestDTO> getStudentRequestsByStatus(int studentId, RequestStatus status);
     StudentDTO getStudentSchedule(int studentId, int semester);
+    Student saveStudent(Student student);
     AcademicPlanDTO getAcademicPlan(Integer studentId);
 }

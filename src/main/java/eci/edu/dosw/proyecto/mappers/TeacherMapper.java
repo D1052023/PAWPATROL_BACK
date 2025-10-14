@@ -2,14 +2,14 @@ package eci.edu.dosw.proyecto.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 import eci.edu.dosw.proyecto.models.Teacher;
 import eci.edu.dosw.proyecto.dtos.TeacherDTO;
 
+/**
+ * Interfaz que mapea el DTO y Entity de profesores.
+ */
 @Mapper(componentModel = "spring")
-public interface TeacherMapper {
-
-    TeacherMapper INSTANCE = Mappers.getMapper(TeacherMapper.class);
+public interface TeacherMapper { 
 
     TeacherDTO toDTO(Teacher teacher);
 

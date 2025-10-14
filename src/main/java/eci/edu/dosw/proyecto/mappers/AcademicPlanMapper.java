@@ -5,7 +5,7 @@ import eci.edu.dosw.proyecto.models.Student;
 import org.mapstruct.Mapper;
 
 /**
- * Mapper del plan de avance de un estudiante
+ * Interfaz que mapea el DTO del plan académico.
  */
 @Mapper(componentModel = "spring")
 public interface AcademicPlanMapper {

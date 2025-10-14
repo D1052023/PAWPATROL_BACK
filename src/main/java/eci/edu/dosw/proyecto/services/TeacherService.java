@@ -5,6 +5,9 @@ import java.util.Optional;
 
 import eci.edu.dosw.proyecto.dtos.TeacherDTO;
 
+/**
+ * Interfaz que maneja los métodos para implementar en TeacherServiceImpl.
+ */
 public interface TeacherService {
 
     TeacherDTO getTeacherById(int id);

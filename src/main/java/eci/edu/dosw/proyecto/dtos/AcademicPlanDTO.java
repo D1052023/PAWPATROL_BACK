@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * Avance del plan academico y progreso del estudiante
+ * Clase DTO para el avance del plan academico y progreso del estudiante.
  */
 @Data
 @NoArgsConstructor

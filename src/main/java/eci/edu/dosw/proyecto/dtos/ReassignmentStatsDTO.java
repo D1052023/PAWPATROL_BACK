@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO para las estadisticas de reasignacion
+ * Clase DTO para las estadísticas de reasignación.
  */
 @Data
 @NoArgsConstructor

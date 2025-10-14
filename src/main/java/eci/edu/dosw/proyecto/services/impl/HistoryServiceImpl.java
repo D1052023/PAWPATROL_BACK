@@ -11,7 +11,7 @@ import java.util.UUID;
 
 
 /**
- * Clase servicio que implementa la intefaz del historial para consultar a detalle el proceso de solicitud
+ * Clase servicio que implementa la intefaz del historial para consultar a detalle el proceso de solicitud.
  */
 @Service
 @RequiredArgsConstructor

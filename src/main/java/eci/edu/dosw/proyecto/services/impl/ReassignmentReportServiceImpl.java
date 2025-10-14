@@ -1,16 +1,19 @@
 package eci.edu.dosw.proyecto.services.impl;
 
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import eci.edu.dosw.proyecto.dtos.ReassignmentStatsDTO;
 import eci.edu.dosw.proyecto.models.ChangeRequest;
 import eci.edu.dosw.proyecto.repositories.ChangeRequestRepository;
 import eci.edu.dosw.proyecto.services.ReassignmentReportService;
-import eci.edu.dosw.proyecto.util.MessageExceptions;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,11 +29,10 @@ public class ReassignmentReportServiceImpl implements ReassignmentReportService 
         long exceptional = group.stream().filter(cr -> Boolean.TRUE.equals(cr.isExceptional())).count();
 
         List<Long> hours = group.stream()
-                .filter(cr -> cr.getCreatedAt() != null && cr.getUpdatedAt() != null && cr.getStatus() != null && cr.getStatus().name().equals("PENDING") == false)
+                .filter(cr -> cr.getCreatedAt() != null && cr.getUpdatedAt() != null && cr.getStatus() != null && !cr.getStatus().name().equals("PENDING"))
                 .map(cr -> {
                     try {
-                        long h = Duration.between(cr.getCreatedAt(), cr.getUpdatedAt()).toMinutes();
-                        return h; // minutos
+                        return Duration.between(cr.getCreatedAt(), cr.getUpdatedAt()).toMinutes(); // minutos
                     } catch (Exception ex) {
                         return null;
                     }
@@ -76,9 +78,7 @@ public class ReassignmentReportServiceImpl implements ReassignmentReportService 
     public List<ReassignmentStatsDTO> statsByDeanery() {
         List<ChangeRequest> all = changeRequestRepository.findAll();
         Map<String, List<ChangeRequest>> byFaculty = all.stream()
-                .collect(Collectors.groupingBy(cr -> {
-                    return cr.getFaculty() == null ? "UNKNOWN" : cr.getFaculty().name();
-                }));
+                .collect(Collectors.groupingBy(cr -> cr.getFaculty() == null ? "UNKNOWN" : cr.getFaculty().name()));
 
         return byFaculty.entrySet().stream()
                 .map(e -> buildStats(e.getKey(), e.getKey(), e.getValue()))

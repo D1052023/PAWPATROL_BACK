@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Clase que maneja la información de los usuarios de 
+ * Clase que maneja la información de los usuarios de SIRHA.
  */
 @Data
 @AllArgsConstructor

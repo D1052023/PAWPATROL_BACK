@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Clase que maneja los DTO de información de las solicitudes.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

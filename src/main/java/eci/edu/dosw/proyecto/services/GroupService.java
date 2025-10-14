@@ -1,6 +1,7 @@
 package eci.edu.dosw.proyecto.services;
 
 import java.util.List;
+
 import eci.edu.dosw.proyecto.dtos.GroupDTO;
 import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
@@ -34,6 +35,4 @@ public interface GroupService {
     void deleteScheduleForDay(String groupId, String day);
     GroupDTO assignStudentToGroup(String groupId, int studentId);
     GroupDTO removeStudentFromGroup(String groupId, int studentId);
-
-
 }
