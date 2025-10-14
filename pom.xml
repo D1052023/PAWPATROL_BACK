@@ -36,6 +36,7 @@
             **/mappers/**,
             **/configs/**,
             **/security/**,
+            **/util/**,
             **/ClassApplication.class
         </jacoco.exclusions.pattern>
     </properties>

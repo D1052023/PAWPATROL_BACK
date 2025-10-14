@@ -1,14 +1,11 @@
 package eci.edu.dosw.proyecto;
 
 import eci.edu.dosw.proyecto.controller.StudentController;
+import eci.edu.dosw.proyecto.dtos.AcademicPlanDTO;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
-import eci.edu.dosw.proyecto.enums.AcademicTrafficLight;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.services.StudentService;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,124 +25,120 @@ class StudentControllerTest {
     private StudentService studentService;
 
     @InjectMocks
-    private StudentController studentController;
+    private StudentController controller;
 
-    private StudentDTO studentDTO;
+    @Test
+    void shouldCreateStudent() {
+        StudentDTO in = new StudentDTO();
+        in.setName("Juan Pablo Caballero");
+        in.setEmail("juan.ccastellanos@mail.escuelaing.edu.co");
+        StudentDTO out = new StudentDTO();
+        out.setId(1000100516);
+        out.setName("Juan Pablo Caballero");
+        out.setEmail("juan.ccastellanos@mail.escuelaing.edu.co");
+        when(studentService.createStudent(in)).thenReturn(out);
+        StudentDTO res = controller.createStudent(in);
 
-    @BeforeEach
-    void setup() {
-        studentDTO = new StudentDTO();
-        studentDTO.setId(1);
-        studentDTO.setName("Juan");
-        studentDTO.setEmail("juan@mail.com");
+        assertNotNull(res);
+        assertEquals(1000100516, res.getId());
+        assertEquals("Juan Pablo Caballero", res.getName());
     }
 
     @Test
-    void ShouldReturnAllStudents() {
-        when(studentService.getAllStudents()).thenReturn(List.of(studentDTO));
+    void shouldGetAllStudents() {
+        StudentDTO s1 = new StudentDTO(); s1.setId(1); s1.setName("Oscar Porras Sanchez");
+        StudentDTO s2 = new StudentDTO(); s2.setId(2); s2.setName("David Santiago Palcios");
+        when(studentService.getAllStudents()).thenReturn(List.of(s1, s2));
+        List<StudentDTO> res = controller.getAllStudents();
 
-        List<StudentDTO> result = studentController.getAllStudents();
-
-        assertEquals(1, result.size());
-        assertEquals("Juan", result.get(0).getName());
+        assertEquals(2, res.size());
+        assertEquals("Oscar Porras Sanchez", res.get(0).getName());
     }
 
     @Test
-    void ShouldReturnStudentById() {
-        when(studentService.getStudentById(1)).thenReturn(studentDTO);
+    void shouldGetStudentById() {
+        StudentDTO dto = new StudentDTO(); dto.setId(1000100667); dto.setName("Diego Fernando Chavarro");
+        when(studentService.getStudentById(1000100667)).thenReturn(dto);
+        StudentDTO res = controller.getStudentById(1000100667);
 
-        StudentDTO result = studentController.getStudentById(1);
-
-        assertNotNull(result);
-        assertEquals("Juan", result.getName());
+        assertEquals(1000100667, res.getId());
+        assertEquals("Diego Fernando Chavarro", res.getName());
     }
 
     @Test
-    void ShouldCreateStudent() {
-        when(studentService.createStudent(studentDTO)).thenReturn(studentDTO);
-
-        StudentDTO result = studentController.createStudent(studentDTO);
-
-        assertEquals(studentDTO.getEmail(), result.getEmail());
-    }
-
-    @Test
-    void ShouldUpdateStudent() {
+    void shouldUpdateStudent() {
         StudentDTO updated = new StudentDTO();
-        updated.setId(1);
-        updated.setName("Juan Updated");
+        updated.setName("Robinson Steven Nuñez");
+        updated.setEmail("robinson.nunez-p@mail.escuelaing.edu.co");
+        StudentDTO returned = new StudentDTO();
+        returned.setId(1000100575);
+        returned.setName("Robinson Steven Nuñez");
+        returned.setEmail("robinson.nunez-p@mail.escuelaing.edu.co");
+        when(studentService.updateStudent(1000100575, updated)).thenReturn(returned);
+        StudentDTO res = controller.updateStudent(1000100575, updated);
 
-        when(studentService.updateStudent(1, updated)).thenReturn(updated);
+        assertNotNull(res);
+        assertEquals("Robinson Steven Nuñez", res.getName());
 
-        StudentDTO result = studentController.updateStudent(1, updated);
-
-        assertEquals("Juan Updated", result.getName());
     }
 
     @Test
-    void ShouldPartiallyUpdateStudent() {
-        StudentDTO partial = new StudentDTO();
-        partial.setName("Nuevo Nombre");
+    void shouldPartialUpdateStudent() {
+        StudentDTO patch = new StudentDTO();
+        patch.setName("Parcial");
+        StudentDTO ret = new StudentDTO();
+        ret.setId(1000100575);
+        ret.setName("Parcial");
+        when(studentService.partialUpdateStudent(1000100575, patch)).thenReturn(ret);
+        StudentDTO res = controller.partialUpdateStudent(1000100575, patch);
 
-        when(studentService.partialUpdateStudent(1, partial)).thenReturn(partial);
+        assertEquals("Parcial", res.getName());
 
-        StudentDTO result = studentController.partialUpdateStudent(1, partial);
-
-        assertEquals("Nuevo Nombre", result.getName());
-    }
-
-    /**
-    @Test
-    void ShouldGetStudentSchedule() {
-        when(studentService.getStudentSchedule(1, 2024)).thenReturn(studentDTO);
-
-        StudentDTO result = studentController.getStudentSchedule(1, 2024);
-
-        assertNotNull(result);
-        assertEquals(1, result.getId());
     }
 
     @Test
-    void ShouldGetStudentRequests() {
-        ChangeRequestDTO request = new ChangeRequestDTO();
-        when(studentService.getStudentRequests(1)).thenReturn(List.of(request));
+    void shouldGetStudentRequests() {
+        ChangeRequestDTO r1 = new ChangeRequestDTO(); r1.setId(UUID.randomUUID());
+        when(studentService.getStudentRequests(1000100575)).thenReturn(List.of(r1));
+        List<ChangeRequestDTO> res = controller.getStudentRequests(1000100575);
 
-        List<ChangeRequestDTO> result = studentController.getStudentRequests(1);
+        assertEquals(1, res.size());
 
-        assertEquals(1, result.size());
     }
 
     @Test
-    void ShouldGetStudentScheduleByTrafficLight() {
-        ScheduleEntryDTO entry = new ScheduleEntryDTO();
-        when(studentService.getStudentScheduleByTrafficLight(1, 2024, AcademicTrafficLight.GREEN))
-                .thenReturn(List.of(entry));
+    void shouldGetStudentRequestsByStatusWhenProvided() {
+        ChangeRequestDTO r1 = new ChangeRequestDTO(); r1.setId(UUID.randomUUID());
+        when(studentService.getStudentRequestsByStatus(1000100575, RequestStatus.PENDING)).thenReturn(List.of(r1));
+        List<ChangeRequestDTO> res = controller.getStudentRequestsByStatus(1000100575, RequestStatus.PENDING);
 
-        List<ScheduleEntryDTO> result =
-                studentController.getStudentScheduleByTrafficLight(1, 2024, AcademicTrafficLight.GREEN);
+        assertEquals(1, res.size());
 
-        assertEquals(1, result.size());
     }
 
     @Test
-    void ShouldGetStudentRequestsByStatusWhenStatusProvided() {
-        ChangeRequestDTO req = new ChangeRequestDTO();
-        when(studentService.getStudentRequestsByStatus(1, RequestStatus.APPROVED)).thenReturn(List.of(req));
+    void shouldGetStudentRequestsByStatusWhenNullUsesAll() {
+        ChangeRequestDTO r1 = new ChangeRequestDTO(); r1.setId(UUID.randomUUID());
+        when(studentService.getStudentRequests(1000100575)).thenReturn(List.of(r1));
+        List<ChangeRequestDTO> res = controller.getStudentRequestsByStatus(1000100575, null);
 
-        List<ChangeRequestDTO> result = studentController.getStudentRequestsByStatus(1, RequestStatus.APPROVED);
+        assertEquals(1, res.size());
 
-        assertEquals(1, result.size());
     }
-     **/
-/**
+
     @Test
-    void ShouldGetStudentRequestsByStatusWhenStatusIsNull() {
-        ChangeRequestDTO req = new ChangeRequestDTO();
-        when(studentService.getStudentRequests(1)).thenReturn(List.of(req));
-
-        List<ChangeRequestDTO> result = studentController.getStudentRequestsByStatus(1, null);
-
-        assertEquals(1, result.size());
+    void shouldDeleteStudent() {
+        doNothing().when(studentService).deleteStudent(1000100575);
+        controller.deleteStudent(1000100575);
     }
-    **/
+
+    @Test
+    void shouldGetAcademicPlan() {
+        AcademicPlanDTO dto = new AcademicPlanDTO();
+        dto.setStudentId(1000100575);
+        when(studentService.getAcademicPlan(1000100575)).thenReturn(dto);
+        AcademicPlanDTO res = controller.getAcademicPlan(1000100575);
+
+        assertEquals(1000100575, res.getStudentId());
+    }
 }

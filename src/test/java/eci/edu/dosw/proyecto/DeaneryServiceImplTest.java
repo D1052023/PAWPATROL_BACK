@@ -26,6 +26,7 @@ import org.mockito.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -678,6 +679,148 @@ class DeaneryServiceImplTest {
         assertTrue(student.getEnrolledSubjects().contains("ODSC"));
     }
 
+    @Test
+    void shouldRespondAdditionalInfoByDeanery() {
+        int deaneryId = 1000000451;
+        UUID reqId = UUID.randomUUID();
+        Deanery dean = new Deanery(); dean.setId(deaneryId); dean.setFaculty(Faculty.INGENIERIA_DE_SISTEMAS);
+        ChangeRequest req = new ChangeRequest(); req.setId(reqId);
+        req.setStatus(RequestStatus.PENDING);
+        req.setFaculty(Faculty.INGENIERIA_DE_SISTEMAS);
+        when(message.findDeaneryOrThrow(deaneryId)).thenReturn(dean);
+        when(message.findChangeRequestOrThrow(reqId)).thenReturn(req);
+        when(changeRequestMapper.toDTO(req)).thenReturn(new ChangeRequestDTO() {{ setId(reqId); }});
+        RequestDecisionDTO decision = new RequestDecisionDTO();
+        decision.setRequestAdditionalInfo(true);
+        decision.setAdditionalInfoRequestMessage("Adjunta certificado");
+        RequestDatesDTO dates = new RequestDatesDTO();
+        dates.setStartDate(LocalDateTime.now().minusDays(1));
+        dates.setEndDate(LocalDateTime.now().plusDays(1));
+        ChangeRequestDTO out = deaneryService.respondRequestByDeanery(deaneryId, reqId, decision, dates);
+
+        assertNotNull(out);
+        assertEquals(reqId, out.getId());
+        assertEquals(RequestStatus.REQUEST_ADDITIONAL_INFO, req.getStatus());
+    }
+
+
+    @Test
+    void shouldProcessApprovedRequestAddsBasicScheduleWhenNoGroupSchedule() {
+        UUID reqId = UUID.randomUUID();
+        int studentId = 1000100575;
+        ChangeRequest req = new ChangeRequest();
+        req.setId(reqId);
+        req.setStudentId(studentId);
+        req.setCurrentSubject("DOSW");
+        req.setTargetSubject("ODSC");
+        req.setCurrentGroup("DOSW-1");
+        req.setTargetGroup("G-2");
+        req.setStatus(RequestStatus.PENDING);
+        Group current = new Group();
+        current.setGroupId("DOSW-1");
+        current.setWaitlist(new ArrayList<>(List.of(studentId)));
+        Group target = new Group();
+        target.setGroupId("G-2");
+        target.setCurrentCapacity(1);
+        target.setMaximumCapacity(30);
+        target.setSubjectId("ODSC");
+        target.setSchedule(new ArrayList<>());
+        Student student = new Student();
+        student.setId(studentId);
+        student.setSchedule(new ArrayList<>());
+        student.setEnrolledSubjects(new ArrayList<>());
+        when(message.findGroupOrThrow("DOSW-1")).thenReturn(current);
+        when(message.findGroupOrThrow("G-2")).thenReturn(target);
+        when(message.findStudentOrThrow(studentId)).thenReturn(student);
+        when(groupRepository.save(any(Group.class))).thenAnswer(i -> i.getArgument(0));
+        when(studentRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
+        deaneryService.processApprovedRequest(req, new RequestDecisionDTO() {{ setStatus(RequestStatus.APPROVED); }}, 999);
+
+        assertEquals(3, target.getCurrentCapacity());
+        assertFalse(current.getWaitlist().contains(studentId));
+        assertTrue(student.getEnrolledSubjects().contains("ODSC"));
+        boolean found = student.getSchedule().stream().anyMatch(se -> "ODSC".equals(se.getSubject()) && "G-2".equals(se.getGroup()));
+        assertTrue(found);
+
+
+    }
+
+
+    @Test
+    void shouldUpdateRequestAsDeaneryWhenStatusNull() {
+        int deaneryId = 1000000143;
+        UUID reqId = UUID.randomUUID();
+        Deanery dean = new Deanery(); dean.setId(deaneryId); dean.setFaculty(Faculty.ECONOMIA);
+        ChangeRequest req = new ChangeRequest(); req.setId(reqId);
+        req.setStatus(RequestStatus.PENDING);
+        req.setFaculty(Faculty.ECONOMIA);
+        when(message.findDeaneryOrThrow(deaneryId)).thenReturn(dean);
+        when(message.findChangeRequestOrThrow(reqId)).thenReturn(req);
+        when(changeRequestMapper.toDTO(req)).thenReturn(new ChangeRequestDTO() {{ setId(reqId); }});
+        when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
+        RequestDecisionDTO decision = new RequestDecisionDTO();
+        ChangeRequestDTO out = deaneryService.updateRequestAsDeanery(deaneryId, reqId, decision, null);
+
+        assertNotNull(out);
+        assertEquals(reqId, out.getId());
+    }
+
+    @Test
+    void shouldReturnNoteWhenStatusAndObservationArePresent() throws Exception {
+        RequestDecisionDTO decision = new RequestDecisionDTO();
+        decision.setStatus(RequestStatus.APPROVED);
+        decision.setObservations("Todo correcto");
+
+        Method method = DeaneryServiceImpl.class.getDeclaredMethod("decisionToNote", RequestDecisionDTO.class);
+        method.setAccessible(true);
+        String result = (String) method.invoke(deaneryService, decision);
+
+        assertEquals("Decision: APPROVED. Todo correcto", result);
+    }
+
+    @Test
+    void shouldReturnNoteWhenStatusAndObservationAreNull() throws Exception {
+        RequestDecisionDTO decision = new RequestDecisionDTO();
+        decision.setStatus(null);
+        decision.setObservations(null);
+        Method method = DeaneryServiceImpl.class.getDeclaredMethod("decisionToNote", RequestDecisionDTO.class);
+        method.setAccessible(true);
+        String result = (String) method.invoke(deaneryService, decision);
+
+        assertEquals("Decision: UNKNOWN. ", result);
+    }
+
+    @Test
+    void shouldIncludeInfoDueDateInHistoryNote() {
+        int deaneryId = 1000000451;
+        UUID reqId = UUID.randomUUID();
+
+        Deanery deanery = new Deanery();
+        deanery.setId(deaneryId);
+        ChangeRequest req = new ChangeRequest();
+        req.setId(reqId);
+        req.setStatus(RequestStatus.PENDING);
+
+        RequestDecisionDTO decision = new RequestDecisionDTO();
+        decision.setRequestAdditionalInfo(true);
+        decision.setAdditionalInfoRequestMessage("Falta adjuntar documento");
+        decision.setInfoDueDate(LocalDateTime.of(2025, 1, 1, 10, 0));
+
+        RequestDatesDTO dates = new RequestDatesDTO();
+
+        when(message.findDeaneryOrThrow(deaneryId)).thenReturn(deanery);
+        when(message.findChangeRequestOrThrow(reqId)).thenReturn(req);
+        doNothing().when(message).ensureResolutionDeadlineNotExceeded(any(), any());
+        doNothing().when(message).ensureDatesProvided(any());
+        doNothing().when(message).ensureNowWithinDates(any(), any());
+        doNothing().when(message).ensureDeaneryFacultyMatches(any(), any());
+        doNothing().when(message).ensureRequestPending(any());
+        when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
+        when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO());
+
+        deaneryService.respondRequestByDeanery(deaneryId, reqId, decision, dates);
+
+    }
 
 
 }

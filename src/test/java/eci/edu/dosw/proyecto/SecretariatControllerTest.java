@@ -1,20 +1,19 @@
 package eci.edu.dosw.proyecto;
 
 import eci.edu.dosw.proyecto.controller.SecretariatController;
-import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.RequestDatesDTO;
-import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
-import eci.edu.dosw.proyecto.dtos.SecretariatDTO;
+import eci.edu.dosw.proyecto.dtos.*;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
+import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
+import eci.edu.dosw.proyecto.services.GroupService;
+import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.SecretariatService;
+import eci.edu.dosw.proyecto.services.StudentService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,118 +28,173 @@ class SecretariatControllerTest {
     @Mock
     private SecretariatService secretariatService;
 
+    @Mock
+    private HistoryService historyService;
+
+    @Mock
+    private GroupService groupService;
+
+    @Mock
+    private StudentService studentService;
+
     @InjectMocks
     private SecretariatController controller;
 
-    /**
     @Test
-    void ShouldCreateSecretariat() {
+    void shouldCreateSecretariat() {
+        SecretariatDTO in = new SecretariatDTO();
+        in.setName("Patricia Salazar Perdomo");
+        in.setEmail("patricia.salazar@escuelaing.edu.co");
+        SecretariatDTO out = new SecretariatDTO();
+        out.setId(1);
+        out.setName("Patricia Salazar Perdomo");
+        out.setEmail("patricia.salazar@escuelaing.edu.co");
+        when(secretariatService.createSecretariat(in)).thenReturn(out);
+        SecretariatDTO res = controller.createSecretariat(in);
+
+        assertNotNull(res);
+        assertEquals(1, res.getId());
+        assertEquals("Patricia Salazar Perdomo", res.getName());
+    }
+
+    @Test
+    void shouldGetSecretariat() {
         SecretariatDTO dto = new SecretariatDTO();
-        dto.setId(1);
-        dto.setName("Secretaría Académica");
+        dto.setId(5);
+        dto.setName("Patricia Salazar Perdomo");
+        when(secretariatService.getSecretariatById(5)).thenReturn(dto);
+        SecretariatDTO res = controller.getSecretariat(5);
 
-        when(secretariatService.createSecretariat(dto)).thenReturn(dto);
-
-        SecretariatDTO response = controller.createSecretariat(dto);
-
-        assertNotNull(response);
-        assertEquals(1, response.getId());
-        assertEquals("Secretaría Académica", response.getName());
+        assertEquals("Patricia Salazar Perdomo", res.getName());
     }
 
     @Test
-    void ShouldGetSecretariatById() {
-        SecretariatDTO dto = new SecretariatDTO();
-        dto.setId(2);
-        dto.setName("Secretaría de Sistemas");
+    void shouldGetAllSecretariats() {
+        SecretariatDTO a = new SecretariatDTO(); a.setId(1);
+        SecretariatDTO b = new SecretariatDTO(); b.setId(2);
+        when(secretariatService.getAllSecretariats()).thenReturn(List.of(a, b));
+        List<SecretariatDTO> res = controller.getAllSecretariats();
 
-        when(secretariatService.getSecretariatById(2)).thenReturn(dto);
-
-        SecretariatDTO response = controller.getSecretariat(2);
-
-        assertNotNull(response);
-        assertEquals(2, response.getId());
-        assertEquals("Secretaría de Sistemas", response.getName());
+        assertEquals(2, res.size());
     }
 
     @Test
-    void ShouldGetAllSecretariats() {
-        SecretariatDTO s1 = new SecretariatDTO();
-        s1.setId(1);
-        SecretariatDTO s2 = new SecretariatDTO();
-        s2.setId(2);
+    void shouldUpdateSecretariat() {
+        SecretariatDTO in = new SecretariatDTO();
+        in.setName("Updated");
+        SecretariatDTO out = new SecretariatDTO();
+        out.setId(7);
+        out.setName("Updated");
+        when(secretariatService.updateSecretariat(1000000398, in)).thenReturn(out);
 
-        when(secretariatService.getAllSecretariats()).thenReturn(List.of(s1, s2));
-
-        List<SecretariatDTO> response = controller.getAllSecretariats();
-
-        assertEquals(2, response.size());
+        SecretariatDTO res = controller.updateSecretariat(1000000398, in);
+        assertEquals("Updated", res.getName());
     }
 
     @Test
-    void ShouldUpdateSecretariat() {
-        SecretariatDTO dto = new SecretariatDTO();
-        dto.setId(3);
-        dto.setName("Secretaría Actualizada");
-
-        when(secretariatService.updateSecretariat(3, dto)).thenReturn(dto);
-
-        SecretariatDTO response = controller.updateSecretariat(3, dto);
-
-        assertNotNull(response);
-        assertEquals("Secretaría Actualizada", response.getName());
+    void shouldDeleteSecretariat() {
+        doNothing().when(secretariatService).deleteSecretariat(1000000398);
+        controller.deleteSecretariat(1000000398);
+        verify(secretariatService).deleteSecretariat(1000000398);
     }
 
     @Test
-    void ShouldDeleteSecretariat() {
-        doNothing().when(secretariatService).deleteSecretariat(5);
-
-        controller.deleteSecretariat(5);
-
-        verify(secretariatService).deleteSecretariat(5);
+    void shouldUpdateRequestDates() {
+        RequestDatesDTO dto = new RequestDatesDTO(LocalDateTime.of(2025,1,1,9,0), LocalDateTime.of(2025,1,10,18,0));
+        doNothing().when(secretariatService).updateRequestDates(1000000398, dto.getStartDate(), dto.getEndDate());
+        controller.updateRequestDates(1000000398, dto);
+        verify(secretariatService).updateRequestDates(1000000398, dto.getStartDate(), dto.getEndDate());
     }
 
     @Test
-    void ShouldUpdateRequestDates() {
-        RequestDatesDTO dates = new RequestDatesDTO(LocalDateTime.now(), LocalDateTime.now().plusDays(5));
-
-        doNothing().when(secretariatService).updateRequestDates(7, dates.getStartDate(), dates.getEndDate());
-
-        controller.updateRequestDates(7, dates);
-
-        verify(secretariatService).updateRequestDates(7, dates.getStartDate(), dates.getEndDate());
-    }
-
-    @Test
-    void ShouldRespondRequestBySecretariat() {
-        UUID requestId = UUID.randomUUID();
+    void shouldRespondWithParams() {
+        UUID reqId = UUID.randomUUID();
         RequestDecisionDTO decision = new RequestDecisionDTO();
-        RequestDatesDTO dates = new RequestDatesDTO(LocalDateTime.now(), LocalDateTime.now().plusDays(2));
-        ChangeRequestDTO returned = new ChangeRequestDTO();
+        decision.setStatus(RequestStatus.REJECTED);
+        LocalDateTime start = LocalDateTime.now().minusDays(1);
+        LocalDateTime end = LocalDateTime.now().plusDays(1);
+        ChangeRequestDTO out = new ChangeRequestDTO();
+        out.setId(reqId);
+        when(secretariatService.respondRequestBySecretariat(eq(reqId), eq(decision), any())).thenReturn(out);
+        ChangeRequestDTO res = controller.respondRequestBySecretariat(reqId, decision, start, end);
 
-        when(secretariatService.respondRequestBySecretariat(requestId, decision, dates)).thenReturn(returned);
-
-        ResponseEntity<ChangeRequestDTO> response = controller.respondRequestBySecretariat(
-                requestId, decision, dates.getStartDate(), dates.getEndDate()
-        );
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(returned, response.getBody());
+        assertEquals(reqId, res.getId());
     }
 
-    @SuppressWarnings("null")
     @Test
-    void ShouldGetRequestsByFacultyAndStatus() {
+    void shouldRespondWithBody() {
+        UUID reqId = UUID.randomUUID();
+        RequestDecisionDTO decision = new RequestDecisionDTO();
+        decision.setStatus(RequestStatus.APPROVED);
+        RequestDatesDTO dates = new RequestDatesDTO(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
+        RespondRequestInfo body = new RespondRequestInfo();
+        body.setDecision(decision);
+        body.setDates(dates);
+        ChangeRequestDTO out = new ChangeRequestDTO();
+        out.setId(reqId);
+        when(secretariatService.respondRequestBySecretariat(eq(reqId), eq(decision), eq(dates))).thenReturn(out);
+        ChangeRequestDTO res = controller.respondRequestBySecretariat(reqId, body);
+
+        assertEquals(reqId, res.getId());
+    }
+
+    @Test
+    void shouldGetRequestsByFacultyAndStatus() {
         Faculty faculty = Faculty.INGENIERIA_DE_SISTEMAS;
         RequestStatus status = RequestStatus.PENDING;
         ChangeRequestDTO dto = new ChangeRequestDTO();
-
         when(secretariatService.getRequestsByFacultyAndStatus(faculty, status)).thenReturn(List.of(dto));
+        List<ChangeRequestDTO> res = controller.getRequestsByFacultyAndStatus(faculty, status);
 
-        ResponseEntity<List<ChangeRequestDTO>> response = controller.getRequestsByFacultyAndStatus(faculty, status);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
+        assertEquals(1, res.size());
     }
-    **/
+
+    @Test
+    void shouldGetRequestsOrderedAndSearchAndByPriority() {
+        Faculty faculty = Faculty.ECONOMIA;
+        ChangeRequestDTO dto = new ChangeRequestDTO();
+        when(secretariatService.getRequestsByFacultyOrderedByPriority(faculty)).thenReturn(List.of(dto));
+        when(secretariatService.searchRequestsByFacultyAndOrPriority(faculty, null)).thenReturn(List.of(dto));
+        when(secretariatService.getAllRequestsOrderedByPriority()).thenReturn(List.of(dto));
+        when(secretariatService.getAllRequestsByPriority(2)).thenReturn(List.of(dto));
+
+        assertEquals(1, controller.getRequestsByFacultyOrderedByPriority(faculty).size());
+        assertEquals(1, controller.searchRequests(faculty, null).size());
+        assertEquals(1, controller.getAllOrderedByPriority().size());
+        assertEquals(1, controller.getAllByPriority(2).size());
+    }
+
+    @Test
+    void shouldGetHistoryAndGroupAndStudent() {
+        UUID reqId = UUID.randomUUID();
+        ChangeRequestHistory h = new ChangeRequestHistory();
+        when(historyService.getHistory(reqId)).thenReturn(List.of(h));
+        assertEquals(1, controller.getRequestHistory(reqId).size());
+        when(groupService.getMaxCapacity("EGI4-4")).thenReturn(40);
+        when(groupService.getCurrentCapacity("EGI4-4")).thenReturn(10);
+        when(groupService.getWaitlist("EGI4-4")).thenReturn(List.of(1001, 1002));
+        assertEquals(40, controller.getMaxCapacity("EGI4-4"));
+        assertEquals(10, controller.getCurrentCapacity("EGI4-4"));
+        assertEquals(List.of(1001, 1002), controller.getWaitingList("EGI4-4"));
+        StudentDTO stu = new StudentDTO(); stu.setId(1000100575); stu.setName("Alumno");
+        when(studentService.getStudentById(1000100575)).thenReturn(stu);
+        StudentDTO res = controller.getStudentInfo(1000100575);
+
+        assertEquals("Alumno", res.getName());
+    }
+
+    @Test
+    void shouldUpdateAndDeleteRequestAsSecretariat() {
+        UUID reqId = UUID.randomUUID();
+        RequestDecisionDTO decision = new RequestDecisionDTO();
+        decision.setStatus(RequestStatus.APPROVED);
+        RequestDatesDTO dates = new RequestDatesDTO(LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(1));
+        ChangeRequestDTO out = new ChangeRequestDTO(); out.setId(reqId);
+        when(secretariatService.updateRequestAsSecretariat(reqId, decision, dates)).thenReturn(out);
+        ChangeRequestDTO res = controller.updateRequestAsSecretariat(reqId, decision, dates.getStartDate(), dates.getEndDate());
+        assertEquals(reqId, res.getId());
+        doNothing().when(secretariatService).deleteRequestAsSecretariat(reqId);
+        controller.deleteRequestAsSecretariat(reqId);
+
+    }
 }

@@ -17,7 +17,7 @@ public interface StudentMapper {
     @Mapping(target = "requests", source = "requests")
     @Mapping(target = "enrolledSubjects", source = "enrolledSubjects")
     @Mapping(target = "approvedSubjects", source = "approvedSubjects")
-    @Mapping(target = "admissionCycle", ignore = true)
+
     StudentDTO toDTO(Student student);
 
     @Mapping(target = "role", ignore = true)
