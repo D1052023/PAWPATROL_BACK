@@ -1,236 +1,360 @@
 package eci.edu.dosw.proyecto;
 
-import eci.edu.dosw.proyecto.dtos.GroupDTO;
-import eci.edu.dosw.proyecto.dtos.SubjectDTO;
+import eci.edu.dosw.proyecto.dtos.*;
 import eci.edu.dosw.proyecto.enums.Curriculum;
-import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
-import eci.edu.dosw.proyecto.mappers.GroupMapper;
-import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
-import eci.edu.dosw.proyecto.mappers.SubjectMapper;
-import eci.edu.dosw.proyecto.models.Group;
-import eci.edu.dosw.proyecto.models.Subject;
-import eci.edu.dosw.proyecto.models.ScheduleEntry;
-import eci.edu.dosw.proyecto.repositories.GroupRepository;
+import eci.edu.dosw.proyecto.mappers.*;
+import eci.edu.dosw.proyecto.models.*;
+import eci.edu.dosw.proyecto.repositories.*;
+import eci.edu.dosw.proyecto.services.*;
 import eci.edu.dosw.proyecto.services.impl.GroupServiceImpl;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class GroupServiceImplTest {
 
-    @Mock
-    GroupRepository groupRepository;
+    @Mock 
+    private GroupRepository groupRepository;
+    @Mock 
+    private MongoTemplate mongoTemplate;
+    @Mock 
+    private AlertService alertService;
+    @Mock 
+    private GroupMapper groupMapper;
+    @Mock 
+    private ScheduleEntryMapper scheduleEntryMapper;
+    @Mock 
+    private MessageExceptions message;
+    @Mock 
+    private StudentRepository studentRepository;
+    @Mock 
+    private StudentService studentService;
+    @Mock 
+    private HistoryService historyService;
 
-    @Mock
-    GroupMapper groupMapper;
+    @InjectMocks 
+    private GroupServiceImpl groupService;
 
-    @Mock
-    ScheduleEntryMapper scheduleEntryMapper;
+    private Group group;
+    private GroupDTO groupDTO;
+    private Student student;
+    private StudentDTO studentDTO;
+    private ScheduleEntryDTO scheduleEntryDTO;
+    private ScheduleEntry scheduleEntry;
 
-    @Mock
-    SubjectMapper subjectMapper;
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
 
-    @InjectMocks
-    GroupServiceImpl groupService;
+        group = new Group();
+        group.setGroupId("DDYA-4");
+        group.setName("Diseño de estructuras y algoritmos");
+        group.setMaximumCapacity(10);
+        group.setCurrentCapacity(5);
+        group.setSubjectId("DDYA");
+        group.setWaitlist(new ArrayList<>(List.of(1)));
+        group.setSchedule(new ArrayList<>());
 
-    /**
-    @Test
-    void ShouldCreateGroup() {
-        GroupDTO dto = new GroupDTO();
-        dto.setName("4");
-        dto.setCurriculum(Curriculum.ISIS_15);
+        groupDTO = new GroupDTO();
+        groupDTO.setGroupId("DDYA-4");
+        groupDTO.setName("Diseño de estructuras y algoritmos");
+        groupDTO.setMaximumCapacity(10);
+        groupDTO.setCurrentCapacity(5);
+        groupDTO.setSubjectId("DDYA");
 
-        Group model = new Group();
-        model.setName("4");
-        model.setCurriculum(Curriculum.ISIS_15);
-        
-        Group saved = new Group();
-        saved.setName("4");
-        saved.setCurriculum(Curriculum.ISIS_15);
-        saved.setGroupId("DOSW");
+        student = new Student();
+        student.setId(1);
+        student.setSchedule(new ArrayList<>());
+        student.setEnrolledSubjects(new ArrayList<>());
 
-        GroupDTO expectedDto = new GroupDTO();
-        expectedDto.setName("4");
-        expectedDto.setCurriculum(Curriculum.ISIS_15);
-        expectedDto.setGroupId("DOSW");
+        studentDTO = new StudentDTO();
+        studentDTO.setId(1);
 
-        when(groupMapper.toModel(dto)).thenReturn(model);
-        when(groupRepository.save(model)).thenReturn(saved);
-        when(groupMapper.toDTO(saved)).thenReturn(expectedDto);
+        scheduleEntryDTO = new ScheduleEntryDTO();
+        scheduleEntryDTO.setDay("Monday");
+        scheduleEntryDTO.setFrom("08:00");
+        scheduleEntryDTO.setTo("10:00");
 
-        GroupDTO out = groupService.createGroup(dto);
-        assertNotNull(out);
-        assertEquals("DOSW", out.getGroupId());
+        scheduleEntry = new ScheduleEntry();
+        scheduleEntry.setDay("Monday");
+        scheduleEntry.setFrom("08:00");
+        scheduleEntry.setTo("10:00");
+
+        when(groupMapper.toDTO(any(Group.class))).thenAnswer(invocation -> {
+            Group g = invocation.getArgument(0);
+            GroupDTO dto = new GroupDTO();
+            dto.setGroupId(g.getGroupId());
+            dto.setName(g.getName());
+            dto.setMaximumCapacity(g.getMaximumCapacity());
+            dto.setCurrentCapacity(g.getCurrentCapacity());
+            dto.setSubjectId(g.getSubjectId());
+            return dto;
+        });
+
+        when(groupMapper.toDTO(any(Group.class))).thenAnswer(invocation -> {
+            Group g = invocation.getArgument(0);
+            GroupDTO dto = new GroupDTO();
+            dto.setGroupId(g.getGroupId());
+            dto.setName(g.getName());
+            dto.setMaximumCapacity(g.getMaximumCapacity());
+            dto.setCurrentCapacity(g.getCurrentCapacity());
+            dto.setSubjectId(g.getSubjectId());
+            dto.setCurriculum(g.getCurriculum()); 
+            dto.setSchedule(scheduleEntryMapper.toDTOList(g.getSchedule()));
+            return dto;
+        });
+
+
+        when(scheduleEntryMapper.toDTOList(anyList())).thenAnswer(invocation -> {
+            List<ScheduleEntry> entries = invocation.getArgument(0);
+            List<ScheduleEntryDTO> dtos = new ArrayList<>();
+            for (ScheduleEntry e : entries) {
+                ScheduleEntryDTO dto = new ScheduleEntryDTO();
+                dto.setDay(e.getDay());
+                dto.setFrom(e.getFrom());
+                dto.setTo(e.getTo());
+                dtos.add(dto);
+            }
+            return dtos;
+        });
+
+        when(scheduleEntryMapper.toDTO(any(ScheduleEntry.class))).thenReturn(scheduleEntryDTO);
+        when(scheduleEntryMapper.toModel(scheduleEntryDTO)).thenReturn(scheduleEntry);
+        when(scheduleEntryMapper.toModelList(anyList())).thenAnswer(invocation -> {
+            List<ScheduleEntryDTO> dtos = invocation.getArgument(0);
+            List<ScheduleEntry> list = new ArrayList<>();
+            for (ScheduleEntryDTO dto : dtos) {
+                ScheduleEntry e = new ScheduleEntry();
+                e.setDay(dto.getDay());
+                e.setFrom(dto.getFrom());
+                e.setTo(dto.getTo());
+                list.add(e);
+            }
+            return list;
+        });
     }
 
     @Test
-    void ShouldNotCreateGroup() {
-        GroupDTO dto = new GroupDTO();
-        dto.setName("5");
-        dto.setCurriculum(Curriculum.ISIS_15);
+    void ShouldGetWaitlistAndDetails() {
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(studentService.getStudentById(1)).thenReturn(studentDTO);
 
-        SubjectDTO subjDto = new SubjectDTO();
-        subjDto.setCurriculum(Curriculum.ISIS_14);
-        dto.setSubject(subjDto);
+        List<Integer> waitlist = groupService.getWaitlist("DDYA-4");
+        assertEquals(List.of(1), waitlist);
 
-        Group model = new Group();
-        model.setName("5");
-        model.setCurriculum(Curriculum.ISIS_15);
-        model.setSubject(new Subject());
-
-        when(groupMapper.toModel(dto)).thenReturn(model);
-        model.getSubject().setCurriculum(Curriculum.ISIS_14);
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> groupService.createGroup(dto));
-        assertTrue(ex.getMessage().toLowerCase().contains("pensum") || ex.getMessage().toLowerCase().contains("corresponde"));
-    }
-
-
-    @Test
-    void ShouldReturnAllGroups() {
-        Group g = new Group();
-        g.setGroupId("TPYC-1");
-        g.setName("TPYC");
-
-        GroupDTO dto = new GroupDTO();
-        dto.setGroupId("TPYC-1");
-        dto.setName("TPYC");
-
-        when(groupRepository.findAll()).thenReturn(List.of(g));
-        when(groupMapper.toDTOList(List.of(g))).thenReturn(List.of(dto));
-
-        List<GroupDTO> list = groupService.getAllGroups();
-        assertEquals(1, list.size());
-        assertEquals("TPYC-1", list.get(0).getGroupId());
-    }
-
-
-
-    @Test
-    void ShouldReturnGroupById() {
-        Group g = new Group();
-        g.setGroupId("DDYA-1");
-        g.setName("DDYA");
-
-        GroupDTO dto = new GroupDTO();
-        dto.setGroupId("DDYA-1");
-        dto.setName("DDYA");
-
-        when(groupRepository.findByGroupId("DDYA-1")).thenReturn(Optional.of(g));
-        when(groupMapper.toDTO(g)).thenReturn(dto);
-
-        GroupDTO out = groupService.getGroupById("DDYA-1");
-        assertEquals("DDYA-1", out.getGroupId());
+        List<StudentDTO> details = groupService.getWaitlistDetails("DDYA-4");
+        assertEquals(1, details.size());
+        assertEquals(1, details.get(0).getId());
     }
 
     @Test
-    void ShouldThrowWhenGroupNotFound() {
-        when(groupRepository.findByGroupId("NOsubject")).thenReturn(Optional.empty());
+    void ShouldAddAndGetSchedule() {
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(groupRepository.save(group)).thenReturn(group);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> groupService.getGroupById("NOsubject"));
-        assertTrue(ex.getMessage().toLowerCase().contains("no encontrado") || ex.getMessage().toLowerCase().contains("no encontrado"));
+        ScheduleEntryDTO result = groupService.addScheduleEntry("DDYA-4", scheduleEntryDTO);
+        assertNotNull(result);
+        assertEquals("Monday", result.getDay());
+
+        List<ScheduleEntryDTO> schedule = groupService.getSchedule("DDYA-4");
+        assertEquals(1, schedule.size());
     }
 
+    @Test
+    void ShouldUpdateScheduleGlobalAndForDay() {
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(groupRepository.save(group)).thenReturn(group);
+
+        List<ScheduleEntryDTO> globalUpdated = groupService.updateScheduleGlobal("DDYA-4",
+                new ArrayList<>(List.of(scheduleEntryDTO)));
+        assertEquals(1, globalUpdated.size());
+
+        List<ScheduleEntryDTO> dayUpdated = groupService.updateScheduleForDay("DDYA-4", "Monday",
+                new ArrayList<>(List.of(scheduleEntryDTO)));
+        assertEquals(1, dayUpdated.size());
+    }
+
+    @Test
+    void ShouldDeleteScheduleGlobalAndForDay() {
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(groupRepository.save(group)).thenReturn(group);
+
+        groupService.deleteScheduleGlobal("DDYA-4");
+        assertTrue(group.getSchedule().isEmpty());
+
+        group.getSchedule().add(scheduleEntry);
+        groupService.deleteScheduleForDay("DDYA-4", "Monday");
+        assertTrue(group.getSchedule().isEmpty());
+    }
+
+    @Test
+    void ShouldGetGroupsByTeacherAndSubject() {
+        when(groupRepository.findByTeacher(5)).thenReturn(List.of(group));
+        when(groupRepository.findBySubjectId("DDYA")).thenReturn(List.of(group));
+
+        List<GroupDTO> byTeacher = groupService.getGroupsByTeacher(5);
+        List<GroupDTO> bySubject = groupService.getGroupsBySubject("DDYA");
+
+        assertEquals(1, byTeacher.size());
+        assertEquals(1, bySubject.size());
+    }
+
+    @Test
+    void ShouldCapacities() {
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(groupRepository.save(group)).thenReturn(group);
+
+        assertEquals(10, groupService.getMaxCapacity("DDYA-4"));
+        assertEquals(5, groupService.getCurrentCapacity("DDYA-4"));
+
+        GroupDTO capUpdated = groupService.updateCapacity("DDYA-4", 15);
+        assertEquals("Diseño de estructuras y algoritmos", capUpdated.getName());
+    }
 
     @Test
     void ShouldUpdateGroup() {
-        Group existing = new Group();
-        existing.setGroupId("AYED-23");
-        existing.setName("AYED");
-        existing.setCurriculum(Curriculum.ISIS_14);
-        existing.setCurrentCapacity(5);
-        existing.setMaximumCapacity(20);
-
         GroupDTO dto = new GroupDTO();
-        dto.setName("DDYA");
-        dto.setTeacher("Alejandro Anzola Avila");
-        dto.setMaximumCapacity(30);
-        dto.setCurrentCapacity(10);
-        dto.setCurriculum(Curriculum.ISIS_14);
+        dto.setMaximumCapacity(15);
+        dto.setCurrentCapacity(7);
+        dto.setName("Nuevo Nombre");
+        dto.setSchedule(new ArrayList<>(List.of(scheduleEntryDTO)));
+        dto.setCurriculum(Curriculum.ADMI_05);
 
-        ScheduleEntryDTO seDto = new ScheduleEntryDTO();
-        seDto.setDay("LUNES");
-        dto.setSchedule(List.of(seDto));
-        when(scheduleEntryMapper.toModelList(dto.getSchedule())).thenReturn(List.of(new ScheduleEntry()));
-        when(groupRepository.findByGroupId("DDYA-236")).thenReturn(Optional.of(existing));
-        Group saved = new Group();
-        saved.setGroupId("DDYA-236");
-        saved.setName("DDYA");
-        saved.setTeacher("Alejandro Anzola Avila");
-        saved.setCurrentCapacity(10);
-        saved.setMaximumCapacity(30);
-        saved.setCurriculum(Curriculum.ISIS_14);
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(message.findSubjectOrThrow(group.getSubjectId())).thenReturn(new Subject() {{
+            setSubjectId("DDYA");
+            setMaximumCapacity(100);
+        }});
+        when(groupRepository.findBySubjectId("DDYA")).thenReturn(List.of(group));
+        when(groupRepository.save(group)).thenReturn(group);
 
-        when(groupRepository.save(existing)).thenReturn(saved);
+        GroupDTO updated = groupService.updateGroup("DDYA-4", dto);
 
-        GroupDTO outDto = new GroupDTO();
-        outDto.setGroupId("DDYA-236");
-        outDto.setName("DDYA");
-        outDto.setTeacher("Alejandro Anzola Avila");
-        outDto.setCurrentCapacity(10);
-        outDto.setMaximumCapacity(30);
+        assertEquals("Nuevo Nombre", updated.getName());
+        assertEquals(15, updated.getMaximumCapacity());
+        assertEquals(7, updated.getCurrentCapacity());
+        assertEquals(Curriculum.ADMI_05, updated.getCurriculum());
+        assertEquals(1, updated.getSchedule().size());
+    }
 
-        when(groupMapper.toDTO(saved)).thenReturn(outDto);
+    @Test
+    void ShouldDeleteGroup() {
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        groupService.deleteGroup("DDYA-4");
 
-        GroupDTO res = groupService.updateGroup("DDYA-236", dto);
-        assertEquals("DDYA", res.getName());
-        assertEquals("Alejandro Anzola Avila", res.getTeacher());
-        assertEquals(10, res.getCurrentCapacity());
+        verify(groupRepository, times(1)).delete(group);
+    }
+
+    @Test
+    void ShouldPartialUpdateGroup() {
+        GroupDTO dto = new GroupDTO();
+        dto.setName("Algoritmos");                 
+        dto.setMaximumCapacity(0);                  
+        dto.setCurrentCapacity(8);                  
+        dto.setCurriculum(Curriculum.ADMI_05);     
+        dto.setSchedule(new ArrayList<>(List.of(scheduleEntryDTO))); 
+        dto.setSubjectId(null);                     
+        dto.setGroupStatus(null);                   
+
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(groupRepository.save(group)).thenReturn(group);
+
+        GroupDTO updated = groupService.partialUpdateGroup("DDYA-4", dto);
+
+        assertEquals("Algoritmos", updated.getName(), "El nombre debería actualizarse");
+        assertEquals(8, updated.getCurrentCapacity(), "La capacidad actual debería actualizarse");
+        assertEquals(Curriculum.ADMI_05, updated.getCurriculum(), "El curriculum debería actualizarse");
+        assertEquals(1, updated.getSchedule().size(), "El schedule debería actualizarse");
+
+        assertEquals(10, updated.getMaximumCapacity(), "La capacidad máxima no debería cambiar");
+        assertEquals("DDYA", updated.getSubjectId(), "El subjectId no debería cambiar");
     }
 
 
     @Test
-    void ShouldThrowWhenDeleteNotFound() {
-        when(groupRepository.findByGroupId("RECO-1")).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> groupService.deleteGroup("RECO-1"));
+    void ShouldAssignTeacherToGroup() {
+        group.setTeacher(null);
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(groupRepository.save(group)).thenReturn(group);
+
+        groupService.assignTeacherToGroup("DDYA-4", 10);
+
+        assertEquals(10, group.getTeacher());
     }
-    
+
     @Test
-    void ShouldUpdateCapacity() {
-        Group existing = new Group();
+    void ShouldRemoveTeacherFromGroup() {
+        group.setTeacher(10);
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(groupRepository.save(group)).thenReturn(group);
 
-        existing.setGroupId("ECDI-6");
-        existing.setCurrentCapacity(5);
+        groupService.removeTeacherFromGroup("DDYA-4");
 
-        when(groupRepository.findByGroupId("ECDI-6")).thenReturn(Optional.of(existing));
+        assertEquals(0, group.getTeacher());
+}
 
-        Group saved = new Group();
 
-        saved.setGroupId("ECDI-6");
-        saved.setCurrentCapacity(12);
-        when(groupRepository.save(existing)).thenReturn(saved);
+    @Test
+    void ShouldGetEnrolledCount() {
+        group.setCurrentCapacity(7);
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        int enrolled = groupService.getEnrolledCount("DDYA-4");
+
+        assertEquals(7, enrolled);
+    }
+
+    @Test
+    void ShouldAssignStudentToGroupAddsScheduleWithoutDuplicates() {
+        group.setSchedule(new ArrayList<>(List.of(scheduleEntry)));
+        student.setSchedule(new ArrayList<>()); 
+
+        when(message.findStudentOrThrow(1)).thenReturn(student);
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(mongoTemplate.findAndModify(any(), any(), any(), eq(Group.class))).thenReturn(group);
+        when(studentRepository.save(student)).thenReturn(student);
+        when(groupMapper.toDTO(group)).thenReturn(groupDTO);
+
+        groupService.assignStudentToGroup("DDYA-4", 1);
+
+        assertEquals(1, student.getSchedule().size());
+        ScheduleEntry seAdded = student.getSchedule().get(0);
+        assertEquals("DDYA", seAdded.getSubject());
+        assertEquals("DDYA-4", seAdded.getGroup());
+        assertEquals("Monday", seAdded.getDay());
+    }
+
+    @Test
+    void ShouldAssignStudentToGroupAvoidsDuplicateSchedule() {
+        group.setSchedule(new ArrayList<>(List.of(scheduleEntry)));
         
-        GroupDTO dto = new GroupDTO();
+        ScheduleEntry studentEntry = new ScheduleEntry();
+        studentEntry.setSubject("DDYA");
+        studentEntry.setGroup("DDYA-4");
+        studentEntry.setDay("Monday");
+        studentEntry.setFrom("08:00");
+        studentEntry.setTo("10:00");
+        student.setSchedule(new ArrayList<>(List.of(studentEntry)));
 
-        dto.setCurrentCapacity(12);
-        when(groupMapper.toDTO(saved)).thenReturn(dto);
+        when(message.findStudentOrThrow(1)).thenReturn(student);
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(mongoTemplate.findAndModify(any(), any(), any(), eq(Group.class))).thenReturn(group);
+        when(studentRepository.save(student)).thenReturn(student);
+        when(groupMapper.toDTO(group)).thenReturn(groupDTO);
 
-        GroupDTO out = groupService.updateCapacity("ECDI-6", 12);
+        groupService.assignStudentToGroup("DDYA-4", 1);
 
-        assertEquals(12, out.getCurrentCapacity());
+        assertEquals(1, student.getSchedule().size());
     }
 
-    @Test
-    void ShouldReturnWaitlist() {
-        Group existing = new Group();
 
-        existing.setGroupId("CALD-12");
-        existing.setWaitlist(List.of(1000100575, 1000100516)); 
-        when(groupRepository.findByGroupId("CALD-12")).thenReturn(Optional.of(existing));
-
-        var wl = groupService.getWaitlist("CALD-12");
-
-        assertNotNull(wl);
-        assertEquals(2, wl.size());
-        assertEquals(1000100575, wl.get(0));
-    }
-**/
 }

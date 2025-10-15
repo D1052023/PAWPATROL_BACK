@@ -17,12 +17,19 @@ public interface StudentMapper {
     @Mapping(target = "requests", source = "requests")
     @Mapping(target = "enrolledSubjects", source = "enrolledSubjects")
     @Mapping(target = "approvedSubjects", source = "approvedSubjects")
-    @Mapping(target = "admissionCycle", ignore = true)
     StudentDTO toDTO(Student student);
 
     @Mapping(target = "role", ignore = true)
     @Mapping(target = "schedule", ignore = true)
     @Mapping(target = "requests", ignore = true)
+    @Mapping(target = "academicSituation", ignore = true)
+    @Mapping(target = "admissionCycle", ignore = true)
+    @Mapping(target = "approvedCredits", ignore = true)
+    @Mapping(target = "gradeAverage", ignore = true)
+    @Mapping(target = "lastSemester", ignore = true)
+    @Mapping(target = "semesterToTake", ignore = true)
+    @Mapping(target = "situationCycle", ignore = true)
+    @Mapping(target = "accumulativeAverage", ignore = true)
     Student toEntity(StudentDTO studentDTO);
 
     List<StudentDTO> toDTOList(List<Student> students);

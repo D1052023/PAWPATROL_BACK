@@ -5,10 +5,9 @@ import eci.edu.dosw.proyecto.dtos.SubjectDTO;
 import eci.edu.dosw.proyecto.services.SubjectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
+
+import org.springframework.http.ResponseEntity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,23 +15,25 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class SubjectControllerTest {
-
-    @Mock
-    private SubjectService subjectService;
 
     @InjectMocks
     private SubjectController subjectController;
+
+    @Mock
+    private SubjectService subjectService;
 
     private SubjectDTO subjectDTO;
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
+
         subjectDTO = new SubjectDTO();
         subjectDTO.setSubjectId("ODSC");
         subjectDTO.setName("Organización de los Sistemas de Computo");
         subjectDTO.setCredits(3);
+        subjectDTO.setMaximumCapacity(50);
     }
 
     @Test
@@ -71,7 +72,6 @@ class SubjectControllerTest {
 
         SubjectDTO result = subjectController.updateSubject("ODSC", subjectDTO);
 
-        assertNotNull(result);
         assertEquals("Organización de los Sistemas de Computo", result.getName());
     }
 
@@ -81,8 +81,50 @@ class SubjectControllerTest {
 
         SubjectDTO result = subjectController.partialUpdateSubject("ODSC", subjectDTO);
 
-        assertNotNull(result);
         assertEquals(3, result.getCredits());
     }
 
+    @Test
+    void ShouldDeleteSubject() {
+        doNothing().when(subjectService).deleteSubject("ODSC");
+
+        subjectController.deleteSubject("ODSC");
+        verify(subjectService, times(1)).deleteSubject("ODSC");
+    }
+
+    @Test
+    void ShouldGetSubjectsByTeacher() {
+        when(subjectService.getSubjectsByTeacher(1)).thenReturn(Arrays.asList(subjectDTO));
+
+        List<SubjectDTO> result = subjectController.getSubjectsByTeacher(1);
+
+        assertEquals(1, result.size());
+        assertEquals("ODSC", result.get(0).getSubjectId());
+    }
+
+    @SuppressWarnings("null")
+    @Test
+    void ShouldUpdateSubjectCapacity() {
+        SubjectDTO dto = new SubjectDTO();
+        dto.setMaximumCapacity(60);
+
+        when(subjectService.partialUpdateSubject("ODSC", dto)).thenReturn(dto);
+
+        ResponseEntity<SubjectDTO> response = subjectController.updateSubjectCapacity("ODSC", 60);
+
+        assertNotNull(response.getBody());
+        assertEquals(60, response.getBody().getMaximumCapacity());
+    }
+
+    @Test
+    void ShouldAssignAndRemoveStudent() {
+        when(subjectService.assignStudentToSubject("ODSC", 101)).thenReturn(subjectDTO);
+        when(subjectService.removeStudentFromSubject("ODSC", 101)).thenReturn(subjectDTO);
+
+        ResponseEntity<SubjectDTO> assigned = subjectController.assignStudentToSubject("ODSC", 101);
+        assertEquals(subjectDTO, assigned.getBody());
+
+        ResponseEntity<SubjectDTO> removed = subjectController.removeStudentFromSubject("ODSC", 101);
+        assertEquals(subjectDTO, removed.getBody());
+    }
 }

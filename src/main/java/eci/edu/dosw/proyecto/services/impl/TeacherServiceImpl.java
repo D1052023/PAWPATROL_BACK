@@ -28,7 +28,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     public TeacherDTO getTeacherById(int id) {
         Teacher teacher = teacherRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Teacher not found with id: " + id));
+            .orElseThrow(() -> new RuntimeException("Profesor no encontrado con id: " + id));
         return teacherMapper.toDTO(teacher);
     }
 
@@ -64,8 +64,7 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher existingTeacher = teacherRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Profesor no encontrado con id: " + id));
         
-        if (!existingTeacher.getEmail().equals(teacherDTO.getEmail()) &&
-            teacherRepository.existsByEmail(teacherDTO.getEmail())) {
+        if (!existingTeacher.getEmail().equals(teacherDTO.getEmail()) && teacherRepository.existsByEmail(teacherDTO.getEmail())) {
             throw new RuntimeException("Email ya existe: " + teacherDTO.getEmail());
         }
 

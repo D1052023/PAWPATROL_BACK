@@ -5,205 +5,213 @@ import eci.edu.dosw.proyecto.enums.Curriculum;
 import eci.edu.dosw.proyecto.enums.SubjectStatus;
 import eci.edu.dosw.proyecto.enums.SubjectType;
 import eci.edu.dosw.proyecto.mappers.SubjectMapper;
+import eci.edu.dosw.proyecto.models.Group;
+import eci.edu.dosw.proyecto.models.ScheduleEntry;
 import eci.edu.dosw.proyecto.models.Subject;
+import eci.edu.dosw.proyecto.models.Student;
+import eci.edu.dosw.proyecto.repositories.GroupRepository;
+import eci.edu.dosw.proyecto.repositories.StudentRepository;
 import eci.edu.dosw.proyecto.repositories.SubjectRepository;
+import eci.edu.dosw.proyecto.repositories.TeacherRepository;
+import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.impl.SubjectServiceImpl;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.*;
 
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 class SubjectServiceImplTest {
 
-    private SubjectRepository subjectRepository;
-    private SubjectMapper subjectMapper;
+    @InjectMocks
     private SubjectServiceImpl subjectService;
 
-    /**
+    @Mock
+    private SubjectRepository subjectRepository;
+    @Mock
+    private TeacherRepository teacherRepository;
+    @Mock
+    private GroupRepository groupRepository;
+    @Mock
+    private SubjectMapper subjectMapper;
+    @Mock
+    private HistoryService historyService;
+    @Mock
+    private MessageExceptions message;
+    @Mock
+    private StudentRepository studentRepository;
+
+    private SubjectDTO dto;
+    private Subject subject;
+    private Group group;
+    private Student student;
+
     @BeforeEach
     void setUp() {
-        subjectRepository = Mockito.mock(SubjectRepository.class);
-        subjectMapper = Mockito.mock(SubjectMapper.class);
-        subjectService = new SubjectServiceImpl(subjectRepository, subjectMapper);
-    }
+        MockitoAnnotations.openMocks(this);
 
-    @Test
-    void ShouldCreateSubject() {
-        SubjectDTO dto = new SubjectDTO(
-                "MATE01",
-                "Matemáticas",
-                3,
-                Curriculum.ISIS_15,
-                SubjectType.MANDATORY,
-                SubjectStatus.OPEN,
-                List.of("CALC01"),
-                "Curso de matemáticas básicas"
-        );
+        dto = new SubjectDTO();
+        dto.setSubjectId("ODSC");
+        dto.setName("Organización de los Sistemas de Computo");
+        dto.setCredits(3);
+        dto.setMaximumCapacity(50);
+        dto.setCurriculum(Curriculum.ISIS_15);
+        dto.setType(SubjectType.MANDATORY);
+        dto.setSubjectStatus(SubjectStatus.OPEN);
+        dto.setPrerequisites(Arrays.asList("MAT1000100516"));
+        dto.setDescription("Descripción");
 
-        Subject subject = new Subject();
-        subject.setSubjectId("MATE01");
-        subject.setName("Matemáticas");
-        subject.setCredits(3);
-        subject.setCurriculum(Curriculum.ISIS_15);
-        subject.setType(SubjectType.MANDATORY);
-        subject.setSubjectStatus(SubjectStatus.OPEN);
-        subject.setPrerequisites(List.of("CALC01"));
-        subject.setDescription("Curso de matemáticas básicas");
+        subject = new Subject();
+        subject.setSubjectId("ODSC");
+        subject.setMaximumCapacity(50);
 
-        Mockito.when(subjectMapper.toModel(dto)).thenReturn(subject);
-        Mockito.when(subjectRepository.save(subject)).thenReturn(subject);
-        Mockito.when(subjectMapper.toDTO(subject)).thenReturn(dto);
+        group = new Group();
+        group.setMaximumCapacity(20);
 
-        SubjectDTO result = subjectService.createSubject(dto);
-
-        assertEquals("MATE01", result.getSubjectId());
-        assertEquals("Matemáticas", result.getName());
-        assertEquals(3, result.getCredits());
-        assertEquals(Curriculum.ISIS_15, result.getCurriculum());
-        assertEquals(SubjectType.MANDATORY, result.getType());
-        assertEquals(SubjectStatus.OPEN, result.getSubjectStatus());
-        assertTrue(result.getPrerequisites().contains("CALC01"));
+        student = new Student();
+        student.setId(1000100516);
+        student.setEnrolledSubjects(new ArrayList<>());
+        student.setSchedule(new ArrayList<>());
     }
 
     @Test
     void ShouldGetAllSubjects() {
-        Subject subject = new Subject();
-        subject.setSubjectId("MATE01");
-
-        SubjectDTO dto = new SubjectDTO(
-                "MATE01",
-                "Matemáticas",
-                3,
-                Curriculum.ISIS_15,
-                SubjectType.MANDATORY,
-                SubjectStatus.OPEN,
-                List.of(),
-                "Curso básico"
-        );
-
-        Mockito.when(subjectRepository.findAll()).thenReturn(List.of(subject));
-        Mockito.when(subjectMapper.toDTOList(List.of(subject))).thenReturn(List.of(dto));
+        when(subjectRepository.findAll()).thenReturn(Arrays.asList(subject));
+        when(subjectMapper.toDTOList(Arrays.asList(subject))).thenReturn(Arrays.asList(dto));
 
         List<SubjectDTO> result = subjectService.getAllSubjects();
-
         assertEquals(1, result.size());
-        assertEquals("MATE01", result.get(0).getSubjectId());
     }
 
     @Test
-    void ShouldGetSubjectById() {
-        Subject subject = new Subject();
-        subject.setSubjectId("DOSW");
+    void ShouldGetSubjectByIdFound() {
+        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.of(subject));
+        when(subjectMapper.toDTO(subject)).thenReturn(dto);
 
-        SubjectDTO dto = new SubjectDTO(
-                "DOSW", "Desarrollo de software", 3,
-                Curriculum.ISIS_15, SubjectType.MANDATORY,
-                SubjectStatus.OPEN, List.of(), "Curso básico"
-        );
-
-        Mockito.when(subjectRepository.findBySubjectId("DOSW")).thenReturn(Optional.of(subject));
-        Mockito.when(subjectMapper.toDTO(subject)).thenReturn(dto);
-
-        SubjectDTO result = subjectService.getSubjectById("DOSW");
-
-        assertEquals("DOSW", result.getSubjectId());
+        SubjectDTO result = subjectService.getSubjectById("ODSC");
+        assertEquals("ODSC", result.getSubjectId());
     }
 
     @Test
-    void ShouldNotGetSubjectById() {
-        Mockito.when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> subjectService.getSubjectById("ODCS"));
+    void ShouldThrowSubjectByIdNotFound() {
+        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class,
+                () -> subjectService.getSubjectById("ODSC"));
     }
 
     @Test
-    void ShouldUpdateSubject() {
-        SubjectDTO dto = new SubjectDTO(
-                "MATE01", "Matemáticas Avanzadas", 4,
-                Curriculum.ISIS_15, SubjectType.ELECTIVE,
-                SubjectStatus.OPEN, List.of("CALC01"), "Curso avanzado"
-        );
+    void ShouldUpdateSubjectSuccessfully() {
+        when(subjectRepository.existsBySubjectId("ODSC")).thenReturn(true);
+        when(subjectMapper.toModel(dto)).thenReturn(subject);
+        when(subjectRepository.save(subject)).thenReturn(subject);
+        when(subjectMapper.toDTO(subject)).thenReturn(dto);
 
-        Subject updated = new Subject();
-        updated.setSubjectId("CALD");
-        updated.setName("Matemáticas Avanzadas");
-        updated.setCredits(4);
-        updated.setCurriculum(Curriculum.ISIS_15);
-        updated.setType(SubjectType.ELECTIVE);
-        updated.setSubjectStatus(SubjectStatus.OPEN);
-        updated.setPrerequisites(List.of("CALC01"));
-        updated.setDescription("Curso avanzado");
-
-        Mockito.when(subjectRepository.existsBySubjectId("CALD")).thenReturn(true);
-        Mockito.when(subjectMapper.toModel(dto)).thenReturn(updated);
-        Mockito.when(subjectRepository.save(updated)).thenReturn(updated);
-        Mockito.when(subjectMapper.toDTO(updated)).thenReturn(dto);
-
-        SubjectDTO result = subjectService.updateSubject("CALD", dto);
-
-        assertEquals("Matemáticas Avanzadas", result.getName());
-        assertEquals(4, result.getCredits());
-        assertEquals(Curriculum.ISIS_15, result.getCurriculum());
-        assertEquals(SubjectType.ELECTIVE, result.getType());
+        SubjectDTO result = subjectService.updateSubject("ODSC", dto);
+        assertEquals("ODSC", result.getSubjectId());
     }
 
     @Test
-    void ShouldNotUpdateSubject() {
-        SubjectDTO dto = new SubjectDTO("DDYA", "DISEÑO DATOS", 3, Curriculum.ISIS_15, null, null, null, null);
-        Mockito.when(subjectRepository.existsBySubjectId("DDYA")).thenReturn(false);
-        assertThrows(RuntimeException.class, () -> subjectService.updateSubject("DDYA", dto));
-    }
-
-    @Test
-    void ShouldPartialUpdateSubjec() {
-        SubjectDTO dto = new SubjectDTO(
-                null, "Nuevo Nombre", 5,
-                null, null, SubjectStatus.CLOSE,
-                null, null
-        );
-
-        Subject existing = new Subject();
-        existing.setSubjectId("MATE01");
-        existing.setName("Viejo Nombre");
-        existing.setCredits(3);
-        existing.setCurriculum(Curriculum.ISIS_15);
-        existing.setType(SubjectType.MANDATORY);
-        existing.setSubjectStatus(SubjectStatus.OPEN);
-        existing.setPrerequisites(List.of("CALC01"));
-        existing.setDescription("Curso base");
-
-        Mockito.when(subjectRepository.findBySubjectId("MATE01")).thenReturn(Optional.of(existing));
-        Mockito.when(subjectRepository.save(existing)).thenReturn(existing);
-
-        SubjectDTO expected = new SubjectDTO(
-                "MATE01", "Nuevo Nombre", 5,
-                Curriculum.ISIS_15, SubjectType.MANDATORY,
-                SubjectStatus.CLOSE, List.of("CALC01"), "Curso base"
-        );
-
-        Mockito.when(subjectMapper.toDTO(existing)).thenReturn(expected);
-
-        SubjectDTO result = subjectService.partialUpdateSubject("MATE01", dto);
-
-        assertEquals("Nuevo Nombre", result.getName());
-        assertEquals(5, result.getCredits());
-        assertEquals(SubjectStatus.CLOSE, result.getSubjectStatus());
-    }
-
-    @Test
-    void ShouldNotpartialUpdateSubject() {
-        SubjectDTO dto = new SubjectDTO("ECDI", "Ecuaciones", 3, null, null, null, null, null);
-        Mockito.when(subjectRepository.findBySubjectId("ECDI")).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> subjectService.partialUpdateSubject("ECDI", dto));
+    void ShouldThrowUpdateSubjectNotFound() {
+        when(subjectRepository.existsBySubjectId("ODSC")).thenReturn(false);
+        assertThrows(RuntimeException.class,
+                () -> subjectService.updateSubject("ODSC", dto));
     }
 
     @Test
     void ShouldDeleteSubject() {
-        assertDoesNotThrow(() -> subjectService.deleteSubject("MATE01"));
+        doNothing().when(subjectRepository).deleteById("ODSC");
+        subjectService.deleteSubject("ODSC");
+        verify(subjectRepository, times(1)).deleteById("ODSC");
     }
-    **/
+
+    @Test
+    void ShouldUpdateNameAndCreditsIfPresent() {
+        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.of(subject));
+        when(groupRepository.findBySubjectId("ODSC")).thenReturn(Collections.emptyList());
+        when(subjectRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(subjectMapper.toDTO(any())).thenAnswer(invocation -> {
+            Subject arg = invocation.getArgument(0);
+            SubjectDTO updatedDto = new SubjectDTO();
+            updatedDto.setName(arg.getName());
+            updatedDto.setCredits(arg.getCredits());
+            return updatedDto;
+        });
+
+        SubjectDTO updateDto = new SubjectDTO();
+        updateDto.setName("DDYA");
+        updateDto.setCredits(5);
+
+        SubjectDTO result = subjectService.partialUpdateSubject("ODSC", updateDto);
+
+        assertEquals("DDYA", result.getName()); 
+        assertEquals(5, result.getCredits());
+    }
+
+
+    @Test
+    void ShouldUpdateMaximumCapacityWhenValid() {
+        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.of(subject));
+        when(groupRepository.findBySubjectId("ODSC")).thenReturn(Arrays.asList(group));
+        when(subjectRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(subjectMapper.toDTO(any())).thenReturn(dto);
+
+        dto.setMaximumCapacity(30); 
+        SubjectDTO result = subjectService.partialUpdateSubject("ODSC", dto);
+
+        assertEquals(30, result.getMaximumCapacity());
+        assertEquals(30, subject.getMaximumCapacity());
+    }
+
+    @Test
+    void ShouldThrowIfMaximumCapacityLessThanSumGroups() {
+        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.of(subject));
+        group.setMaximumCapacity(20);
+        when(groupRepository.findBySubjectId("ODSC")).thenReturn(Arrays.asList(group));
+
+        dto.setMaximumCapacity(10);
+        assertThrows(RuntimeException.class,
+                () -> subjectService.partialUpdateSubject("ODSC", dto));
+    }
+
+    @Test
+    void ShouldInitializeEnrolledSubjectsIfNull() {
+        student.setEnrolledSubjects(null);
+        when(message.findSubjectOrThrow("ODSC")).thenReturn(subject);
+        when(message.findStudentOrThrow(1000100516)).thenReturn(student);
+        doNothing().when(message).ensureCurriculumMatchesStudent(student, subject);
+        when(subjectMapper.toDTO(subject)).thenReturn(dto);
+        when(studentRepository.save(any(Student.class))).thenReturn(student);
+
+        subjectService.assignStudentToSubject("ODSC", 1000100516);
+
+        assertNotNull(student.getEnrolledSubjects());
+        assertTrue(student.getEnrolledSubjects().contains("ODSC"));
+    }
+
+    @Test
+    void ShouldRemoveStudentFromEnrolledAndSchedule() {
+        student.getEnrolledSubjects().add("ODSC");
+        ScheduleEntry entry = new ScheduleEntry();
+        entry.setSubject("ODSC");
+        student.getSchedule().add(entry);
+
+        when(message.findSubjectOrThrow("ODSC")).thenReturn(subject);
+        when(message.findStudentOrThrow(1000100516)).thenReturn(student);
+        when(subjectMapper.toDTO(subject)).thenReturn(dto);
+        when(studentRepository.save(any(Student.class))).thenReturn(student);
+
+        subjectService.removeStudentFromSubject("ODSC", 1000100516);
+
+        assertFalse(student.getEnrolledSubjects().contains("ODSC"));
+        assertTrue(student.getSchedule().isEmpty());
+    }
+
+    
 }

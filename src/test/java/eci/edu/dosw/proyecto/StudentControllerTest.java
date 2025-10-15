@@ -1,18 +1,14 @@
 package eci.edu.dosw.proyecto;
 
 import eci.edu.dosw.proyecto.controller.StudentController;
-import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
-import eci.edu.dosw.proyecto.dtos.StudentDTO;
-import eci.edu.dosw.proyecto.enums.AcademicTrafficLight;
+import eci.edu.dosw.proyecto.dtos.*;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.services.StudentService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -72,36 +68,25 @@ class StudentControllerTest {
     void ShouldUpdateStudent() {
         StudentDTO updated = new StudentDTO();
         updated.setId(1);
-        updated.setName("Juan Updated");
+        updated.setName("Juan Carlos");
 
         when(studentService.updateStudent(1, updated)).thenReturn(updated);
 
         StudentDTO result = studentController.updateStudent(1, updated);
 
-        assertEquals("Juan Updated", result.getName());
+        assertEquals("Juan Carlos", result.getName());
     }
 
     @Test
     void ShouldPartiallyUpdateStudent() {
         StudentDTO partial = new StudentDTO();
-        partial.setName("Nuevo Nombre");
+        partial.setName("Robinson Nuñez");
 
         when(studentService.partialUpdateStudent(1, partial)).thenReturn(partial);
 
         StudentDTO result = studentController.partialUpdateStudent(1, partial);
 
-        assertEquals("Nuevo Nombre", result.getName());
-    }
-
-    /**
-    @Test
-    void ShouldGetStudentSchedule() {
-        when(studentService.getStudentSchedule(1, 2024)).thenReturn(studentDTO);
-
-        StudentDTO result = studentController.getStudentSchedule(1, 2024);
-
-        assertNotNull(result);
-        assertEquals(1, result.getId());
+        assertEquals("Robinson Nuñez", result.getName());
     }
 
     @Test
@@ -115,18 +100,6 @@ class StudentControllerTest {
     }
 
     @Test
-    void ShouldGetStudentScheduleByTrafficLight() {
-        ScheduleEntryDTO entry = new ScheduleEntryDTO();
-        when(studentService.getStudentScheduleByTrafficLight(1, 2024, AcademicTrafficLight.GREEN))
-                .thenReturn(List.of(entry));
-
-        List<ScheduleEntryDTO> result =
-                studentController.getStudentScheduleByTrafficLight(1, 2024, AcademicTrafficLight.GREEN);
-
-        assertEquals(1, result.size());
-    }
-
-    @Test
     void ShouldGetStudentRequestsByStatusWhenStatusProvided() {
         ChangeRequestDTO req = new ChangeRequestDTO();
         when(studentService.getStudentRequestsByStatus(1, RequestStatus.APPROVED)).thenReturn(List.of(req));
@@ -135,8 +108,7 @@ class StudentControllerTest {
 
         assertEquals(1, result.size());
     }
-     **/
-/**
+
     @Test
     void ShouldGetStudentRequestsByStatusWhenStatusIsNull() {
         ChangeRequestDTO req = new ChangeRequestDTO();
@@ -146,5 +118,23 @@ class StudentControllerTest {
 
         assertEquals(1, result.size());
     }
-    **/
+
+    @Test
+    void ShouldDeleteStudent() {
+        doNothing().when(studentService).deleteStudent(1);
+
+        studentController.deleteStudent(1);
+
+        verify(studentService, times(1)).deleteStudent(1);
+    }
+
+    @Test
+    void ShouldGetAcademicPlan() {
+        AcademicPlanDTO plan = new AcademicPlanDTO();
+        when(studentService.getAcademicPlan(1)).thenReturn(plan);
+
+        AcademicPlanDTO result = studentController.getAcademicPlan(1);
+
+        assertNotNull(result);
+    }
 }

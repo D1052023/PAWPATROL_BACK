@@ -3,7 +3,6 @@ package eci.edu.dosw.proyecto.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
