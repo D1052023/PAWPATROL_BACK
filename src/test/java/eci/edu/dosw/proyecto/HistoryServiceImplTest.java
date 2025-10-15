@@ -33,6 +33,7 @@ class HistoryServiceImplTest {
         String action = "CREATED";
         String note = "Solicitud creada";
         String processedBy = "STUDENT:1000100575";
+        
         when(repo.save(any(ChangeRequestHistory.class))).thenAnswer(i -> i.getArgument(0));
         historyService.addHistoryEvent(reqId, actor, action, note, processedBy);
 
@@ -52,6 +53,7 @@ class HistoryServiceImplTest {
     @Test
     void shouldReturnHistory() {
         UUID reqId = UUID.randomUUID();
+
         ChangeRequestHistory h1 = new ChangeRequestHistory();
         h1.setRequestId(reqId);
         h1.setTimestamp(LocalDateTime.now().minusMinutes(1));
@@ -59,6 +61,7 @@ class HistoryServiceImplTest {
         h1.setAction("SENT_TO_DEANERY");
         h1.setNote("Enviada");
         h1.setProcessedBy("SYSTEM");
+
         ChangeRequestHistory h2 = new ChangeRequestHistory();
         h2.setRequestId(reqId);
         h2.setTimestamp(LocalDateTime.now());
@@ -66,6 +69,7 @@ class HistoryServiceImplTest {
         h2.setAction("APPROVED");
         h2.setNote("Aprobada");
         h2.setProcessedBy("DEANERY");
+
         when(repo.findByRequestIdOrderByTimestampAsc(reqId)).thenReturn(List.of(h1, h2));
         List<ChangeRequestHistory> result = historyService.getHistory(reqId);
 

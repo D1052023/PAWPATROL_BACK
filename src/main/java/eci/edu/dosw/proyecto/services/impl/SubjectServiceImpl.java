@@ -1,8 +1,6 @@
 package eci.edu.dosw.proyecto.services.impl;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +21,6 @@ import eci.edu.dosw.proyecto.mappers.SubjectMapper;
 import eci.edu.dosw.proyecto.repositories.GroupRepository;
 import eci.edu.dosw.proyecto.repositories.StudentRepository;
 import eci.edu.dosw.proyecto.repositories.SubjectRepository;
-import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 
 
 /**
@@ -34,7 +31,6 @@ import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 public class SubjectServiceImpl implements SubjectService {
 
     private final SubjectRepository subjectRepository;
-    private final TeacherRepository teacherRepository;
     private final GroupRepository groupRepository;
     private final StudentRepository studentRepository;
 

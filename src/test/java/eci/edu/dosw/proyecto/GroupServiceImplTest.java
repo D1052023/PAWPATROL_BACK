@@ -2,6 +2,7 @@ package eci.edu.dosw.proyecto;
 
 import eci.edu.dosw.proyecto.dtos.*;
 import eci.edu.dosw.proyecto.enums.Curriculum;
+import eci.edu.dosw.proyecto.enums.GroupStatus;
 import eci.edu.dosw.proyecto.mappers.*;
 import eci.edu.dosw.proyecto.models.*;
 import eci.edu.dosw.proyecto.repositories.*;
@@ -12,6 +13,7 @@ import eci.edu.dosw.proyecto.util.MessageExceptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 
@@ -145,6 +147,59 @@ class GroupServiceImplTest {
     }
 
     @Test
+    void ShouldCreateGroup() {
+        Subject subject = new Subject();
+        subject.setSubjectId("DDYA");
+        subject.setMaximumCapacity(50);
+
+        Group groupModel = new Group();
+        groupModel.setGroupId("DDYA-4");
+        groupModel.setSubjectId("DDYA");
+        groupModel.setMaximumCapacity(10);
+
+        Group savedGroup = new Group();
+        savedGroup.setGroupId("DDYA-4");
+        savedGroup.setSubjectId("DDYA");
+        savedGroup.setMaximumCapacity(10);
+
+        when(groupMapper.toModel(groupDTO)).thenReturn(groupModel);
+        when(message.findSubjectOrThrow(groupModel.getSubjectId())).thenReturn(subject);
+        when(groupRepository.findBySubjectId("DDYA")).thenReturn(Collections.emptyList());
+        when(groupRepository.save(any(Group.class))).thenReturn(savedGroup);
+        when(groupMapper.toDTO(savedGroup)).thenReturn(groupDTO);
+
+        GroupDTO result = groupService.createGroup(groupDTO);
+
+        assertNotNull(result);
+        assertEquals("DDYA-4", result.getGroupId());
+
+    }
+
+    @Test
+    void ShouldReturnAllGroups() {
+        Group group1 = new Group();
+        group1.setGroupId("DDYA-1");
+        group1.setSubjectId("DDYA");
+
+        Group group2 = new Group();
+        group2.setGroupId("ODSC-2");
+        group2.setSubjectId("ODSC");
+
+        List<Group> groups = List.of(group1, group2);
+        List<GroupDTO> groupDTOs = List.of(groupDTO, groupDTO);
+
+        when(groupRepository.findAll()).thenReturn(groups);
+        when(groupMapper.toDTO(group1)).thenReturn(groupDTOs.get(0));
+        when(groupMapper.toDTO(group2)).thenReturn(groupDTOs.get(1));
+
+        List<GroupDTO> result = groupService.getAllGroups();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+    }
+
+
+    @Test
     void ShouldGetWaitlistAndDetails() {
         when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
         when(studentService.getStudentById(1)).thenReturn(studentDTO);
@@ -168,6 +223,19 @@ class GroupServiceImplTest {
 
         List<ScheduleEntryDTO> schedule = groupService.getSchedule("DDYA-4");
         assertEquals(1, schedule.size());
+    }
+
+    @Test
+    void ShouldReturnGroupById() {
+        group.setGroupId("DDYA-4");
+        group.setSubjectId("DDYA");
+
+        when(message.findGroupOrThrow("DDYA-4")).thenReturn(group);
+        when(groupMapper.toDTO(group)).thenReturn(groupDTO);
+
+        GroupDTO result = groupService.getGroupById("DDYA-4");
+
+        assertNotNull(result);
     }
 
     @Test
@@ -356,5 +424,113 @@ class GroupServiceImplTest {
         assertEquals(1, student.getSchedule().size());
     }
 
+    @Test
+    void ShouldRemoveStudentFromGroup() {
+        String groupId = "DDYA-1";
+        int studentId = 1001;
+
+        student.setId(studentId);
+        student.setEnrolledSubjects(new ArrayList<>(List.of("DDYA")));
+        student.setSchedule(new ArrayList<>());
+
+        group.setGroupId(groupId);
+        group.setSubjectId("DDYA");
+        group.setCurrentCapacity(5);
+
+        Group updatedGroup = new Group();
+        updatedGroup.setGroupId(groupId);
+        updatedGroup.setSubjectId("DDYA");
+        updatedGroup.setCurrentCapacity(4);
+
+        when(message.findStudentOrThrow(studentId)).thenReturn(student);
+        when(message.findGroupOrThrow(groupId)).thenReturn(group);
+        when(mongoTemplate.findAndModify(any(), any(), any(), eq(Group.class))).thenReturn(updatedGroup);
+        when(groupMapper.toDTO(updatedGroup)).thenReturn(groupDTO);
+
+        GroupDTO result = groupService.removeStudentFromGroup(groupId, studentId);
+
+        assertNotNull(result);
+    }
+
+    @Test
+    void ShouldPartiallyUpdateGroupFields() {
+        String groupId = "ISIS-1";
+
+        Group existing = new Group();
+        existing.setGroupId(groupId);
+        existing.setName("Grupo Original");
+        existing.setMaximumCapacity(20);
+        existing.setCurrentCapacity(10);
+        existing.setSubjectId("MAT01");
+        existing.setCurriculum(Curriculum.ISIS_15);
+        existing.setGroupStatus(GroupStatus.ACTIVE);
+        existing.setSchedule(new ArrayList<>());
+
+        GroupDTO dto = new GroupDTO();
+        dto.setName("Grupo Actualizado");
+        dto.setMaximumCapacity(40); 
+        dto.setCurrentCapacity(15); 
+        dto.setSchedule(Arrays.asList(new ScheduleEntryDTO())); 
+        dto.setSubjectId("MAT02"); 
+        dto.setCurriculum(Curriculum.MATE_04); 
+        dto.setGroupStatus(GroupStatus.INACTIVE);
+
+        List<ScheduleEntry> mappedSchedule = Arrays.asList(new ScheduleEntry());
+        when(scheduleEntryMapper.toModelList(anyList())).thenReturn(mappedSchedule);
+
+        when(message.findGroupOrThrow(groupId)).thenReturn(existing);
+        when(groupRepository.save(any(Group.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(groupMapper.toDTO(any(Group.class))).thenReturn(dto);
+
+        GroupDTO result = groupService.partialUpdateGroup(groupId, dto);
+
+        assertNotNull(result);
+        assertEquals("Grupo Actualizado", existing.getName());
+        assertEquals(40, existing.getMaximumCapacity());
+        assertEquals(15, existing.getCurrentCapacity());
+        assertEquals("MAT02", existing.getSubjectId());
+        assertEquals(Curriculum.MATE_04, existing.getCurriculum());
+        assertEquals(GroupStatus.INACTIVE, existing.getGroupStatus());
+        assertEquals(mappedSchedule, existing.getSchedule());
+
+    }
+
+    @Test
+    void ShouldAssignStudentToGroupWhenGroupHasNoSchedule() {
+        String groupId = "DDYA-4";
+        int studentId = 1;
+
+        student.setId(studentId);
+        student.setSchedule(new ArrayList<>());
+
+        group.setGroupId(groupId);
+        group.setSubjectId("DDYA");
+        group.setMaximumCapacity(10);
+        group.setCurrentCapacity(5);
+        group.setSchedule(null); 
+
+        Group updatedGroup = new Group();
+        updatedGroup.setGroupId(groupId);
+        updatedGroup.setSubjectId("DDYA");
+        updatedGroup.setMaximumCapacity(10);
+        updatedGroup.setCurrentCapacity(6);
+        updatedGroup.setSchedule(null); 
+
+        when(message.findStudentOrThrow(studentId)).thenReturn(student);
+        when(message.findGroupOrThrow(groupId)).thenReturn(group);
+        when(mongoTemplate.findAndModify(any(), any(), any(), eq(Group.class))).thenReturn(updatedGroup);
+        when(studentRepository.save(any(Student.class))).thenReturn(student);
+        when(groupMapper.toDTO(any(Group.class))).thenReturn(new GroupDTO());
+
+        GroupDTO result = groupService.assignStudentToGroup(groupId, studentId);
+
+        assertNotNull(result);
+        assertEquals(1, student.getSchedule().size());
+
+        ScheduleEntry entry = student.getSchedule().get(0);
+        assertEquals("DDYA", entry.getSubject());
+        assertEquals("DDYA-4", entry.getGroup());
+
+    }
 
 }

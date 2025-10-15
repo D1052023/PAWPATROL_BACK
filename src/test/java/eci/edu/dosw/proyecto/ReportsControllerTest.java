@@ -26,6 +26,7 @@ class ReportsControllerTest {
     @Test
     void shouldReturnBySubject() {
         ReassignmentStatsDTO dto = new ReassignmentStatsDTO("DOSW", "DOSW", 1, 0, 0, 1, 0, null);
+
         when(reportService.statsBySubject()).thenReturn(List.of(dto));
         List<ReassignmentStatsDTO> res = controller.bySubject();
 
@@ -37,6 +38,7 @@ class ReportsControllerTest {
     @Test
     void shouldReturnByGroup() {
         ReassignmentStatsDTO dto = new ReassignmentStatsDTO("G-1", "G-1", 2, 1, 0, 1, 0, 1.25);
+        
         when(reportService.statsByGroup()).thenReturn(List.of(dto));
         List<ReassignmentStatsDTO> res = controller.byGroup();
 
@@ -50,6 +52,7 @@ class ReportsControllerTest {
     @Test
     void shouldReturnByDeanery() {
         ReassignmentStatsDTO dto = new ReassignmentStatsDTO("ING", "ING", 3, 2, 0, 1, 0, 0.5);
+
         when(reportService.statsByDeanery()).thenReturn(List.of(dto));
         List<ReassignmentStatsDTO> res = controller.byDeanery();
 
@@ -62,6 +65,7 @@ class ReportsControllerTest {
     @Test
     void shouldReturnGlobal() {
         ReassignmentStatsDTO dto = new ReassignmentStatsDTO("GLOBAL", "GLOBAL", 10, 6, 2, 2, 1, 2.0);
+        
         when(reportService.statsGlobal()).thenReturn(dto);
         ReassignmentStatsDTO res = controller.global();
 

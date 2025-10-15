@@ -6,12 +6,12 @@ import eci.edu.dosw.proyecto.services.impl.AuthUserServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.mockito.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class AuthUserServiceImplTest {
 

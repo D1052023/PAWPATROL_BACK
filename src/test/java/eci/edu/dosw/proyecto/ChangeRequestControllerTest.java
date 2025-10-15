@@ -8,17 +8,19 @@ import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
 import eci.edu.dosw.proyecto.services.ChangeRequestService;
 import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.StudentService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ChangeRequestControllerTest {

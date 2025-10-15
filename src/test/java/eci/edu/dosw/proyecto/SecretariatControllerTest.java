@@ -45,10 +45,12 @@ class SecretariatControllerTest {
         SecretariatDTO in = new SecretariatDTO();
         in.setName("Patricia Salazar Perdomo");
         in.setEmail("patricia.salazar@escuelaing.edu.co");
+
         SecretariatDTO out = new SecretariatDTO();
         out.setId(1);
         out.setName("Patricia Salazar Perdomo");
         out.setEmail("patricia.salazar@escuelaing.edu.co");
+
         when(secretariatService.createSecretariat(in)).thenReturn(out);
         SecretariatDTO res = controller.createSecretariat(in);
 
@@ -62,6 +64,7 @@ class SecretariatControllerTest {
         SecretariatDTO dto = new SecretariatDTO();
         dto.setId(5);
         dto.setName("Patricia Salazar Perdomo");
+
         when(secretariatService.getSecretariatById(5)).thenReturn(dto);
         SecretariatDTO res = controller.getSecretariat(5);
 
@@ -72,6 +75,7 @@ class SecretariatControllerTest {
     void shouldGetAllSecretariats() {
         SecretariatDTO a = new SecretariatDTO(); a.setId(1);
         SecretariatDTO b = new SecretariatDTO(); b.setId(2);
+
         when(secretariatService.getAllSecretariats()).thenReturn(List.of(a, b));
         List<SecretariatDTO> res = controller.getAllSecretariats();
 
@@ -82,8 +86,10 @@ class SecretariatControllerTest {
     void shouldUpdateSecretariat() {
         SecretariatDTO in = new SecretariatDTO();
         in.setName("Updated");
+
         SecretariatDTO out = new SecretariatDTO();
         out.setId(7);
+        
         out.setName("Updated");
         when(secretariatService.updateSecretariat(1000000398, in)).thenReturn(out);
 
@@ -102,20 +108,25 @@ class SecretariatControllerTest {
     @Test
     void shouldUpdateRequestDates() {
         RequestDatesDTO dto = new RequestDatesDTO(LocalDateTime.of(2025,1,1,9,0), LocalDateTime.of(2025,1,10,18,0));
+
         doNothing().when(secretariatService).updateRequestDates(1000000398, dto.getStartDate(), dto.getEndDate());
         controller.updateRequestDates(1000000398, dto);
+
         verify(secretariatService).updateRequestDates(1000000398, dto.getStartDate(), dto.getEndDate());
     }
 
     @Test
     void shouldRespondWithParams() {
         UUID reqId = UUID.randomUUID();
+
         RequestDecisionDTO decision = new RequestDecisionDTO();
         decision.setStatus(RequestStatus.REJECTED);
         LocalDateTime start = LocalDateTime.now().minusDays(1);
         LocalDateTime end = LocalDateTime.now().plusDays(1);
+
         ChangeRequestDTO out = new ChangeRequestDTO();
         out.setId(reqId);
+
         when(secretariatService.respondRequestBySecretariat(eq(reqId), eq(decision), any())).thenReturn(out);
         ChangeRequestDTO res = controller.respondRequestBySecretariat(reqId, decision, start, end);
 
@@ -125,14 +136,18 @@ class SecretariatControllerTest {
     @Test
     void shouldRespondWithBody() {
         UUID reqId = UUID.randomUUID();
+
         RequestDecisionDTO decision = new RequestDecisionDTO();
         decision.setStatus(RequestStatus.APPROVED);
+
         RequestDatesDTO dates = new RequestDatesDTO(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
         RespondRequestInfo body = new RespondRequestInfo();
         body.setDecision(decision);
         body.setDates(dates);
+
         ChangeRequestDTO out = new ChangeRequestDTO();
         out.setId(reqId);
+
         when(secretariatService.respondRequestBySecretariat(eq(reqId), eq(decision), eq(dates))).thenReturn(out);
         ChangeRequestDTO res = controller.respondRequestBySecretariat(reqId, body);
 
@@ -143,7 +158,9 @@ class SecretariatControllerTest {
     void shouldGetRequestsByFacultyAndStatus() {
         Faculty faculty = Faculty.INGENIERIA_DE_SISTEMAS;
         RequestStatus status = RequestStatus.PENDING;
+
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(secretariatService.getRequestsByFacultyAndStatus(faculty, status)).thenReturn(List.of(dto));
         List<ChangeRequestDTO> res = controller.getRequestsByFacultyAndStatus(faculty, status);
 
@@ -154,6 +171,7 @@ class SecretariatControllerTest {
     void shouldGetRequestsOrderedAndSearchAndByPriority() {
         Faculty faculty = Faculty.ECONOMIA;
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(secretariatService.getRequestsByFacultyOrderedByPriority(faculty)).thenReturn(List.of(dto));
         when(secretariatService.searchRequestsByFacultyAndOrPriority(faculty, null)).thenReturn(List.of(dto));
         when(secretariatService.getAllRequestsOrderedByPriority()).thenReturn(List.of(dto));
@@ -169,15 +187,21 @@ class SecretariatControllerTest {
     void shouldGetHistoryAndGroupAndStudent() {
         UUID reqId = UUID.randomUUID();
         ChangeRequestHistory h = new ChangeRequestHistory();
+
         when(historyService.getHistory(reqId)).thenReturn(List.of(h));
+
         assertEquals(1, controller.getRequestHistory(reqId).size());
+
         when(groupService.getMaxCapacity("EGI4-4")).thenReturn(40);
         when(groupService.getCurrentCapacity("EGI4-4")).thenReturn(10);
         when(groupService.getWaitlist("EGI4-4")).thenReturn(List.of(1001, 1002));
+
         assertEquals(40, controller.getMaxCapacity("EGI4-4"));
         assertEquals(10, controller.getCurrentCapacity("EGI4-4"));
         assertEquals(List.of(1001, 1002), controller.getWaitingList("EGI4-4"));
+
         StudentDTO stu = new StudentDTO(); stu.setId(1000100575); stu.setName("Alumno");
+
         when(studentService.getStudentById(1000100575)).thenReturn(stu);
         StudentDTO res = controller.getStudentInfo(1000100575);
 
@@ -187,15 +211,17 @@ class SecretariatControllerTest {
     @Test
     void shouldUpdateAndDeleteRequestAsSecretariat() {
         UUID reqId = UUID.randomUUID();
+
         RequestDecisionDTO decision = new RequestDecisionDTO();
         decision.setStatus(RequestStatus.APPROVED);
         RequestDatesDTO dates = new RequestDatesDTO(LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(1));
         ChangeRequestDTO out = new ChangeRequestDTO(); out.setId(reqId);
+
         when(secretariatService.updateRequestAsSecretariat(reqId, decision, dates)).thenReturn(out);
         ChangeRequestDTO res = controller.updateRequestAsSecretariat(reqId, decision, dates.getStartDate(), dates.getEndDate());
-        assertEquals(reqId, res.getId());
-        doNothing().when(secretariatService).deleteRequestAsSecretariat(reqId);
         controller.deleteRequestAsSecretariat(reqId);
+        
+        assertEquals(reqId, res.getId());
 
     }
 }

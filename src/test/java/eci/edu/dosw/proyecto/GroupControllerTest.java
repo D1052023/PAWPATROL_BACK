@@ -151,6 +151,7 @@ class GroupControllerTest {
     @Test
     void ShouldManageSchedule() {
         ScheduleEntryDTO entry = new ScheduleEntryDTO();
+        
         when(groupService.getSchedule("MPIN-3")).thenReturn(Arrays.asList(entry));
         when(groupService.addScheduleEntry("MPIN-3", entry)).thenReturn(entry);
         when(groupService.updateScheduleGlobal("MPIN-3", Arrays.asList(entry))).thenReturn(Arrays.asList(entry));

@@ -22,9 +22,6 @@ import eci.edu.dosw.proyecto.mappers.GroupMapper;
 import eci.edu.dosw.proyecto.mappers.ScheduleEntryMapper;
 import eci.edu.dosw.proyecto.dtos.ScheduleEntryDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
-import eci.edu.dosw.proyecto.models.Group;
-import eci.edu.dosw.proyecto.models.ScheduleEntry;
-import eci.edu.dosw.proyecto.models.Student;
 import eci.edu.dosw.proyecto.models.*;
 import eci.edu.dosw.proyecto.repositories.StudentRepository;
 import eci.edu.dosw.proyecto.services.HistoryService;
@@ -304,10 +301,10 @@ public class GroupServiceImpl implements GroupService {
                 q, u, FindAndModifyOptions.options().returnNew(true), Group.class
         );
 
-        message.ensureAtomicUpdateSucceeded(updated, "No se puede inscribir: el grupo está lleno o se actualizó simultáneamente");
+        Objects.requireNonNull(updated, "No se puede inscribir: el grupo está lleno o se actualizó simultáneamente");
+
         if (student.getSchedule() == null) student.setSchedule(new ArrayList<>());
         String subjectId = updated.getSubjectId();
-        updated = Objects.requireNonNull(updated, "No se puede inscribir: el grupo está lleno o se actualizó simultáneamente");
         if (updated.getSchedule() != null && !updated.getSchedule().isEmpty()) {
             for (ScheduleEntry se : updated.getSchedule()) {
                 ScheduleEntry newEntry = new ScheduleEntry(

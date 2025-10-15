@@ -6,16 +6,19 @@ import eci.edu.dosw.proyecto.enums.Role;
 import eci.edu.dosw.proyecto.models.AuthUser;
 import eci.edu.dosw.proyecto.services.AuthUserService;
 import eci.edu.dosw.proyecto.services.JwtService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 class AuthControllerTest {
 

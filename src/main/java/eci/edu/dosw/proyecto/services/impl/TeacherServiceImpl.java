@@ -3,18 +3,17 @@ package eci.edu.dosw.proyecto.services.impl;
 import java.util.List;
 import java.util.Optional;
 
-import eci.edu.dosw.proyecto.util.MessageExceptions;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
+import lombok.RequiredArgsConstructor;
 
 import eci.edu.dosw.proyecto.dtos.TeacherDTO;
 import eci.edu.dosw.proyecto.models.Teacher;
 import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 import eci.edu.dosw.proyecto.services.TeacherService;
 import eci.edu.dosw.proyecto.mappers.TeacherMapper;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 
-import lombok.RequiredArgsConstructor;
 
 /**
  * Clase servicio que implementa la interfaz y maneja la lógica de los profesores.

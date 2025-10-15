@@ -81,7 +81,31 @@ class SubjectServiceImplTest {
         student.setId(1000100516);
         student.setEnrolledSubjects(new ArrayList<>());
         student.setSchedule(new ArrayList<>());
+    }  
+
+    @Test
+    void ShouldReturnSubjectsByTeacher() {
+        int teacherId = 1001;
+
+        Subject subject1 = new Subject();
+        subject1.setSubjectId("ODSC");
+        Subject subject2 = new Subject();
+        subject2.setSubjectId("DDYA");
+
+        List<Subject> subjects = Arrays.asList(subject1, subject2);
+        List<SubjectDTO> subjectDTOs = Arrays.asList(new SubjectDTO(), new SubjectDTO());
+
+        when(subjectRepository.findByTeacherId(teacherId)).thenReturn(subjects);
+        when(subjectMapper.toDTOList(subjects)).thenReturn(subjectDTOs);
+
+        List<SubjectDTO> result = subjectService.getSubjectsByTeacher(teacherId);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
     }
+
+
+
 
     @Test
     void ShouldGetAllSubjects() {
@@ -127,9 +151,10 @@ class SubjectServiceImplTest {
                 () -> subjectService.updateSubject("ODSC", dto));
     }
 
+
+
     @Test
     void ShouldDeleteSubject() {
-        doNothing().when(subjectRepository).deleteById("ODSC");
         subjectService.deleteSubject("ODSC");
         verify(subjectRepository, times(1)).deleteById("ODSC");
     }

@@ -81,7 +81,6 @@ class DeaneryControllerTest {
         assertEquals(dto, result);
     }
 
-    @SuppressWarnings("null")
     @Test
     void ShouldGetAllDeaneries() {
         DeaneryDTO d1 = new DeaneryDTO();
@@ -95,7 +94,6 @@ class DeaneryControllerTest {
         assertEquals(2, response.size());
     }
 
-    @SuppressWarnings("null")
     @Test
     void ShouldUpdateDeanery() {
         DeaneryDTO dto = new DeaneryDTO();
@@ -130,7 +128,6 @@ class DeaneryControllerTest {
         assertEquals(returned, response);
     }
 
-    @SuppressWarnings("null")
     @Test
     void ShouldGetRequestsByFacultyAndStatus() {
         Faculty faculty = Faculty.INGENIERIA_DE_SISTEMAS;
@@ -199,22 +196,24 @@ class DeaneryControllerTest {
     void shouldDeleteRequestAsDeanery() {
         int deaneryId = 1000000143;
         UUID reqId = UUID.randomUUID();
-        doNothing().when(deaneryService).deleteRequestAsDeanery(deaneryId, reqId);
-        controller.deleteRequestAsDeanery(deaneryId, reqId);
 
-        assertEquals(1, 1);
+        controller.deleteRequestAsDeanery(deaneryId, reqId);
+        verify(deaneryService, times(1)).deleteRequestAsDeanery(deaneryId, reqId);
     }
 
     @Test
     void shouldRespondRequestByDeaneryWithBody() {
         int deaneryId = 1000000451;
         UUID reqId = UUID.randomUUID();
+
         RequestDecisionDTO decision = new RequestDecisionDTO();
         RequestDatesDTO dates = new RequestDatesDTO();
         RespondRequestInfo body = new RespondRequestInfo();
         body.setDecision(decision);
         body.setDates(dates);
+
         ChangeRequestDTO returned = new ChangeRequestDTO();
+
         when(deaneryService.respondRequestByDeanery(deaneryId, reqId, decision, dates)).thenReturn(returned);
         ChangeRequestDTO response = controller.respondRequestByDeanery(deaneryId, reqId, body);
 
@@ -225,7 +224,9 @@ class DeaneryControllerTest {
     void shouldGetRequestsByFacultyAndPriority() {
         Faculty faculty = Faculty.INGENIERIA_DE_SISTEMAS;
         int priority = 1;
+
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(deaneryService.getRequestsByFacultyAndPriority(faculty, priority)).thenReturn(List.of(dto));
         List<ChangeRequestDTO> response = controller.getRequestsByFacultyAndPriority(faculty, priority);
 
@@ -236,7 +237,9 @@ class DeaneryControllerTest {
     void shouldApproveExceptional() {
         int deaneryId = 1000000451;
         UUID reqId = UUID.randomUUID();
+
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(changeRequestService.approveExceptionalRequest(deaneryId, reqId, true, "ok"))
                 .thenReturn(dto);
 
@@ -250,7 +253,9 @@ class DeaneryControllerTest {
     void shouldSearchRequestsByFacultyAndPriority() {
         Faculty faculty = Faculty.INGENIERIA_DE_SISTEMAS;
         Integer priority = 2;
+
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(deaneryService.searchRequestsByFacultyAndOrPriority(faculty, priority)).thenReturn(List.of(dto));
 
         List<ChangeRequestDTO> res = controller.searchRequests(faculty, priority);
@@ -263,6 +268,7 @@ class DeaneryControllerTest {
     void shouldGetExceptionalRequestsForStudentByDeanery() {
         int deaneryId = 1000000143;
         Integer studentId = 1000100575;
+
         ChangeRequestDTO dto = new ChangeRequestDTO();
         when(changeRequestService.getExceptionalRequestsByStudentForDeanery(deaneryId, studentId))
                 .thenReturn(List.of(dto));
@@ -277,6 +283,7 @@ class DeaneryControllerTest {
     void shouldGetRequestsByFacultyOrderedByPriority() {
         Faculty faculty = Faculty.INGENIERIA_DE_SISTEMAS;
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(deaneryService.getRequestsByFacultyOrderedByPriority(faculty)).thenReturn(List.of(dto));
 
         List<ChangeRequestDTO> res = controller.getRequestsByFacultyOrderedByPriority(faculty);
@@ -289,6 +296,7 @@ class DeaneryControllerTest {
     void shouldGetAllByPriority() {
         int priority = 3;
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(deaneryService.getAllRequestsByPriority(priority)).thenReturn(List.of(dto));
 
         List<ChangeRequestDTO> res = controller.getAllByPriority(priority);
@@ -301,6 +309,7 @@ class DeaneryControllerTest {
     void shouldGetExceptionalByDeanery() {
         int deaneryId = 1000000143;
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(changeRequestService.getExceptionalRequestsByDeanery(deaneryId)).thenReturn(List.of(dto));
 
         List<ChangeRequestDTO> res = controller.getExceptionalByDeanery(deaneryId);
@@ -312,6 +321,7 @@ class DeaneryControllerTest {
     @Test
     void shouldGetAllOrderedByPriority() {
         ChangeRequestDTO dto = new ChangeRequestDTO();
+
         when(deaneryService.getAllRequestsOrderedByPriority()).thenReturn(List.of(dto));
 
         List<ChangeRequestDTO> res = controller.getAllOrderedByPriority();
@@ -323,6 +333,7 @@ class DeaneryControllerTest {
     @Test
     void shouldGetAllExceptionalRequests() {
         ChangeRequestDTO dto = new ChangeRequestDTO();
+        
         when(changeRequestService.getAllExceptionalRequests()).thenReturn(List.of(dto));
 
         List<ChangeRequestDTO> res = controller.getAllExceptionalRequests();
