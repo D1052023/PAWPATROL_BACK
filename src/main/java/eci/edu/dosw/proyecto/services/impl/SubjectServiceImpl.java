@@ -47,8 +47,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     public SubjectDTO createSubject(SubjectDTO dto) {
-        Teacher teacher = teacherRepository.findById(dto.getTeacherId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado"));
+        Teacher teacher = message.findTeacherOrThrow(dto.getTeacherId());
 
         Subject subject = subjectMapper.toModel(dto);
         subject.setFaculty(teacher.getFaculty());
@@ -67,17 +66,13 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     public SubjectDTO getSubjectById(String subjectId) {
-        return subjectRepository.findBySubjectId(subjectId)
-                .map(subjectMapper::toDTO)
-                .orElseThrow(() -> new RuntimeException("Materia no encontrada"));
+        Subject subject = message.findSubjectOrThrow(subjectId);
+        return subjectMapper.toDTO(subject);
     }
 
     @Override
     public SubjectDTO updateSubject(String subjectId, SubjectDTO dto) {
-        if (!subjectRepository.existsBySubjectId(subjectId)) {
-            throw new RuntimeException("Materia no encontrada");
-        }
-
+        message.findSubjectOrThrow(subjectId);
         Subject updated = subjectMapper.toModel(dto);
         updated.setSubjectId(subjectId); 
         updated.setUpdatedAt(LocalDateTime.now());
@@ -93,8 +88,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     public SubjectDTO partialUpdateSubject(String subjectId, SubjectDTO dto) {
-        Subject existing = subjectRepository.findBySubjectId(subjectId)
-                .orElseThrow(() -> new RuntimeException("Materia no encontrada"));
+        Subject existing = message.findSubjectOrThrow(subjectId);
 
         if (dto.getName() != null) existing.setName(dto.getName());
         if (dto.getCredits() != 0) existing.setCredits(dto.getCredits());
@@ -110,10 +104,7 @@ public class SubjectServiceImpl implements SubjectService {
                     .mapToInt(Group::getMaximumCapacity)
                     .sum();
 
-            if (dto.getMaximumCapacity() < totalCuposGrupos) {
-                throw new RuntimeException("El nuevo cupo máximo es menor que la suma de los grupos existentes");
-            }
-
+            message.ensureNewSubjectMaxNotSmallerThanGroupSum(totalCuposGrupos, dto.getMaximumCapacity());
             existing.setMaximumCapacity(dto.getMaximumCapacity());
         }
 
@@ -125,10 +116,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     public List<SubjectDTO> getSubjectsByTeacher(int teacherId) {
-        if (!teacherRepository.existsById(teacherId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado");
-        }
-
+        message.ensureTeacherExistsOrThrow(teacherId);
         List<Subject> subjects = subjectRepository.findByTeacherId(teacherId);
         return subjectMapper.toDTOList(subjects);
     }
@@ -139,19 +127,14 @@ public class SubjectServiceImpl implements SubjectService {
         Student student = message.findStudentOrThrow(studentId);
 
         message.ensureCurriculumMatchesStudent(student, subject);
-
-        if (student.getEnrolledSubjects() != null && student.getEnrolledSubjects().contains(subjectId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El estudiante ya está inscrito en esta materia");
-        }
+        message.ensureStudentNotEnrolledInSubject(student, subjectId);
 
         int totalCuposUsados = groupRepository.findBySubjectId(subjectId)
                 .stream()
                 .mapToInt(g -> g.getCurrentCapacity() != null ? g.getCurrentCapacity() : 0)
                 .sum();
 
-        if (totalCuposUsados >= subject.getMaximumCapacity()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La materia ya alcanzó su capacidad máxima");
-        }
+        message.ensureSubjectHasAvailableCapacity(subject, totalCuposUsados);
 
         if (student.getEnrolledSubjects() == null) {
             student.setEnrolledSubjects(new ArrayList<>());
@@ -170,10 +153,7 @@ public class SubjectServiceImpl implements SubjectService {
     public SubjectDTO removeStudentFromSubject(String subjectId, int studentId) {
         Subject subject = message.findSubjectOrThrow(subjectId);
         Student student = message.findStudentOrThrow(studentId);
-
-        if (student.getEnrolledSubjects() == null || !student.getEnrolledSubjects().contains(subjectId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El estudiante no está inscrito en esta materia");
-        }
+        message.ensureStudentIsEnrolledInSubject(student, subjectId);
 
         student.getEnrolledSubjects().removeIf(sid -> sid.equals(subjectId));
 

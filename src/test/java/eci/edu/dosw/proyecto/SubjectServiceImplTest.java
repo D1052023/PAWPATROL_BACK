@@ -20,6 +20,8 @@ import eci.edu.dosw.proyecto.util.MessageExceptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.util.*;
@@ -92,7 +94,7 @@ class SubjectServiceImplTest {
 
     @Test
     void ShouldGetSubjectByIdFound() {
-        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.of(subject));
+        when(message.findSubjectOrThrow("ODSC")).thenReturn(subject);
         when(subjectMapper.toDTO(subject)).thenReturn(dto);
 
         SubjectDTO result = subjectService.getSubjectById("ODSC");
@@ -101,8 +103,9 @@ class SubjectServiceImplTest {
 
     @Test
     void ShouldThrowSubjectByIdNotFound() {
-        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class,
+        when(message.findSubjectOrThrow("ODSC"))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Materia no encontrada"));
+        assertThrows(ResponseStatusException.class,
                 () -> subjectService.getSubjectById("ODSC"));
     }
 
@@ -133,7 +136,7 @@ class SubjectServiceImplTest {
 
     @Test
     void ShouldUpdateNameAndCreditsIfPresent() {
-        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.of(subject));
+        when(message.findSubjectOrThrow("ODSC")).thenReturn(subject);
         when(groupRepository.findBySubjectId("ODSC")).thenReturn(Collections.emptyList());
         when(subjectRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(subjectMapper.toDTO(any())).thenAnswer(invocation -> {
@@ -157,7 +160,7 @@ class SubjectServiceImplTest {
 
     @Test
     void ShouldUpdateMaximumCapacityWhenValid() {
-        when(subjectRepository.findBySubjectId("ODSC")).thenReturn(Optional.of(subject));
+        when(message.findSubjectOrThrow("ODSC")).thenReturn(subject);
         when(groupRepository.findBySubjectId("ODSC")).thenReturn(Arrays.asList(group));
         when(subjectRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(subjectMapper.toDTO(any())).thenReturn(dto);

@@ -156,6 +156,8 @@ class SecretariatServiceImplTest {
         sec.setId(id);
         when(message.findSecretariatOrThrow(id)).thenReturn(sec);
         secretariatService.deleteSecretariat(id);
+
+        assertEquals(id, sec.getId());
     }
 
     @Test

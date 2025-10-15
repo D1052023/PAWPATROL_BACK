@@ -53,6 +53,13 @@ public class MessageExceptions {
     private static final String CANNOT_ENROLL_ATOMIC = "No se puede inscribir: el grupo está lleno o se actualizó simultáneamente";
     private static final String CANNOT_REMOVE_ATOMIC = "No se pudo retirar: capacidad ya en 0 o modificación concurrente";
     private static final String STUDENT_NOT_FOUND_FOR_EMAIL = "Estudiante no encontrado con email: %s";
+    private static final String TEACHER_NOT_FOUND_BY_ID = "Profesor no encontrado con id: %d";
+    private static final String STUDENT_ALREADY_ENROLLED_SUBJECT = "El estudiante ya está inscrito en esta materia";
+    private static final String STUDENT_NOT_ENROLLED_SUBJECT = "El estudiante no está inscrito en esta materia";
+    private static final String SUBJECT_AT_MAX_CAPACITY = "La materia ya alcanzó su capacidad máxima";
+    private static final String SUBJECT_NEW_MAX_LESS_THAN_GROUPS = "El nuevo cupo máximo es menor que la suma de los grupos existentes";
+    private static final String TEACHER_EMAIL_EXISTS = "Email ya existe: %s";
+    private static final String TEACHER_EMAIL_CONFLICT = "Email ya registrado: %s";
 
     private final StudentRepository studentRepository;
     private final ChangeRequestRepository changeRequestRepository;
@@ -285,4 +292,58 @@ public class MessageExceptions {
         LOG.debug("NotFound: {}", message);
         return new ResponseStatusException(status, message);
     }
+
+    public Teacher findTeacherOrThrow(int teacherId) {
+        return teacherRepository.findById(teacherId)
+                .orElseThrow(() -> notFound(HttpStatus.NOT_FOUND, String.format(TEACHER_NOT_FOUND_BY_ID, teacherId)));
+    }
+
+    public void ensureStudentNotEnrolledInSubject(Student student, String subjectId) {
+        if (student == null) return;
+        if (student.getEnrolledSubjects() != null && student.getEnrolledSubjects().contains(subjectId)) {
+            throw badRequest(STUDENT_ALREADY_ENROLLED_SUBJECT);
+        }
+    }
+
+    public void ensureStudentIsEnrolledInSubject(Student student, String subjectId) {
+        if (student == null) return;
+        if (student.getEnrolledSubjects() == null || !student.getEnrolledSubjects().contains(subjectId)) {
+            throw badRequest(STUDENT_NOT_ENROLLED_SUBJECT);
+        }
+    }
+
+    public void ensureSubjectHasAvailableCapacity(Subject subject, int totalCuposUsados) {
+        if (subject == null) return;
+        Integer max = subject.getMaximumCapacity();
+        int subjectMax = (max == null ? 0 : max);
+        if (totalCuposUsados >= subjectMax) {
+            throw badRequest(SUBJECT_AT_MAX_CAPACITY);
+        }
+    }
+
+    public void ensureNewSubjectMaxNotSmallerThanGroupSum(int totalCuposGrupos, int newSubjectMax) {
+        if (newSubjectMax < totalCuposGrupos) {
+            throw badRequest(SUBJECT_NEW_MAX_LESS_THAN_GROUPS);
+        }
+    }
+
+    public void ensureTeacherEmailNotRegisteredForCreate(String email) {
+        if (email == null || email.isBlank()) return;
+        if (teacherRepository.existsByEmail(email)) {
+            throw badRequest(String.format(TEACHER_EMAIL_EXISTS, email));
+        }
+    }
+
+    public void ensureTeacherEmailNotRegisteredForUpdate(int currentTeacherId, String newEmail) {
+        if (newEmail == null || newEmail.isBlank()) return;
+
+        boolean exists = teacherRepository.existsByEmail(newEmail);
+        if (exists) {
+            Teacher owner = teacherRepository.findByEmail(newEmail).orElse(null);
+            if (owner == null || owner.getId() != currentTeacherId) {
+                throw badRequest(String.format(TEACHER_EMAIL_CONFLICT, newEmail));
+            }
+        }
+    }
+
 }

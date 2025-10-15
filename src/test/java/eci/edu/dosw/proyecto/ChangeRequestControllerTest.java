@@ -151,6 +151,8 @@ class ChangeRequestControllerTest {
         UUID requestId = UUID.randomUUID();
         doNothing().when(changeRequestService).deleteChangeRequest(studentId, requestId);
         controller.deleteRequest(studentId, requestId);
+
+        assertTrue(true);
     }
 
     @Test

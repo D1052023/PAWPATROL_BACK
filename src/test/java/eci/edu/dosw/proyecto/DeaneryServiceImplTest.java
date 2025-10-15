@@ -167,7 +167,7 @@ class DeaneryServiceImplTest {
         when(message.findDeaneryOrThrow(999)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Decan@ no encontrado"));
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> deaneryService.getDeaneryById(999));
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
-        assertTrue(ex.getReason().contains("Decan@ no encontrado"));
+        assertTrue(Optional.ofNullable(ex.getReason()).orElse("").contains("Decan@ no encontrado"));
     }
 
     @Test
@@ -232,6 +232,8 @@ class DeaneryServiceImplTest {
         d.setId(1000000143); d.setName("Oswaldo Castillo Navetty");
         when(message.findDeaneryOrThrow(1000000143)).thenReturn(d);
         deaneryService.deleteDeanery(1000000143);
+
+        assertNotNull(d.getId());
     }
 
     @Test
@@ -492,18 +494,24 @@ class DeaneryServiceImplTest {
         Faculty f = Faculty.INGENIERIA_DE_SISTEMAS;
         when(changeRequestRepository.findByFacultyAndPriorityOrderByPriorityAsc(eq(f), eq(5))).thenReturn(List.of(new ChangeRequest()));
         when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO());
-
         List<ChangeRequestDTO> r1 = deaneryService.searchRequestsByFacultyAndOrPriority(f, 5);
+        assertNotNull(r1);
+        assertEquals(1, r1.size(), "Se esperaba 1 resultado para faculty + priority");
         when(changeRequestRepository.findByFacultyOrderByPriorityAsc(eq(f))).thenReturn(List.of(new ChangeRequest()));
         List<ChangeRequestDTO> r2 = deaneryService.searchRequestsByFacultyAndOrPriority(f, null);
         assertNotNull(r2);
+        assertEquals(1, r2.size(), "Se esperaba 1 resultado para faculty only");
         when(changeRequestRepository.findByPriorityOrderByPriorityAsc(eq(7))).thenReturn(List.of(new ChangeRequest()));
         List<ChangeRequestDTO> r3 = deaneryService.searchRequestsByFacultyAndOrPriority(null, 7);
         assertNotNull(r3);
+        assertEquals(1, r3.size(), "Se esperaba 1 resultado para priority only");
         when(changeRequestRepository.findAllByOrderByPriorityAsc()).thenReturn(List.of(new ChangeRequest()));
         List<ChangeRequestDTO> r4 = deaneryService.searchRequestsByFacultyAndOrPriority(null, null);
+
         assertNotNull(r4);
+        assertEquals(1, r4.size(), "Se esperaba 1 resultado para sin filtros");
     }
+
 
     @Test
     void shouldProcessApprovedRequest() {

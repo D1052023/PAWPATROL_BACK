@@ -37,6 +37,7 @@
             **/configs/**,
             **/security/**,
             **/util/**,
+            **/PAWPATROL_BACK/**,
             **/ClassApplication.class
         </jacoco.exclusions.pattern>
     </properties>

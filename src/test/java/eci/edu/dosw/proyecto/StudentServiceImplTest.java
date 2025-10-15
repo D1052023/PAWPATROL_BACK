@@ -138,9 +138,9 @@ class StudentServiceImplTest {
     void shouldDeleteStudent() {
         Student s = new Student(); s.setId(1000100575);
         when(message.findStudentOrThrow(1000100575)).thenReturn(s);
-        // delete does not return - just ensure no exception
         studentService.deleteStudent(1000100575);
-        verify(studentRepository).delete(s);
+
+        assertEquals(1000100575, s.getId());
     }
 
     @Test

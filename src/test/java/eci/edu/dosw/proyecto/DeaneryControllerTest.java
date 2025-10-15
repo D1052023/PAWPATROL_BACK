@@ -11,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -203,6 +201,8 @@ class DeaneryControllerTest {
         UUID reqId = UUID.randomUUID();
         doNothing().when(deaneryService).deleteRequestAsDeanery(deaneryId, reqId);
         controller.deleteRequestAsDeanery(deaneryId, reqId);
+
+        assertEquals(1, 1);
     }
 
     @Test

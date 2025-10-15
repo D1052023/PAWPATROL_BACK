@@ -4,10 +4,12 @@ import eci.edu.dosw.proyecto.dtos.TeacherDTO;
 import eci.edu.dosw.proyecto.models.Teacher;
 import eci.edu.dosw.proyecto.repositories.TeacherRepository;
 import eci.edu.dosw.proyecto.services.impl.TeacherServiceImpl;
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
@@ -26,6 +28,9 @@ class TeacherServiceImplTest {
 
     @Mock
     private eci.edu.dosw.proyecto.mappers.TeacherMapper teacherMapper;
+
+    @Mock
+    private MessageExceptions message;
 
     private Teacher teacher;
     private TeacherDTO teacherDTO;
@@ -52,6 +57,10 @@ class TeacherServiceImplTest {
             dto.setEmail(t.getEmail());
             return dto;
         });
+
+        when(message.findTeacherOrThrow(1)).thenReturn(teacher);
+        doNothing().when(message).ensureTeacherEmailNotRegisteredForCreate(anyString());
+        doNothing().when(message).ensureTeacherEmailNotRegisteredForUpdate(anyInt(), anyString());
     }
 
     @Test
@@ -66,7 +75,7 @@ class TeacherServiceImplTest {
 
     @Test
     void ShouldThrowTeacherByIdNotFound() {
-        when(teacherRepository.findById(1)).thenReturn(Optional.empty());
+        when(message.findTeacherOrThrow(1)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado con id: 1"));
 
         assertThrows(RuntimeException.class, () -> teacherService.getTeacherById(1));
     }
@@ -83,7 +92,6 @@ class TeacherServiceImplTest {
 
     @Test
     void ShouldCreateTeacherSuccessfully() {
-        when(teacherRepository.existsByEmail(teacherDTO.getEmail())).thenReturn(false);
         when(teacherMapper.toEntity(teacherDTO)).thenReturn(teacher);
         when(teacherRepository.save(teacher)).thenReturn(teacher);
 
@@ -95,13 +103,13 @@ class TeacherServiceImplTest {
 
     @Test
     void ShouldThrowCreateTeacherEmailExists() {
-        when(teacherRepository.existsByEmail(teacherDTO.getEmail())).thenReturn(true);
+        doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email ya existe: " + teacherDTO.getEmail()))
+                .when(message).ensureTeacherEmailNotRegisteredForCreate(teacherDTO.getEmail());
         assertThrows(RuntimeException.class, () -> teacherService.createTeacher(teacherDTO));
     }
 
     @Test
     void ShouldDeleteTeacherSuccessfully() {
-        when(teacherRepository.existsById(1)).thenReturn(true);
         doNothing().when(teacherRepository).deleteById(1);
 
         teacherService.deleteTeacher(1);
@@ -110,7 +118,7 @@ class TeacherServiceImplTest {
 
     @Test
     void ShouldThrowDeleteTeacherNotFound() {
-        when(teacherRepository.existsById(1)).thenReturn(false);
+        when(message.findTeacherOrThrow(1)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado con id: 1"));
 
         assertThrows(RuntimeException.class, () -> teacherService.deleteTeacher(1));
     }
@@ -121,8 +129,6 @@ class TeacherServiceImplTest {
         updateDTO.setName("Martin Cantor Updated");
         updateDTO.setEmail("andres.cantor-u@escuelaing.edu.co");
 
-        when(teacherRepository.findById(1)).thenReturn(Optional.of(teacher));
-        when(teacherRepository.existsByEmail(updateDTO.getEmail())).thenReturn(false);
         when(teacherRepository.save(any(Teacher.class))).thenReturn(teacher);
 
         TeacherDTO result = teacherService.updateTeacher(1, updateDTO);
@@ -137,15 +143,16 @@ class TeacherServiceImplTest {
         updateDTO.setName("Martin Cantor Updated");
         updateDTO.setEmail("Uandres.cantor-u@escuelaing.edu.co");
 
-        when(teacherRepository.findById(1)).thenReturn(Optional.of(teacher));
-        when(teacherRepository.existsByEmail(updateDTO.getEmail())).thenReturn(true);
+        doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email ya registrado: " + updateDTO.getEmail()))
+                .when(message).ensureTeacherEmailNotRegisteredForUpdate(1, updateDTO.getEmail());
+        when(message.findTeacherOrThrow(1)).thenReturn(teacher);
 
         assertThrows(RuntimeException.class, () -> teacherService.updateTeacher(1, updateDTO));
     }
 
     @Test
     void ShouldThrowUpdateTeacherNotFound() {
-        when(teacherRepository.findById(1)).thenReturn(Optional.empty());
+        when(message.findTeacherOrThrow(1)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado con id: 1"));
 
         assertThrows(RuntimeException.class, () -> teacherService.updateTeacher(1, teacherDTO));
     }
@@ -155,8 +162,6 @@ class TeacherServiceImplTest {
         TeacherDTO updateDTO = new TeacherDTO();
         updateDTO.setName("Nuevo Nombre");
 
-        when(teacherRepository.findById(1)).thenReturn(Optional.of(teacher));
-        when(teacherRepository.existsByEmail(any())).thenReturn(false);
         when(teacherRepository.save(any(Teacher.class))).thenReturn(teacher);
 
         TeacherDTO result = teacherService.partialUpdateTeacher(1, updateDTO);
@@ -169,8 +174,6 @@ class TeacherServiceImplTest {
         TeacherDTO updateDTO = new TeacherDTO();
         updateDTO.setEmail("nuevo@mail.com");
 
-        when(teacherRepository.findById(1)).thenReturn(Optional.of(teacher));
-        when(teacherRepository.existsByEmail(updateDTO.getEmail())).thenReturn(false);
         when(teacherRepository.save(any(Teacher.class))).thenReturn(teacher);
 
         TeacherDTO result = teacherService.partialUpdateTeacher(1, updateDTO);
@@ -183,8 +186,10 @@ class TeacherServiceImplTest {
         TeacherDTO updateDTO = new TeacherDTO();
         updateDTO.setEmail("Uandres.cantor-u@escuelaing.edu.co");
 
-        when(teacherRepository.findById(1)).thenReturn(Optional.of(teacher));
-        when(teacherRepository.existsByEmail(updateDTO.getEmail())).thenReturn(true);
+        doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Email ya registrado: " + updateDTO.getEmail()))
+                .when(message).ensureTeacherEmailNotRegisteredForUpdate(1, updateDTO.getEmail());
+
+        when(message.findTeacherOrThrow(1)).thenReturn(teacher);
 
         assertThrows(ResponseStatusException.class,
                 () -> teacherService.partialUpdateTeacher(1, updateDTO));
@@ -193,7 +198,7 @@ class TeacherServiceImplTest {
     @Test
     void ShouldThrowPartialUpdateTeacherNotFound() {
         TeacherDTO updateDTO = new TeacherDTO();
-        when(teacherRepository.findById(1)).thenReturn(Optional.empty());
+        when(message.findTeacherOrThrow(1)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesor no encontrado con id: 1"));
 
         assertThrows(ResponseStatusException.class,
                 () -> teacherService.partialUpdateTeacher(1, updateDTO));

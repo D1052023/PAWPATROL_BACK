@@ -153,8 +153,9 @@ class ChangeRequestServiceImplTest {
         when(message.findChangeRequestOrThrow(reqId)).thenReturn(r);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> changeRequestService.getRequestById(studentId, reqId));
-
-        assertTrue(ex.getReason().contains("Esta solicitud no pertenece"));
+        String reason = ex.getReason();
+        assertNotNull(reason, "Se esperaba que la excepción tuviera 'reason'");
+        assertTrue(reason.contains("Esta solicitud no pertenece"));
     }
 
     @Test
@@ -205,6 +206,8 @@ class ChangeRequestServiceImplTest {
             setWaitlist(new ArrayList<>(List.of(studentId)));
         }}));
         changeRequestService.deleteChangeRequest(studentId, reqId);
+
+        assertTrue(student.getRequests().isEmpty());
     }
 
     @Test

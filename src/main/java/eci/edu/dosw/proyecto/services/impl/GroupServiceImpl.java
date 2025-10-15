@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import eci.edu.dosw.proyecto.services.AlertService;
@@ -306,6 +307,7 @@ public class GroupServiceImpl implements GroupService {
         message.ensureAtomicUpdateSucceeded(updated, "No se puede inscribir: el grupo está lleno o se actualizó simultáneamente");
         if (student.getSchedule() == null) student.setSchedule(new ArrayList<>());
         String subjectId = updated.getSubjectId();
+        updated = Objects.requireNonNull(updated, "No se puede inscribir: el grupo está lleno o se actualizó simultáneamente");
         if (updated.getSchedule() != null && !updated.getSchedule().isEmpty()) {
             for (ScheduleEntry se : updated.getSchedule()) {
                 ScheduleEntry newEntry = new ScheduleEntry(

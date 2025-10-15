@@ -3,6 +3,7 @@ package eci.edu.dosw.proyecto.services.impl;
 import java.util.List;
 import java.util.Optional;
 
+import eci.edu.dosw.proyecto.util.MessageExceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,11 +25,11 @@ public class TeacherServiceImpl implements TeacherService {
 
     private final TeacherRepository teacherRepository;
     private final TeacherMapper teacherMapper;
+    private final MessageExceptions message;
 
     @Override
     public TeacherDTO getTeacherById(int id) {
-        Teacher teacher = teacherRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Profesor no encontrado con id: " + id));
+        Teacher teacher = message.findTeacherOrThrow(id);
         return teacherMapper.toDTO(teacher);
     }
 
@@ -42,10 +43,7 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     public TeacherDTO createTeacher(TeacherDTO teacherDTO) {
-        if (teacherRepository.existsByEmail(teacherDTO.getEmail())) {
-            throw new RuntimeException("Email ya existe: " + teacherDTO.getEmail());
-        }
-
+        message.ensureTeacherEmailNotRegisteredForCreate(teacherDTO.getEmail());
         Teacher teacher = teacherMapper.toEntity(teacherDTO);
         Teacher savedTeacher = teacherRepository.save(teacher);
         return teacherMapper.toDTO(savedTeacher);
@@ -53,19 +51,16 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     public void deleteTeacher(int id) {
-        if (!teacherRepository.existsById(id)) {
-            throw new RuntimeException("Profesor no encontrado con id: " + id);
-        }
+        message.findTeacherOrThrow(id);
         teacherRepository.deleteById(id);
     }
 
     @Override
     public TeacherDTO updateTeacher(int id, TeacherDTO teacherDTO) {
-        Teacher existingTeacher = teacherRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Profesor no encontrado con id: " + id));
-        
-        if (!existingTeacher.getEmail().equals(teacherDTO.getEmail()) && teacherRepository.existsByEmail(teacherDTO.getEmail())) {
-            throw new RuntimeException("Email ya existe: " + teacherDTO.getEmail());
+        Teacher existingTeacher = message.findTeacherOrThrow(id);
+
+        if (!existingTeacher.getEmail().equals(teacherDTO.getEmail())) {
+            message.ensureTeacherEmailNotRegisteredForUpdate(id, teacherDTO.getEmail());
         }
 
         existingTeacher.setName(teacherDTO.getName());
@@ -83,17 +78,15 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     public TeacherDTO partialUpdateTeacher(Integer id, TeacherDTO dto) {
-        Teacher teacher = teacherRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Profesor no encontrado con id: " + id));
+        Teacher teacher = message.findTeacherOrThrow(id);
 
         if (dto.getName() != null) {
             teacher.setName(dto.getName());
         }
 
         if (dto.getEmail() != null) {
-            if (!teacher.getEmail().equals(dto.getEmail()) && teacherRepository.existsByEmail(dto.getEmail())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ya registrado: " + dto.getEmail());
+            if (!teacher.getEmail().equals(dto.getEmail())) {
+                message.ensureTeacherEmailNotRegisteredForUpdate(id, dto.getEmail());
             }
             teacher.setEmail(dto.getEmail());
         }
