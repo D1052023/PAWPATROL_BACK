@@ -52,6 +52,7 @@ public class MessageExceptions {
     private static final String STUDENT_NOT_IN_GROUP = "Estudiante no está inscrito en el grupo: %s";
     private static final String CANNOT_ENROLL_ATOMIC = "No se puede inscribir: el grupo está lleno o se actualizó simultáneamente";
     private static final String CANNOT_REMOVE_ATOMIC = "No se pudo retirar: capacidad ya en 0 o modificación concurrente";
+    private static final String STUDENT_NOT_FOUND_FOR_EMAIL = "Estudiante no encontrado con email: %s";
 
     private final StudentRepository studentRepository;
     private final ChangeRequestRepository changeRequestRepository;
@@ -65,6 +66,15 @@ public class MessageExceptions {
     public Student findStudentOrThrow(Integer studentId) {
         return studentRepository.findById(studentId)
                 .orElseThrow(() -> notFound(HttpStatus.NOT_FOUND, STUDENT_NOT_FOUND.formatted(studentId)));
+    }
+
+    public Student findStudentByEmailOrThrow(String email) {
+        Student student = studentRepository.findByEmail(email);
+        if (student == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    String.format(STUDENT_NOT_FOUND_FOR_EMAIL, email));
+        }
+        return student;
     }
 
     public ChangeRequest findChangeRequestOrThrow(UUID requestId) {

@@ -11,6 +11,7 @@ import eci.edu.dosw.proyecto.repositories.*;
 import eci.edu.dosw.proyecto.services.DeaneryService;
 import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.impl.ChangeRequestServiceImpl;
+import eci.edu.dosw.proyecto.util.CurriculumToFacultyMapper;
 import eci.edu.dosw.proyecto.util.MessageExceptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,6 +62,9 @@ class ChangeRequestServiceImplTest {
     @Mock
     private MessageExceptions message;
 
+    @Mock
+    private CurriculumToFacultyMapper curriculumToFacultyMapper;
+
     @InjectMocks
     private ChangeRequestServiceImpl changeRequestService;
 
@@ -77,17 +81,25 @@ class ChangeRequestServiceImplTest {
         Secretariat sec = new Secretariat();
         sec.setRequestStartDate(LocalDateTime.now().minusDays(1));
         sec.setRequestEndDate(LocalDateTime.now().plusDays(10));
-        Subject current = new Subject(); current.setSubjectId("DOSW"); current.setCurriculum(Curriculum.ISIS_14); current.setCredits(3);
-        Subject target  = new Subject(); target.setSubjectId("TPYC"); target.setCurriculum(Curriculum.ISIS_14); target.setCredits(4);
-        Group gCurrent = new Group(); gCurrent.setGroupId("DOSW-1");
-        Group gTarget  = new Group(); gTarget.setGroupId("TPYC-1"); gTarget.setWaitlist(new ArrayList<>());
+        Subject current = new Subject();
+        current.setSubjectId("DOSW");
+        current.setCurriculum(Curriculum.ISIS_14);
+        current.setCredits(3);
+        Subject target  = new Subject();
+        target.setSubjectId("TPYC");
+        target.setCurriculum(Curriculum.ISIS_14);
+        target.setCredits(4);
+        Group gCurrent = new Group();
+        gCurrent.setGroupId("DOSW-1");
+        Group gTarget  = new Group();
+        gTarget.setGroupId("TPYC-1");
+        gTarget.setWaitlist(new ArrayList<>());
         ChangeRequestDTO dto = new ChangeRequestDTO();
         dto.setCurrentSubject("DOSW");
         dto.setTargetSubject("TPYC");
         dto.setCurrentGroup("DOSW-1");
         dto.setTargetGroup("TPYC-1");
         ChangeRequest entityToSave = new ChangeRequest();
-
         when(message.findStudentOrThrow(studentId)).thenReturn(student);
         when(message.findActiveSecretariatOrThrow(any())).thenReturn(sec);
         when(message.findSubjectOrThrow("DOSW")).thenReturn(current);
@@ -98,7 +110,8 @@ class ChangeRequestServiceImplTest {
         when(changeRequestRepository.findByStudentId(studentId)).thenReturn(Collections.emptyList());
         when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
         when(studentRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
-        when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO(){{setId(UUID.randomUUID());}});
+        when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO(){{ setId(UUID.randomUUID()); }});
+        when(curriculumToFacultyMapper.map(Curriculum.ISIS_14)).thenReturn(Faculty.INGENIERIA_DE_SISTEMAS);
         ChangeRequestDTO result = changeRequestService.createChangeRequest(studentId, dto);
 
         assertNotNull(result);
@@ -306,6 +319,181 @@ class ChangeRequestServiceImplTest {
 
         assertEquals(1, out.size());
         assertEquals(matching.getId(), out.get(0).getId());
+    }
+
+    @Test
+    void shouldUpdatesFacultyAndSubject() {
+        Integer studentId = 1000100575;
+        UUID reqId = UUID.randomUUID();
+        Student student = new Student();
+        student.setId(studentId);
+        ChangeRequest request = new ChangeRequest();
+        request.setId(reqId);
+        request.setStudentId(studentId);
+        request.setStatus(RequestStatus.PENDING);
+        request.setTargetSubject("FUPR");
+        request.setFaculty(Faculty.ADMINISTRACION_DE_EMPRESAS);
+        ChangeRequestDTO dto = new ChangeRequestDTO();
+        dto.setTargetSubject("FUEC");
+        Subject newSubject = new Subject();
+        newSubject.setSubjectId("FUEC");
+        newSubject.setCurriculum(Curriculum.ISIS_14);
+        when(message.findStudentOrThrow(studentId)).thenReturn(student);
+        when(message.findChangeRequestOrThrow(reqId)).thenReturn(request);
+        when(message.findSubjectOrThrow("FUEC")).thenReturn(newSubject);
+        when(curriculumToFacultyMapper.map(newSubject.getCurriculum())).thenReturn(Faculty.INGENIERIA_DE_SISTEMAS);
+        when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
+        when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO(){ { setId(reqId); } });
+        ChangeRequestDTO out = changeRequestService.updateChangeRequest(studentId, reqId, dto);
+
+        assertNotNull(out);
+        assertEquals(reqId, out.getId());
+        assertEquals("FUEC", request.getTargetSubject());
+        assertEquals(Faculty.INGENIERIA_DE_SISTEMAS, request.getFaculty());
+    }
+
+    @Test
+    void shouldRemovesFromOldWaitlistAndAddsToNew() {
+        Integer studentId = 1000100279;
+        UUID reqId = UUID.randomUUID();
+        Student student = new Student(); student.setId(studentId);
+        ChangeRequest request = new ChangeRequest();
+        request.setId(reqId);
+        request.setStudentId(studentId);
+        request.setStatus(RequestStatus.PENDING);
+        request.setTargetGroup("DOSW-1");
+        ChangeRequestDTO dto = new ChangeRequestDTO();
+        dto.setTargetGroup("DOSW-2");
+        Group oldG = new Group();
+        oldG.setGroupId("DOSW-1");
+        oldG.setWaitlist(new ArrayList<>(List.of(studentId)));
+        Group newG = new Group();
+        newG.setGroupId("DOSW-2");
+        newG.setWaitlist(null);
+        when(message.findStudentOrThrow(studentId)).thenReturn(student);
+        when(message.findChangeRequestOrThrow(reqId)).thenReturn(request);
+        when(message.findGroupOrThrow("DOSW-2")).thenReturn(newG);
+        when(groupRepository.findByGroupId("DOSW-1")).thenReturn(Optional.of(oldG));
+        when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
+        when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO(){ { setId(reqId); } });
+        ChangeRequestDTO out = changeRequestService.updateChangeRequest(studentId, reqId, dto);
+
+        assertNotNull(out);
+        assertEquals(reqId, out.getId());
+        assertFalse(oldG.getWaitlist().contains(studentId));
+        assertNotNull(newG.getWaitlist());
+        assertTrue(newG.getWaitlist().contains(studentId));
+    }
+
+    @Test
+    void shouldUpdatesBothAndSavesGroupsAndRequest() {
+        Integer studentId = 1000100492;
+        UUID reqId = UUID.randomUUID();
+        Student student = new Student();
+        student.setId(studentId);
+        ChangeRequest request = new ChangeRequest();
+        request.setId(reqId);
+        request.setStudentId(studentId);
+        request.setStatus(RequestStatus.PENDING);
+        request.setTargetGroup("DOSW-2");
+        request.setTargetSubject("DOSW-2");
+        ChangeRequestDTO dto = new ChangeRequestDTO();
+        dto.setTargetSubject("DOSW");
+        dto.setTargetGroup("DOSW-1");
+        Subject newSubject = new Subject();
+        newSubject.setSubjectId("DOSW");
+        newSubject.setCurriculum(Curriculum.ISIS_14);
+        Group oldG = new Group();
+        oldG.setGroupId("DOSW-2");
+        oldG.setWaitlist(new ArrayList<>(List.of(studentId)));
+        Group newG = new Group();
+        newG.setGroupId("DOSW-1");
+        newG.setWaitlist(new ArrayList<>());
+        when(message.findStudentOrThrow(studentId)).thenReturn(student);
+        when(message.findChangeRequestOrThrow(reqId)).thenReturn(request);
+        when(message.findSubjectOrThrow("DOSW")).thenReturn(newSubject);
+        when(curriculumToFacultyMapper.map(newSubject.getCurriculum())).thenReturn(Faculty.ECONOMIA);
+        when(message.findGroupOrThrow("DOSW-1")).thenReturn(newG);
+        when(groupRepository.findByGroupId("DOSW-2")).thenReturn(Optional.of(oldG));
+        when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
+        when(groupRepository.save(any(Group.class))).thenAnswer(i -> i.getArgument(0));
+        when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO(){ { setId(reqId); } });
+        ChangeRequestDTO out = changeRequestService.updateChangeRequest(studentId, reqId, dto);
+
+        assertNotNull(out);
+        assertEquals(reqId, out.getId());
+        assertEquals("DOSW", request.getTargetSubject());
+        assertEquals(Faculty.ECONOMIA, request.getFaculty());
+        assertFalse(oldG.getWaitlist().contains(studentId));
+        assertTrue(newG.getWaitlist().contains(studentId));
+    }
+
+
+    @Test
+    void shouldUpdatesAndSavesRequest() {
+        Integer studentId = 1000100279;
+        UUID reqId = UUID.randomUUID();
+        Student student = new Student(); student.setId(studentId);
+        ChangeRequest request = new ChangeRequest();
+        request.setId(reqId);
+        request.setStudentId(studentId);
+        request.setStatus(RequestStatus.PENDING);
+        ChangeRequestDTO dto = new ChangeRequestDTO();
+        dto.setObservations("Nueva observación");
+        when(message.findStudentOrThrow(studentId)).thenReturn(student);
+        when(message.findChangeRequestOrThrow(reqId)).thenReturn(request);
+        when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
+        when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO(){ { setId(reqId); } });
+        ChangeRequestDTO out = changeRequestService.updateChangeRequest(studentId, reqId, dto);
+
+        assertNotNull(out);
+        assertEquals(reqId, out.getId());
+        assertEquals("Nueva observación", request.getObservations());
+    }
+
+    @Test
+    void shouldCreateChangeRequestWhenStudentRequestsNullAndTargetWaitlistNull() {
+        Integer studentId = 1000100575;
+        Student student = new Student();
+        student.setId(studentId);
+        student.setName("Test Student");
+        student.setEmail("s@test.edu");
+        student.setCurriculum(Curriculum.ISIS_14);
+        Secretariat sec = new Secretariat();
+        sec.setRequestStartDate(LocalDateTime.now().minusDays(1));
+        sec.setRequestEndDate(LocalDateTime.now().plusDays(10));
+        Subject current = new Subject();
+        current.setSubjectId("DOSW");
+        current.setCurriculum(Curriculum.ISIS_14);
+        current.setCredits(3);
+        Subject target = new Subject();
+        target.setSubjectId("TPYC");
+        target.setCurriculum(Curriculum.ISIS_14);
+        target.setCredits(4);
+        Group gCurrent = new Group(); gCurrent.setGroupId("DOSW-1");
+        Group gTarget = new Group(); gTarget.setGroupId("TPYC-1");
+        ChangeRequestDTO dto = new ChangeRequestDTO();
+        dto.setCurrentSubject("DOSW");
+        dto.setTargetSubject("TPYC");
+        dto.setCurrentGroup("DOSW-1");
+        dto.setTargetGroup("TPYC-1");
+        when(message.findStudentOrThrow(studentId)).thenReturn(student);
+        when(message.findActiveSecretariatOrThrow(any())).thenReturn(sec);
+        when(message.findSubjectOrThrow("DOSW")).thenReturn(current);
+        when(message.findSubjectOrThrow("TPYC")).thenReturn(target);
+        when(message.findGroupOrThrow("DOSW-1")).thenReturn(gCurrent);
+        when(message.findGroupOrThrow("TPYC-1")).thenReturn(gTarget);
+        when(changeRequestMapper.toEntity(dto)).thenAnswer(i -> new ChangeRequest());
+        when(changeRequestRepository.findByStudentId(studentId)).thenReturn(Collections.emptyList());
+        when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
+        when(studentRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
+        when(changeRequestMapper.toDTO(any(ChangeRequest.class))).thenReturn(new ChangeRequestDTO(){{ setId(UUID.randomUUID()); }});
+        when(curriculumToFacultyMapper.map(target.getCurriculum())).thenReturn(Faculty.INGENIERIA_DE_SISTEMAS);
+        ChangeRequestDTO result = changeRequestService.createChangeRequest(studentId, dto);
+
+        assertNotNull(result);
+        assertNotNull(gTarget.getWaitlist());
+        assertTrue(gTarget.getWaitlist().contains(studentId));
     }
 
 }

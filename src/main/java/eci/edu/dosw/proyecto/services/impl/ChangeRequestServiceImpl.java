@@ -1,5 +1,6 @@
 package eci.edu.dosw.proyecto.services.impl;
 
+import eci.edu.dosw.proyecto.util.CurriculumToFacultyMapper;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -16,8 +17,6 @@ import java.util.UUID;
 
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
 import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
-import eci.edu.dosw.proyecto.enums.Curriculum;
-import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
 import eci.edu.dosw.proyecto.models.*;
@@ -42,6 +41,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final DeaneryRepository deaneryRepository;
     private final DeaneryService deaneryService;
     private final MessageExceptions message;
+    private final CurriculumToFacultyMapper curriculumToFacultyMapper;
 
     @Override
     public ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestDTO requestDTO) {
@@ -68,7 +68,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         request.setCurrentGroup(currentGroup.getGroupId());
         request.setTargetSubject(targetSubject.getSubjectId());
         request.setTargetGroup(targetGroup.getGroupId());
-        request.setFaculty(mapCurriculumToFaculty(targetSubject.getCurriculum()));
+        request.setFaculty(curriculumToFacultyMapper.map(targetSubject.getCurriculum()));
         request.setStatus(RequestStatus.SENT_TO_DEANERY);
         request.setStatus(RequestStatus.PENDING);
         request.setCreatedAt(now);
@@ -123,26 +123,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         return changeRequestMapper.toDTO(request);
     }
 
-    private Faculty mapCurriculumToFaculty(Curriculum curriculum) {
-        return switch (curriculum) {
-            case ISIS_14, ISIS_15 -> Faculty.INGENIERIA_DE_SISTEMAS;
-            case ICIV_09, ICIV_10 -> Faculty.INGENIERIA_CIVIL;
-            case IBIO_RO -> Faculty.INGENIERIA_BIOMEDICA;
-            case IMEC_03, IMEC_02 -> Faculty.INGENIERIA_MECANICA;
-            case MATE_04, MATE_03 -> Faculty.MATEMATICAS;
-            case ADMI_04, ADMI_05 -> Faculty.ADMINISTRACION_DE_EMPRESAS;
-            case ECON_07, ECON_08 -> Faculty.ECONOMIA;
-            case IELN_08, IELN_07 -> Faculty.INGENIERIA_ELECTRONICA;
-            case IIND_09, IIND_08 -> Faculty.INGENIERIA_INDUSTRIAL;
-            case IELC_14, IELC_13 -> Faculty.INGENIERIA_ELECTRICA;
-            case IEST_02, IEST_01 -> Faculty.INGENIERIA_ESTADISTICA;
-            case IAMB_02, IAMB_01 -> Faculty.INGENIERIA_AMBIENTAL;
-            case ICIB_01 -> Faculty.INGENIERIA_DE_CIBERSEGURIDAD;
-            case IDIA_01 -> Faculty.INGENIERIA_DE_INTELIGENCIA_ARTIFICIAL;
-            case IBTC_01 -> Faculty.INGENIERIA_DE_BIOTECNOLOGIA;
-        };
-    }
-
     @Override
     public ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestDTO dto) {
 
@@ -162,7 +142,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             Subject targetSubject = message.findSubjectOrThrow(dto.getTargetSubject());
             message.ensureCurriculumMatchesStudent(student,  targetSubject);
             request.setTargetSubject(targetSubject.getSubjectId());
-            request.setFaculty(mapCurriculumToFaculty(targetSubject.getCurriculum()));
+            request.setFaculty(curriculumToFacultyMapper.map(targetSubject.getCurriculum()));
         }
 
         if (dto.getTargetGroup() != null && !dto.getTargetGroup().isBlank()) {

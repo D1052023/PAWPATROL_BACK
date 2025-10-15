@@ -54,7 +54,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         List<String> details = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
-                .collect(Collectors.toList());
+                .toList();
 
         String path = "";
         if (request instanceof ServletWebRequest servletWebRequest) {
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 path = servletWebRequest.getRequest().getRequestURI();
             } catch (Exception ignored) { }
         } else {
-            path = request.getDescription(false); // uri=...
+            path = request.getDescription(false);
         }
 
         ErrorResponse body = new ErrorResponse(
@@ -84,7 +84,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         List<String> details = ex.getConstraintViolations()
                 .stream()
                 .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
-                .collect(Collectors.toList());
+                .toList();
 
         ErrorResponse body = new ErrorResponse(
                 OffsetDateTime.now(),

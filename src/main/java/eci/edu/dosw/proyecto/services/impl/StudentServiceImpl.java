@@ -19,9 +19,7 @@ import eci.edu.dosw.proyecto.services.StudentService;
 import eci.edu.dosw.proyecto.util.MessageExceptions;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,9 +48,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentDTO getStudentById(Integer id) {
-        Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Estudiante no encontrado con id: " + id));
+        Student student = message.findStudentOrThrow(id);
         return studentMapper.toDTO(student);
     }
 
@@ -65,10 +61,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentDTO updateStudent(Integer id, StudentDTO updatedStudentDTO) {
-        Student existingStudent = studentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Estudiante no encontrado con id: " + id));
-
+        Student existingStudent = message.findStudentOrThrow(id);
         existingStudent.setName(updatedStudentDTO.getName());
         existingStudent.setEmail(updatedStudentDTO.getEmail());
         existingStudent.setCareer(updatedStudentDTO.getCareer());
@@ -82,18 +75,13 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public void deleteStudent(Integer id) {
-        Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Estudiante no encontrado con id: " + id));
+        Student student = message.findStudentOrThrow(id);
         studentRepository.delete(student);
     }
 
     @Override
     public StudentDTO partialUpdateStudent(Integer id, StudentDTO dto) {
-        Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Estudiante no encontrado con id: " + id));
-
+        Student student = message.findStudentOrThrow(id);
         if (dto.getName() != null) student.setName(dto.getName());
         if (dto.getEmail() != null) student.setEmail(dto.getEmail());
         if (dto.getCareer() != null) student.setCareer(dto.getCareer());
@@ -106,33 +94,21 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public Student getStudentByEmail(String email) {
-        Student student = studentRepository.findByEmail(email);
-        if (student == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado con email: " + email);
-        }
-        return student;
- 
+        return message.findStudentByEmailOrThrow(email);
     }
 
     @Override
     public List<ChangeRequestDTO> getStudentRequests(int studentId) {
-        studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Estudiante no encontrado con id: " + studentId));
-        List<ChangeRequestDTO> requests = changeRequestRepository.findByStudentId(studentId)
+       message.findStudentOrThrow(studentId);
+        return changeRequestRepository.findByStudentId(studentId)
                 .stream()
                 .map(changeRequestMapper::toDTO)
                 .toList();
-
-        return requests;
     }
 
     @Override
     public List<ChangeRequestDTO> getStudentRequestsByStatus(int studentId, RequestStatus status) {
-        studentRepository.findById(studentId)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Estudiante no encontrado con id: " + studentId));
-
+        message.findStudentOrThrow(studentId);
         return changeRequestRepository.findByStudentId(studentId).stream()
                                     .filter(request -> request.getStatus() == status)
                                     .map(changeRequestMapper::toDTO)
@@ -141,9 +117,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentDTO getStudentSchedule(int studentId, int semester) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado"));
-
+        Student student = message.findStudentOrThrow(studentId);
         List<ScheduleEntryDTO> schedule = (student.getSchedule() == null ? List.<ScheduleEntry>of() : student.getSchedule()).stream()
                 .filter(s -> s.getSemester() == semester)
                 .map(scheduleEntryMapper::toDTO)
@@ -224,7 +198,7 @@ public class StudentServiceImpl implements StudentService {
         }
 
         int enrolledCount = dto.getEnrolledSubjectsCount() == null ? 0 : dto.getEnrolledSubjectsCount();
-        double progress = totalCourses == 0 ? 0.0 : ((double) enrolledCount * 100.0) / totalCourses;
+        double progress = totalCourses == 0 ? 0.0 : (enrolledCount * 100.0) / totalCourses;
 
 
         dto.setProgressPercent(Math.round(progress * 100.0) / 100.0);
@@ -234,7 +208,7 @@ public class StudentServiceImpl implements StudentService {
         List<String> missing = planSubjects.stream()
                 .map(Subject::getSubjectId)
                 .filter(sid -> !done.contains(sid))
-                .collect(Collectors.toList());
+                .toList();
         dto.setMissingSubjectIds(missing);
 
         return dto;
