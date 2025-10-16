@@ -18,7 +18,7 @@
     <description>Project for SIRHA</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <jacoco.version>0.8.13</jacoco.version>
 
         <sonar.projectKey>library</sonar.projectKey>
