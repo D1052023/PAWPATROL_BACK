@@ -31,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/target'
+          path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'pawpatrol-back-preprod-bvhubpaxgda3frfy'
+          app-name: 'pawpatrol-back-preprod'
           slot-name: 'Production'
           package: '*.jar'
           
