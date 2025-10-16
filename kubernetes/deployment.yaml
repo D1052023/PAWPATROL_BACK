@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pawpatrol-back
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pawpatrol-back
+  template:
+    metadata:
+      labels:
+        app: pawpatrol-back
+    spec:
+      containers:
+      - name: pawpatrol-back
+        image: pawpatrol:1.0
+        ports:
+        - containerPort: 8080
