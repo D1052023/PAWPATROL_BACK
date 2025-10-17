@@ -7,8 +7,7 @@
 - Diego Chavarro.
 
 **Nombre De la Rama:**
-`feature/proyecto_JuanCaballero_OscarSanchez_DiegoChavarro_RobinsonPortela_SantiagoPalacios_2025-2`
-
+`feature/Pruebas-PruebasSirha`
 ---
 
 ## Estrategia de Versionamiento y ramas.
@@ -72,7 +71,8 @@ El diagrama de contexto muestra el  sistema central SIRHA y sus relaciones con l
 ## Diagrama de casos de uso.
 ![alt text](docs/uml/DiagramaCasosUso.png)
 
-Deffine la interacción de los usarios dentro del sistema de SIRHA.
+Define como interactuan los siguientes actores con el sistema de SIRHA para la elaboracion de horarios, cada actor tiene ciertas funcionalidades dentro del sistema para saber que puede hacer
+
 
 **Algunos de ellos y sus interacciones son:**
 
@@ -251,5 +251,27 @@ kubectl apply -f kubernetes/service.yaml
 
 - luego abrimos en el navegador localhost para verificar el funcionamiento de los enpoints definidos.
 
+---
+
+## Despliegue API Azure y configuracion Ambientes de pruebas
+
+[Ver el configuracion Ambientes (PDF)](docs/pdf/TutorialConfiguraciónAmbientes.pdf)
+
+### validar sintaxis de los workflows ###
+
+GitHub Actions:
+
+- Al hacer push de un workflow, GitHub automáticamente intenta parsearlo.
+
+- Si hay errores de sintaxis, el workflow no se ejecuta y  da un mensaje en Actions → workflow failed.
+
+![alt text](docs/imagenes/pruebaGitActions.png)
+
+Azure: 
+
+- Para verificar si desplego ve a centro de implementaciones y tiene que estar registrado la implementacion que se realizo
 
 
+  ![alt text](docs/imagenes/pruebaAzure.png)
+  
+---
