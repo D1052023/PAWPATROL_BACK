@@ -9,6 +9,10 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api")
+/**
+ * Clase de comprueba que se tenga un vinculo con la BD
+ *
+ */
 public class StatusController {
 
     private static final Logger logger = LoggerFactory.getLogger(StatusController.class);
