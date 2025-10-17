@@ -39,7 +39,13 @@ jobs:
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
-  
+
+  env:
+    SPRING_PROFILES_ACTIVE: ${{ secrets.SPRING_PROFILES_ACTIVE }}
+    DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
+    APP_SECRET: ${{ secrets.APP_SECRET }}
+
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -57,7 +63,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'sirha-qa'
-          slot-name: 'Production'
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
           package: '*.jar'
           
