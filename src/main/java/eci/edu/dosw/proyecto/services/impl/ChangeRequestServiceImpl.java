@@ -116,17 +116,12 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     public ChangeRequestDTO getRequestById(Integer studentId, UUID requestId) {
         message.findStudentOrThrow(studentId);
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
-
         if (request.getStudentId() != studentId) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Esta solicitud no pertenece al estudiante con id: " + studentId
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Esta solicitud no pertenece al estudiante con id: " + studentId);
         }
 
         return changeRequestMapper.toDTO(request);
     }
-
 
     @Override
     public ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestDTO dto) {
