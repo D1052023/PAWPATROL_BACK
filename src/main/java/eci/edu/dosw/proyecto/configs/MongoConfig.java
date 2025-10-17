@@ -9,11 +9,13 @@ import com.mongodb.MongoClientSettings;
 @Configuration
 public class MongoConfig extends AbstractMongoClientConfiguration {
 
+    @Override
     protected String getDatabaseName() {
         return "sirha_preprod";
     }
 
-    public MongoClientSettings mongoClientSettings() {
+    @Override
+    protected MongoClientSettings mongoClientSettings() {
         return MongoClientSettings.builder()
                 .uuidRepresentation(UuidRepresentation.STANDARD)
                 .build();
