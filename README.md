@@ -113,6 +113,18 @@ Se realizo el diagrama identificando los subcomponentes que interactuan con el c
 
 ![alt text](docs/uml/DiagramaClases.png)
 
+El diagrama representa la estructura de un sistema académico-administrativo. Contiene clases relacionadas con usuarios (como Student, Teacher, Deanery, Secrtetariat) y sus roles . Se incluyen entidades para gestión de solicitudes de cambio (ChangeRequest, ChangeRequestDTO) y el manejo de materias con los grupos.
+
+Las relaciones principales muestran:
+
+Herencia entre User y sus subclases (Student, Teacher, Deanery), lo que permite la especialización de comportamientos según el tipo de usuario.
+
+Asociaciones entre usuarios y solicitudes de cambio, indicando qué usuario puede crear, aprobar o gestionar una solicitud.
+
+Vínculos entre materias, carreras, roles y facultades, representando la organización de los cursos dentro de la institución.
+
+En general, el diagrama muestra una arquitectura orientada a objetos que integra la gestión de usuarios, solicitudes, materias, grupos y notificaciones de alertas para avisar sobre las capacidades de un grupo.
+
 ### **Patrones de diseño:**
 
 #### **Observer**
@@ -251,5 +263,4 @@ kubectl apply -f kubernetes/service.yaml
 
 - luego abrimos en el navegador localhost para verificar el funcionamiento de los enpoints definidos.
 
-
-
+## PRUEBAS DE SWAGGER
