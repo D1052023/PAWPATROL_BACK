@@ -44,13 +44,9 @@ public class SecurityConfig {
                         "/auth/**"
                     ).permitAll();
 
-                if ("preprod".equals(activeProfile)) {
                     auth.anyRequest().permitAll();
-                } else {
-                    auth
-                        .requestMatchers("/deaneries/**").hasAnyRole("SECRETARIAT")
-                        .anyRequest().authenticated();
-                }
+
+                
             })
             .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
