@@ -43,13 +43,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (claims != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             String email = claims.getSubject();
             String roleStr = claims.get("role", String.class);
-            Role roleEnum = Role.valueOf(roleStr.toUpperCase()); 
+            Role roleEnum = Role.valueOf(roleStr.toUpperCase());
             UsernamePasswordAuthenticationToken authentication =
-                 new UsernamePasswordAuthenticationToken(
-                    email,
-                    null,
-                    java.util.List.of(new SimpleGrantedAuthority("ROLE_" + roleEnum.name()))
-                );
+                    new UsernamePasswordAuthenticationToken(
+                            email,
+                            null,
+                            java.util.List.of(new SimpleGrantedAuthority("ROLE_" + roleEnum.name()))
+                    );
 
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
