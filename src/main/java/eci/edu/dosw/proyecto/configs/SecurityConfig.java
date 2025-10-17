@@ -32,19 +32,21 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Swagger / OpenAPI / recursos estáticos
                         .requestMatchers(
                                 "/",
                                 "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**",
                                 "/api/status"
                         ).permitAll()
 
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/deaneries/**").hasAnyRole("SECRETARIAT")
-
+                        .requestMatchers("/deaneries/**").hasRole("SECRETARIAT")
                         .anyRequest().authenticated()
-
                 )
                 .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
