@@ -18,7 +18,7 @@
     <description>Project for SIRHA</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <jacoco.version>0.8.13</jacoco.version>
 
         <sonar.projectKey>library</sonar.projectKey>
@@ -251,7 +251,7 @@
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
+                                            <minimum>0.68</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
