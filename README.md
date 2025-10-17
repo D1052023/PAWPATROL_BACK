@@ -153,55 +153,6 @@ implementa un observador que notifica si un grupo esta próximo o ya esta lleno.
 Group es un modulo de alto nivel por lo que no estamos dependiendo de los modulos de bajo nivel ya que
 define el flujo usando y implementando la interfaz de observer asi trabaja con abstracciones no con clases concretas.
 
-
-## Diagramas de secuencia.
-
-![alt text](docs/uml/diagramaClases.drawio.png)
-
----
-
-### **Patrones de diseño:**
-
-#### **Observer**
-
-Group actúa como el que notifica cambios cuando se llena o alcanza el 90% de capacidad, mientras que GroupObserverService reacciona a esas notificaciones generando alertas o guardando en la base de datos. Asi Group solo gestiona los cupos, y los observadores se encargan de las alertas.
-
-
-#### **Factory Method**
-Se uso ya que nos permitió evitar centralizar la lógica de la validación de los usurios ya que cada uno al entrar en la aplicación SIRHA navega y interactua solo con lo que es de su rol asi evitamos que se mezcle lo que un decano puede hacer y lo que puede hacer un estudiante dentro de la app.
-
----
-
-### **Principios SOLID:**
----
-
-#### **Single Responsability:**
-
-- Student se encarga de modelar la informacion del estudiante y gestiona su horario de clases a través de la clase Schedule.
-
-- Request maneja las solicitudes que hacen los estudiantes. Contiene tanto los datos del estudiante como de la facultad, con todo lo necesario para procesar cada una y utiliza HistoryEntry para llevar un registro del historial de cambios de cada solicitud.
-
-- La clase Denary junto con su servicio se ocupan de las operaciones básicas CRUD de las solicitudes que reciben de los estudiantes.
-
-- Group representa un grupo de asignatura y controla el número máximo de estudiantes que puede tener.
-
-
-#### **Open/Closed:**
-Podemos extender la clase abstracta de usuarios para incluir a mas tipo de estos ya que cada uno se logea de igual forma pero cambia lo que pueden
-hacer dentro de la aplicación SIRHA, asi no modificamos user ya que es la clase en donde establecemos el método de validar el login para los otros usuarios.
-
-
-#### **Interface Segregation Principle:**
-
-Se diseño una interfaz concreta y con un unico metodo para establecer un contrato de alertas con Group ya que
-implementa un observador que notifica si un grupo esta próximo o ya esta lleno.
-
-#### **Dependency Inversion Principle:**
-
-Group es un modulo de alto nivel por lo que no estamos dependiendo de los modulos de bajo nivel ya que
-define el flujo usando y implementando la interfaz de observer asi trabaja con abstracciones no con clases concretas.
-
-
 ## Diagrama de secuencia.
 
 ![DiagramaSecuencia](docs/uml/DiagramaSecuencia.png)
