@@ -25,7 +25,7 @@
         <sonar.projectName>library</sonar.projectName>
         <sonar.host.url>http://localhost:9000</sonar.host.url>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        
+
         <sonar.coverage.exclusions>
             **/aop/**,
             **/models/**,
@@ -178,9 +178,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                <excludes>
-                    <exclude>**/services/AlertService.class</exclude>
-                </excludes>
+                    <excludes>
+                        <exclude>**/services/AlertService.class</exclude>
+                    </excludes>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <annotationProcessorPaths>

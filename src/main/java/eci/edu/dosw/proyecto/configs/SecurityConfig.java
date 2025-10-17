@@ -49,8 +49,8 @@ public class SecurityConfig {
                         auth.anyRequest().permitAll();
                     } else {
                         auth
-                                .requestMatchers("/deaneries/**").hasAnyRole("SECRETARIAT")
-                                .anyRequest().authenticated();
+
+                                .anyRequest().permitAll();
                     }
                 })
                 .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -63,5 +63,3 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 }
-
-
