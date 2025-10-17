@@ -44,9 +44,13 @@ public class SecurityConfig {
                         "/auth/**"
                     ).permitAll();
 
+                if ("preprod".equals(activeProfile)) {
                     auth.anyRequest().permitAll();
+                } else {
+                    auth
 
-                
+                        .anyRequest().permitAll();
+                }
             })
             .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
