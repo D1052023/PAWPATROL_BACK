@@ -1,6 +1,5 @@
 package eci.edu.dosw.proyecto.configs;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,9 +21,6 @@ public class SecurityConfig {
 
     private final JwtService jwtService;
 
-    @Value("${spring.profiles.active:}")
-    private String activeProfile;
-
     @Bean
     public JwtAuthFilter jwtAuthFilter() {
         return new JwtAuthFilter(jwtService);
@@ -35,24 +31,21 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> {
-                    auth
-                            .requestMatchers(
-                                    "/",
-                                    "/v3/api-docs/**",
-                                    "/swagger-ui/**",
-                                    "/swagger-ui.html",
-                                    "/api/status"
-                            ).permitAll();
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api/status"
+                        ).permitAll()
 
-                    if ("qa".equals(activeProfile)) {
-                        auth.anyRequest().permitAll();
-                    } else {
-                        auth
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/deaneries/**").hasAnyRole("SECRETARIAT")
 
-                                .anyRequest().permitAll();
-                    }
-                })
+                        .anyRequest().authenticated()
+
+                )
                 .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
