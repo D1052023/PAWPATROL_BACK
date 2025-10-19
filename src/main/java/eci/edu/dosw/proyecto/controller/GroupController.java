@@ -121,8 +121,8 @@ public class GroupController {
 
     @GetMapping("/{groupId}/waitlist")
     @Operation(summary = "Obtener lista de espera")
-    public List<Integer> getWaitlist(@Parameter(description = "ID del grupo") @PathVariable String id) {
-        return groupService.getWaitlist(id);
+    public List<Integer> getWaitlist(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
+        return groupService.getWaitlist(groupId);
     }
 
     @GetMapping("/{groupId}/waitlist/details")
