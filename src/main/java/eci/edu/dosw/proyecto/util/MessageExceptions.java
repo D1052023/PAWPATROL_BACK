@@ -229,14 +229,17 @@ public class MessageExceptions {
     }
 
     public void ensureGroupHasNoTeacherAssigned(Group group) {
-        if (group != null && group.getTeacher() != 0) {
+        if (group == null) return;
+        Integer teacher = group.getTeacher();
+        if (teacher != null && teacher != 0) {
             throw badRequest(GROUP_HAS_TEACHER);
         }
     }
 
     public void ensureGroupHasTeacherAssigned(Group group) {
         if (group == null) return;
-        if (group.getTeacher() == 0) {
+        Integer teacher = group.getTeacher();
+        if (teacher == null || teacher == 0) {
             throw badRequest(GROUP_NO_TEACHER);
         }
     }
