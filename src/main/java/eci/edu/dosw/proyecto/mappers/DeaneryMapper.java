@@ -19,7 +19,6 @@ public interface DeaneryMapper {
     DeaneryDTO toDTO(Deanery deanery);
 
     @Mapping(target = "role", ignore = true)
-    @Mapping(target = "faculty", ignore = true)
     Deanery toEntity(DeaneryDTO dto);
 
     List<DeaneryDTO> toDTOList(List<Deanery> deaneries);

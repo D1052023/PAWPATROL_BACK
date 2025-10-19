@@ -7,7 +7,9 @@
 - Diego Chavarro.
 
 **Nombre De la Rama:**
+
 `feature/Pruebas-PruebasSirha`
+
 ---
 
 ## Estrategia de Versionamiento y ramas.
@@ -24,6 +26,7 @@
 `feature: Tarea - Acción Realizada`
 
 ---
+
 ## Tecnologías utilizadas
 
 - Java 21
@@ -37,6 +40,8 @@
 - Azure
 - Kubernetes
 - GitHub Actions
+
+--- 
 
 ## Arquitectura
 
@@ -66,9 +71,11 @@ El diagrama de contexto muestra el  sistema central SIRHA y sus relaciones con l
 - Docentes:  Consultan sus horarios y grupos asignados para verificar afectaciones o disponibilidades. Normalmente no realizan cambios desde SIRHA, solo consultan.
 
 - Decanatura: Supervisa y valida solicitudes, resolviendo conflictos complejos que el sistema no pueda resolver automáticamente (p. ej. choques entre asignaturas o limitaciones de recursos).
+- 
 ---
 
 ## Diagrama de casos de uso.
+
 ![alt text](docs/uml/DiagramaCasosUso.png)
 
 Define como interactuan los siguientes actores con el sistema de SIRHA para la elaboracion de horarios, cada actor tiene ciertas funcionalidades dentro del sistema para saber que puede hacer
@@ -81,6 +88,7 @@ Define como interactuan los siguientes actores con el sistema de SIRHA para la e
 - Decanatura: Este usario se le permite consultar información sobre le estudiante, responder solicitudes según su facultad y tipo de solicitud (si es excepcional), consultar las alertas sobre un grupo que este al limite de su capacidad, se le permite asignar profesores capacidad en materias y grupos, crear y consultar reportes sobre un estudiante cantidad de solicitudes.
 
 - Secretaria Académica: Establecer periodos para responder solicitudes y crear solicitudes, consultar solicitudes generalmente o dependiendo del estudiante, prioridad, estado y demás.
+
 ---
 
 ## Diagrama de componentes general.
@@ -95,6 +103,7 @@ Se realizo el diagrama identificando los componentes del sistema, identificando 
 ---
 
 ## Diagrama de componentes especificos.
+
 ![alt text](docs/uml/DiagramaComponentesEspecifico.png)
 
 Se realizo el diagrama identificando los subcomponentes que interactuan con el componente backend
@@ -124,6 +133,8 @@ Asociaciones entre usuarios y solicitudes de cambio, indicando qué usuario pued
 Vínculos entre materias, carreras, roles y facultades, representando la organización de los cursos dentro de la institución.
 
 En general, el diagrama muestra una arquitectura orientada a objetos que integra la gestión de usuarios, solicitudes, materias, grupos y notificaciones de alertas para avisar sobre las capacidades de un grupo.
+
+---
 
 ### **Patrones de diseño:**
 
@@ -165,6 +176,8 @@ implementa un observador que notifica si un grupo esta próximo o ya esta lleno.
 Group es un modulo de alto nivel por lo que no estamos dependiendo de los modulos de bajo nivel ya que
 define el flujo usando y implementando la interfaz de observer asi trabaja con abstracciones no con clases concretas.
 
+--- 
+
 ## Diagrama de secuencia.
 
 ![DiagramaSecuencia](docs/uml/DiagramaSecuencia.png)
@@ -174,6 +187,7 @@ Diagramas basados en casos de uso principales del sistema SIRHA:
 - Crear solicitud de reasignación (Application)
 - Validar solicitud de reasignación
 - Notificación del resultado
+
 ---
 
 ## Diagrama de Base de datos.
@@ -198,50 +212,19 @@ Con esta estructura nos aseguramos:
 - Mantener la integridad (las claves foráneas aseguran que una solicitud no se cree para un grupo inexistente)
 - Flexibilidad (es un sistema con tendencia a crecer, sin necesidad de modificar lo que hay).
 - Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
-_ _ _
-
-## Configuracion base de datos MongoDB
-
-[Ver Configuración(PDF)](docs/pdf/BaseMongoDB.pdf)
-
-
-### DOCKERIZACIÓN DE LA APPI
-
-*Video:*
-
-https://youtu.be/QJJyAQXGyAM
-
-
-
-1. Se Creo el archivo Dockerfile en IntelliJ y se ajusto el path a JDK 21 y se verifico el
-   .jar del proyecto que es `PAWPATROL_BACK-0.0.5.jar`
-2. Luego se creo un .dockerignore para no almacenar cosas innecesarias en el proyecto
-3. Y otro archivo .yml para usar nuestro proyecto de manera local y con mongo docker-compose.local
-4. Posteriormente se descargo  mongo con el comando  `docker pull mongo:6.0`
-5. Compilamos el proyecto  con  `mvn -DskipTests clean package`
-6. Levantamos el Docker con el comando:  `docker compose -f docker-compose.local.yml up -d --build`
-7. Luego subimos nuestra imagen a Docker Hub: https://hub.docker.com/repositories/robinson677?_gl=1*habqp2*_gcl_au*MzI4MDkxODgwLjE3NTcxMzc2OTM.*_ga*NTIxOTAwOTExLjE3NTcxMzc2OTM.*_ga_XJWPQMJYHQ*czE3NTkzODQzNDQkbzQkZzEkdDE3NTkzODUzMDckajYwJGwwJGgw
-8. Hice login Write-Output `Mi token | docker login --username robinson677 --password-stdin`
-9. Y casi finalizando se creo la imagen `docker build -t robinson677/pawpatrol-back:0.0.5 .`
-10. Finalmente se le hizo push Haz push:  `docker push robin123/pawpatrol-back:0.0.5`
-11.  Si se quiere probar la imagen:
-
-
-docker pull robinson677/pawpatrol-back:0.0.5
-docker run --rm -p 8080:8080 `
-  -e SPRING_DATA_MONGODB_URI="mongodb://<host>:27017/sirha" `
--e SPRING_PROFILES_ACTIVE=docker `
-robinson677/pawpatrol-back:0.0.5
 
 ---
 
-**Evidencia en Docker Desktop:**
+## Configuracion base de datos MongoDB
 
-![alt text](docs/imagenes/dockerEvidencia1.png)
+[Ver Configuración (PDF)](docs/pdf/BaseMongoDB.pdf)
 
-**Evidencia de la imagen en Docker Hub:**
 
-![alt text](docs/imagenes/dockerEvidencia2.png)
+---
+
+### DOCKERIZACIÓN DE LA APPI
+
+[Ver configuración de la Dockerización (PDF)](docs/pdf/dockerizacionAppi.pdf)
 
 --- 
 
@@ -287,4 +270,11 @@ Azure:
   ![alt text](docs/imagenes/pruebaAzure.png)
   
 ---
+
 ## PRUEBAS DE SWAGGER
+
+[Ver pruebas ENDPOINTS](docs/pdf/pruebasEndpoints.pdf)
+
+---
+
+
