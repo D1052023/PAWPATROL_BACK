@@ -41,7 +41,7 @@
 - Kubernetes
 - GitHub Actions
 
---- 
+---
 
 ## Arquitectura
 
@@ -58,6 +58,7 @@ El proyecto sigue el patrón MVC (Modelo - Vista - Controlador):
 ---
 
 ## Diagrama de contexto.
+
 ![alt text](docs/uml/DiagramaContexto.png)
 
 El diagrama de contexto muestra el  sistema central SIRHA y sus relaciones con los actores externos que interactúan con el. SIRAH centraliza la gestion de solicitudes de cambio de horario, aplica las reglas de negocio definidas por la institución y coordina validaciones y autorizaciones.
@@ -71,7 +72,7 @@ El diagrama de contexto muestra el  sistema central SIRHA y sus relaciones con l
 - Docentes:  Consultan sus horarios y grupos asignados para verificar afectaciones o disponibilidades. Normalmente no realizan cambios desde SIRHA, solo consultan.
 
 - Decanatura: Supervisa y valida solicitudes, resolviendo conflictos complejos que el sistema no pueda resolver automáticamente (p. ej. choques entre asignaturas o limitaciones de recursos).
-- 
+
 ---
 
 ## Diagrama de casos de uso.
@@ -144,6 +145,7 @@ Group actúa como el que notifica cambios cuando se llena o alcanza el 90% de ca
 
 
 #### **Factory Method**
+
 Se uso ya que nos permitió evitar centralizar la lógica de la validación de los usurios ya que cada uno al entrar en la aplicación SIRHA navega y interactua solo con lo que es de su rol asi evitamos que se mezcle lo que un decano puede hacer y lo que puede hacer un estudiante dentro de la app.
 
 ---
@@ -176,7 +178,7 @@ implementa un observador que notifica si un grupo esta próximo o ya esta lleno.
 Group es un modulo de alto nivel por lo que no estamos dependiendo de los modulos de bajo nivel ya que
 define el flujo usando y implementando la interfaz de observer asi trabaja con abstracciones no con clases concretas.
 
---- 
+---
 
 ## Diagrama de secuencia.
 
@@ -219,12 +221,11 @@ Con esta estructura nos aseguramos:
 
 [Ver Configuración (PDF)](docs/pdf/BaseMongoDB.pdf)
 
-
 ---
 
 ### DOCKERIZACIÓN DE LA APPI
 
-[Ver configuración de la Dockerización (PDF)](docs/pdf/dockerizacionAppi.pdf)
+[Ver Configuración de la Dockerización (PDF)](docs/pdf/dockerizacionAppi.pdf)
 
 --- 
 
@@ -268,13 +269,11 @@ Azure:
 
 
   ![alt text](docs/imagenes/pruebaAzure.png)
-  
+
 ---
 
 ## PRUEBAS DE SWAGGER
 
-[Ver pruebas ENDPOINTS](docs/pdf/pruebasEndpoints.pdf)
+[Ver Pruebas de videos de Sawgger en (PDF)](docs/pdf/pruebasEndpoints.pdf)
 
 ---
-
-
