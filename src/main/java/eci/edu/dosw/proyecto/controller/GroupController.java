@@ -119,13 +119,13 @@ public class GroupController {
         groupService.removeStudentFromGroup(groupId, studentId);
     }
 
-    @GetMapping("/groups/{groupId}/waitlist")
+    @GetMapping("/{groupId}/waitlist")
     @Operation(summary = "Obtener lista de espera")
     public List<Integer> getWaitlist(@Parameter(description = "ID del grupo") @PathVariable String id) {
         return groupService.getWaitlist(id);
     }
 
-    @GetMapping("/groups/{groupId}/waitlist/details")
+    @GetMapping("/{groupId}/waitlist/details")
     @Operation(summary = "Obtener lista de espera detallada")
     public List<StudentDTO> getWaitlistDetails(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
         return groupService.getWaitlistDetails(groupId);
