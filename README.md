@@ -52,6 +52,9 @@ El proyecto sigue el patrón MVC (Modelo - Vista - Controlador):
 
 ---
 
+## Documento Analisis de Requerimientos
+[Analisis de Requerimientos(PDF)](docs/pdf/AnalisisDeRequerimientos.pdf)
+
 ## Diagrama de contexto.
 ![alt text](docs/uml/DiagramaContexto.png)
 
@@ -178,28 +181,30 @@ Diagramas basados en casos de uso principales del sistema SIRHA:
 
 ## Diagrama de Base de datos.
 
-![DiagramaBases](docs/uml/DiagramaBasesDeDatos.png)
+![DiagramaBasesDatos](docs/uml/DiagramaBasesDeDatos.png)
 
-En este diagrama encontramos las tablas(relaciones) que vamos a necesitar para tener una base
-de datos suficiente para cumplir con los requisitos y poder administrar de manera correcta la información necesaria.
+El modelo de base de datos de SIRHA organiza toda la información académica y administrativa del sistema. 
+Parte de una entidad base User, de la cual se derivan Student, Deanery, Secretariat y Teacher, lo que permite manejar roles y permisos de forma centralizada.
 
-Encontramos 8 tablas, las cuales son:
-- Estudiante, guarda la información de un estudiante(id,carrera,semestre).
-- Usuario, guarda la información de un usuario general(sin discriminar estudiante o decanatura)(id,nombre,correo_institucional,contraseña y rol).
-- Decanatura, guarda la información de un usuario con el rol de decanatura(id, facultad).
-- Materia, guarda la información sobre una materia en especifico(id, codigo, nombre y creditos).
-- Grupo, encontramos la información sobre un grupo(de una materia), (id, id_materia,profesor,cupoMaximo y horario).
-- Solicitud, es la tabla con más valores ya que contiene la información de una solicitud(id, id_estudiante,id_materia,grupo_origen,grupo_destino,estado,prioridad,fecha_creacion,observaciones).
-- DecisiónSolicitud, aqui se guardará la información con respecto a las respuestas por parte de la decanatura a las solicitudes(id, id_solicitud, id_decanatura, fechaRespuesta, resultado y comentarios).
-- Inscripcion, esta tabla nos permite llevar un control sobre las inscripciones que realiza y tiene un estudiante(id, id_estudiante, id_grupo, fechaInscripcion).
+Las entidades Subject, Group y ScheduleEntry controlan la oferta académica, los grupos y los horarios de los estudiantes. 
+Por otro lado, ChangeRequest y ChangeRequestHistory gestionan las solicitudes de cambio y su trazabilidad, registrando quién hizo qué y cuándo.
 
-Con esta estructura nos aseguramos:
-- Evitar redundancia de datos (no repetimos la información, usamos llaves foraneas).
-- Mantener la integridad (las claves foráneas aseguran que una solicitud no se cree para un grupo inexistente)
-- Flexibilidad (es un sistema con tendencia a crecer, sin necesidad de modificar lo que hay).
-- Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
+El diseño busca mantener integridad, trazabilidad y escalabilidad, 
+garantizando que cada solicitud pueda seguirse desde su creación hasta su resolución sin pérdida de información. En conjunto, el modelo refleja una arquitectura limpia, modular y orientada a procesos académicos reales.
 _ _ _
 
+## Diagrama de Despliegue.
+![DiagramaDespliegue](docs/uml/DiagramaDeDespliegue.png)
+
+El sistema SIRHA se despliega en la nube de Azure, utilizando un clúster de Kubernetes para la ejecución de contenedores Docker que alojan el backend desarrollado con Spring Boot. 
+Este servicio adicional que comunica con una base de datos MongoDB, encargada de almacenar toda la información académica y de solicitudes.
+
+El cliente accede al sistema desde un navegador web, que se conecta al backend a través de API REST bajo HTTPS, garantizando seguridad en la comunicación. 
+El flujo de despliegue incluye tres entornos: Sandbox, Preproducción y Producción, lo que permite pruebas y validaciones antes del lanzamiento final.
+
+El sistema también integra herramientas de CI/CD para control de calidad. SonarQube realiza el análisis estático del código y JaCoCo mide la cobertura de pruebas, asegurando la calidad del software en cada despliegue.
+
+En conjunto, este esquema ofrece un despliegue escalable, seguro y automatizado, alineado con buenas prácticas de desarrollo en la nube.
 ## Configuracion base de datos MongoDB
 
 [Ver Configuración(PDF)](docs/pdf/BaseMongoDB.pdf)
