@@ -183,6 +183,7 @@ define el flujo usando y implementando la interfaz de observer asi trabaja con a
 ## Diagrama de secuencia.
 
 ![DiagramaSecuencia](docs/uml/DiagramaSecuencia.png)
+
 Diagramas basados en casos de uso principales del sistema SIRHA:
 - Login / Autenticación de usuario
 - Gestión de usuarios (validar/crear usuario)
@@ -274,6 +275,6 @@ Azure:
 
 ## PRUEBAS DE SWAGGER
 
-[Ver Pruebas de videos de Sawgger en (PDF)](docs/pdf/pruebasEndpoints.pdf)
+[Ver Pruebas de videos de Swagger en (PDF)](docs/pdf/pruebasEndpoints.pdf)
 
 ---
