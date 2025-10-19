@@ -120,13 +120,14 @@ class DeaneryControllerTest {
         UUID requestId = UUID.randomUUID();
         RequestDecisionDTO decision = new RequestDecisionDTO();
         RequestDatesDTO dates = new RequestDatesDTO();
+        RespondRequestInfo body = new RespondRequestInfo(decision, dates);
         ChangeRequestDTO returned = new ChangeRequestDTO();
-
         when(deaneryService.respondRequestByDeanery(deaneryId, requestId, decision, dates)).thenReturn(returned);
+        ChangeRequestDTO response = controller.respondRequestByDeanery(deaneryId, requestId, body);
 
-        ChangeRequestDTO response = controller.respondRequestByDeanery(deaneryId, requestId, decision, dates);
-        assertEquals(returned, response);
+        assertSame(returned, response);
     }
+
 
     @Test
     void ShouldGetRequestsByFacultyAndStatus() {

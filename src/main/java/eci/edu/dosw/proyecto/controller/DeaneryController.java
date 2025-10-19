@@ -70,13 +70,13 @@ public class DeaneryController {
     @Operation(summary = "Responder solicitud")
     @PostMapping("/{deaneryId}/requests/{requestId}/respond")
     public ChangeRequestDTO respondRequestByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
-            @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision, @RequestBody RequestDatesDTO dates) {
-        return deaneryService.respondRequestByDeanery(deaneryId, requestId, decision, dates);
+            @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RespondRequestInfo body) {
+        return deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates());
     }
 
     @Operation(summary = "Responder solicitud (info consolidada)")
     @PostMapping("/{deaneryId}/requests/{requestId}/respondInfo")
-    public ChangeRequestDTO respondRequestByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
+    public ChangeRequestDTO respondRequestByDeaneryInfo(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
             @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RespondRequestInfo body) {
         return deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates());
     }
