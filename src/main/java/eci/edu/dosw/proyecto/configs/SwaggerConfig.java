@@ -1,3 +1,4 @@
+
 package eci.edu.dosw.proyecto.configs;
 
 import org.springframework.context.annotation.Bean;
@@ -21,17 +22,17 @@ public class SwaggerConfig {
         final String securitySchemeName = "bearerAuth";
 
         return new OpenAPI()
-            .info(new Info()
-                .title("SIRHA API")
-                .description("API para la gestión de reasignación de horarios académicos")
-                .version("1.0"))
-            .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
-            .components(new Components()
-                .addSecuritySchemes(securitySchemeName,
-                    new SecurityScheme()
-                        .name(securitySchemeName)
-                        .type(SecurityScheme.Type.HTTP)
-                        .scheme("bearer")
-                        .bearerFormat("JWT")));
+                .info(new Info()
+                        .title("SIRHA API")
+                        .description("API para la gestión de reasignación de horarios académicos")
+                        .version("1.0"))
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                .components(new Components()
+                        .addSecuritySchemes(securitySchemeName,
+                                new SecurityScheme()
+                                        .name(securitySchemeName)
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")));
     }
 }
