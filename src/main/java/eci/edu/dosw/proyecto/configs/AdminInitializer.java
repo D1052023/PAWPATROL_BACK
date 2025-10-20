@@ -14,7 +14,7 @@ import eci.edu.dosw.proyecto.services.AuthUserService;
 
 /**
  * Clase de configuración que se ejecuta al iniciar la aplicación y garantiza que exista el 
- * usuario ADMIN por defecto en la base de datos.
+ * usuario ADMIN por defecto en la base de datos
  */
 @Configuration
 @RequiredArgsConstructor
