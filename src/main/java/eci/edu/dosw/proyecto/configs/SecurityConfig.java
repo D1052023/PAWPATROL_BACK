@@ -46,7 +46,7 @@ public class SecurityConfig {
                                     "/api/status"
                             ).permitAll();
 
-                    if ("qa".equals(activeProfile)) {
+                    if ("prod".equals(activeProfile)) {
                         auth.anyRequest().permitAll();
                     } else {
                         auth
