@@ -76,25 +76,25 @@ public class ChangeRequestController {
     @Operation(summary = "Solicitar revisión excepcional")
     @PostMapping("/{requestId}/students/{studentId}/requestExceptional")
     public ChangeRequestDTO requestExceptional(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId,
-            @Parameter(description = "id de la solicitud") @PathVariable UUID requestId, @Parameter(description = "Razón de la solicitud") @RequestParam(required = false) String reason) {
+            @Parameter(description = "ID de la solicitud") @PathVariable UUID requestId, @Parameter(description = "Razón de la solicitud") @RequestParam(required = false) String reason) {
         return changeRequestService.requestExceptionalReview(studentId, requestId, reason);
     }
 
     @Operation(summary = "Consultar una solicitud específica")
     @GetMapping("/{requestId}/students/{studentId}")
-    public ChangeRequestDTO getRequestById(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, @Parameter(description = "id de la solicitud") @PathVariable UUID requestId) {
+    public ChangeRequestDTO getRequestById(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, @Parameter(description = "ID de la solicitud") @PathVariable UUID requestId) {
         return changeRequestService.getRequestById(studentId, requestId);
     }
 
     @Operation(summary = "Consultar historial de una solicitud")
     @GetMapping("/{requestId}/students/{studentId}/history")
-    public List<ChangeRequestHistory> getRequestHistory(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, @Parameter(description = "id de la solicitud") @PathVariable UUID requestId) {
+    public List<ChangeRequestHistory> getRequestHistory(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, @Parameter(description = "ID de la solicitud") @PathVariable UUID requestId) {
         return historyService.getHistory(requestId);
     }
 
     @Operation(summary = "Actualizar una solicitud de cambio")
     @PutMapping("/{requestId}/students/{studentId}")
-    public ChangeRequestDTO updateRequest(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, @Parameter(description = "id de la solicitud") @PathVariable UUID requestId, 
+    public ChangeRequestDTO updateRequest(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, @Parameter(description = "ID de la solicitud") @PathVariable UUID requestId, 
             @RequestBody ChangeRequestDTO requestDTO) {
         return changeRequestService.updateChangeRequest(studentId, requestId, requestDTO);
     }
@@ -102,7 +102,7 @@ public class ChangeRequestController {
     @Operation(summary = "Eliminar una solicitud de cambio")
     @DeleteMapping("/{requestId}/students/{studentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRequest(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, @Parameter(description = "id de la solicitud") @PathVariable UUID requestId) {
+    public void deleteRequest(@Parameter(description = "ID del estudiante") @PathVariable Integer studentId, @Parameter(description = "ID de la solicitud") @PathVariable UUID requestId) {
         changeRequestService.deleteChangeRequest(studentId, requestId);
     }
 }
