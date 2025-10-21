@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -180,6 +181,20 @@ public class MessageExceptions {
     public void ensureGroupHasCapacity(Group group) {
         if (group.getCurrentCapacity() >= group.getMaximumCapacity()) {
             throw badRequest(GROUP_FULL);
+        }
+    }
+
+    public void ensurePrerequisitesMet(Student student, Subject subject) {
+        List<String> prerequisites = subject.getPrerequisites(); 
+        List<String> approvedSubjects = student.getApprovedSubjects();
+
+        if (prerequisites != null) {
+            for (String pre : prerequisites) {
+                if (approvedSubjects == null || !approvedSubjects.contains(pre)) {
+                    throw new IllegalArgumentException(
+                        "El estudiante no ha cumplido con el prerrequisito: " + pre);
+                }
+            }
         }
     }
 
