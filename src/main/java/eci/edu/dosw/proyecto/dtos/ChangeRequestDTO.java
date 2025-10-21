@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import eci.edu.dosw.proyecto.enums.Faculty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 
 
@@ -14,6 +17,7 @@ import lombok.Data;
  */
 @Data
 public class ChangeRequestDTO {
+    @Schema(type = "string", format = "uuid", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
     private UUID id;
     @NotBlank
     private String currentSubject;
@@ -27,7 +31,7 @@ public class ChangeRequestDTO {
     private String studentName;
     private String observations;
     private Faculty faculty;
-    @NotNull
+    @Schema(type = "string", format = "date-time", example = "2025-10-18T12:00:00")
     private LocalDateTime resolutionDeadline;
     private boolean exceptional;
     private String exceptionalReason;
