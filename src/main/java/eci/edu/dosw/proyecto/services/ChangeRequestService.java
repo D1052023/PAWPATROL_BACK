@@ -1,6 +1,9 @@
 package eci.edu.dosw.proyecto.services;
 
+import eci.edu.dosw.proyecto.dtos.ChangeRequestCreateDTO;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
+import eci.edu.dosw.proyecto.dtos.ChangeRequestUpdateDTO;
+import eci.edu.dosw.proyecto.dtos.ExceptionalRequestDTO;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,10 +13,10 @@ import java.util.UUID;
  */
 public interface ChangeRequestService {
 
-    ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestDTO requestDTO);
+    ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestCreateDTO createDto);
     List<ChangeRequestDTO> getAllRequestsByStudent(Integer studentId);
     ChangeRequestDTO getRequestById(Integer studentId, UUID requestId);
-    ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestDTO dto);
+    ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestUpdateDTO updateDto);
     void deleteChangeRequest(Integer studentId, UUID requestId);
     List<ChangeRequestDTO> getExceptionalRequestsByStudent(Integer studentId);
     List<ChangeRequestDTO> getAllExceptionalRequests();
@@ -21,5 +24,8 @@ public interface ChangeRequestService {
     List<ChangeRequestDTO> getExceptionalRequestsByDeanery(int deaneryId);
     List<ChangeRequestDTO> getExceptionalRequestsByStudentForDeanery(int deaneryId, Integer studentId);
     ChangeRequestDTO approveExceptionalRequest(int approverId, UUID requestId, boolean approve, String observations);
+    ChangeRequestDTO requestExceptional(Integer studentId, UUID requestId, ExceptionalRequestDTO dto);
+
 
 }
+

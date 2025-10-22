@@ -1,5 +1,6 @@
 package eci.edu.dosw.proyecto.services.impl;
 
+import eci.edu.dosw.proyecto.dtos.*;
 import eci.edu.dosw.proyecto.util.CurriculumToFacultyMapper;
 import lombok.RequiredArgsConstructor;
 
@@ -15,8 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
-import eci.edu.dosw.proyecto.dtos.RequestDecisionDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
 import eci.edu.dosw.proyecto.models.*;
@@ -44,20 +43,20 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final CurriculumToFacultyMapper curriculumToFacultyMapper;
 
     @Override
-    public ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestDTO requestDTO) {
+    public ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestCreateDTO createDto) {
         Student student = message.findStudentOrThrow(studentId);
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
 
-        Subject currentSubject = message.findSubjectOrThrow(requestDTO.getCurrentSubject());
-        Subject targetSubject = message.findSubjectOrThrow(requestDTO.getTargetSubject());
+        Subject currentSubject = message.findSubjectOrThrow(createDto.getCurrentSubject());
+        Subject targetSubject = message.findSubjectOrThrow(createDto.getTargetSubject());
 
-        Group currentGroup = message.findGroupOrThrow(requestDTO.getCurrentGroup());
-        Group targetGroup = message.findGroupOrThrow(requestDTO.getTargetGroup());
+        Group currentGroup = message.findGroupOrThrow(createDto.getCurrentGroup());
+        Group targetGroup = message.findGroupOrThrow(createDto.getTargetGroup());
 
         message.ensureCurriculumMatchesStudent(student, targetSubject);
         message.ensureCurriculumMatchesStudentGroup(student, targetGroup);
 
-        ChangeRequest request = changeRequestMapper.toEntity(requestDTO);
+        ChangeRequest request = new ChangeRequest();
         request.setCreatedAt(now);
         request.setUpdatedAt(now);
         request.setResolutionDeadline(addBusinessDays(now, 5));
@@ -75,6 +74,18 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         request.setUpdatedAt(now);
         int priority = changeRequestRepository.findByStudentId(studentId).size() + 1;
         request.setPriority(priority);
+
+        if (Boolean.TRUE.equals(createDto.getExceptional())) {
+
+            message.ensureExceptionalReasonProvided(createDto.getExceptionalReason());
+            request.setExceptional(true);
+            request.setExceptionalReason(createDto.getExceptionalReason());
+            request.setExceptionalRequestedBy("STUDENT:" + studentId);
+            request.setExceptionalRequestedAt(now);
+            request.setExceptionalResolutionDeadline(addBusinessDays(now, 5));
+        } else {
+            request.setExceptional(false);
+        }
 
 
         ChangeRequest savedRequest = changeRequestRepository.save(request);
@@ -124,7 +135,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     }
 
     @Override
-    public ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestDTO dto) {
+    public ChangeRequestDTO updateChangeRequest(Integer studentId, UUID requestId, ChangeRequestUpdateDTO updateDTO) {
 
         Student student = message.findStudentOrThrow(studentId);
 
@@ -134,19 +145,19 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         message.ensureRequestPending(request);
 
 
-        if (dto.getObservations() != null) {
-            request.setObservations(dto.getObservations());
+        if (updateDTO.getObservations() != null) {
+            request.setObservations(updateDTO.getObservations());
         }
 
-        if (dto.getTargetSubject() != null && !dto.getTargetSubject().isBlank()) {
-            Subject targetSubject = message.findSubjectOrThrow(dto.getTargetSubject());
+        if (updateDTO.getTargetSubject() != null && !updateDTO.getTargetSubject().isBlank()) {
+            Subject targetSubject = message.findSubjectOrThrow(updateDTO.getTargetSubject());
             message.ensureCurriculumMatchesStudent(student,  targetSubject);
             request.setTargetSubject(targetSubject.getSubjectId());
             request.setFaculty(curriculumToFacultyMapper.map(targetSubject.getCurriculum()));
         }
 
-        if (dto.getTargetGroup() != null && !dto.getTargetGroup().isBlank()) {
-            Group targetGroup = message.findGroupOrThrow(dto.getTargetGroup());
+        if (updateDTO.getTargetGroup() != null && !updateDTO.getTargetGroup().isBlank()) {
+            Group targetGroup = message.findGroupOrThrow(updateDTO.getTargetGroup());
             message.ensureCurriculumMatchesStudentGroup(student,  targetGroup);
 
             if (request.getTargetGroup() != null) {
@@ -235,6 +246,29 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
         return changeRequestMapper.toDTO(request);
     }
+
+
+    @Override
+    public ChangeRequestDTO requestExceptional(Integer studentId, UUID requestId, ExceptionalRequestDTO dto) {
+        ChangeRequest request = message.findChangeRequestOrThrow(requestId);
+        message.ensureStudentOwnsRequest(request, studentId);
+        message.ensureRequestPending(request);
+        message.ensureExceptionalReasonProvided(dto.getReason());
+
+        request.setExceptional(true);
+        request.setExceptionalReason(dto.getReason());
+        String requestedBy = "STUDENT:" + studentId;
+        request.setExceptionalRequestedBy(requestedBy);
+        request.setExceptionalRequestedAt(LocalDateTime.now(ZoneOffset.UTC));
+        request.setExceptionalResolutionDeadline(addBusinessDays(LocalDateTime.now(ZoneOffset.UTC), 5));
+
+        changeRequestRepository.save(request);
+
+        historyService.addHistoryEvent(request.getId(), requestedBy, "EXCEPTION_REQUESTED", dto.getReason(), requestedBy);
+
+        return changeRequestMapper.toDTO(request);
+    }
+
 
     @Override
     public List<ChangeRequestDTO> getExceptionalRequestsByDeanery(int deaneryId) {

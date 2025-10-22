@@ -60,6 +60,7 @@ public class MessageExceptions {
     private static final String SUBJECT_NEW_MAX_LESS_THAN_GROUPS = "El nuevo cupo máximo es menor que la suma de los grupos existentes";
     private static final String TEACHER_EMAIL_EXISTS = "Email ya existe: %s";
     private static final String TEACHER_EMAIL_CONFLICT = "Email ya registrado: %s";
+    private static final String EXCEPTIONAL_REASON_REQUIRED = "Razón obligatoria para solicitar revisión excepcional";
 
     private final StudentRepository studentRepository;
     private final ChangeRequestRepository changeRequestRepository;
@@ -346,6 +347,12 @@ public class MessageExceptions {
             if (owner == null || owner.getId() != currentTeacherId) {
                 throw badRequest(String.format(TEACHER_EMAIL_CONFLICT, newEmail));
             }
+        }
+    }
+
+    public void ensureExceptionalReasonProvided(String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw badRequest(EXCEPTIONAL_REASON_REQUIRED);
         }
     }
 
