@@ -1,6 +1,8 @@
 package eci.edu.dosw.proyecto;
 
+import eci.edu.dosw.proyecto.dtos.ChangeRequestCreateDTO;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
+import eci.edu.dosw.proyecto.dtos.ChangeRequestUpdateDTO;
 import eci.edu.dosw.proyecto.enums.Curriculum;
 import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
@@ -102,11 +104,12 @@ class ChangeRequestServiceImplTest {
         gTarget.setGroupId("TPYC-1");
         gTarget.setWaitlist(new ArrayList<>());
 
-        ChangeRequestDTO dto = new ChangeRequestDTO();
+        ChangeRequestCreateDTO dto = new ChangeRequestCreateDTO();
         dto.setCurrentSubject("DOSW");
         dto.setTargetSubject("TPYC");
         dto.setCurrentGroup("DOSW-1");
         dto.setTargetGroup("TPYC-1");
+        dto.setStudentName("Juan Pablo Caballero");
 
         ChangeRequest entityToSave = new ChangeRequest();
 
@@ -116,7 +119,7 @@ class ChangeRequestServiceImplTest {
         when(message.findSubjectOrThrow("TPYC")).thenReturn(target);
         when(message.findGroupOrThrow("DOSW-1")).thenReturn(gCurrent);
         when(message.findGroupOrThrow("TPYC-1")).thenReturn(gTarget);
-        when(changeRequestMapper.toEntity(dto)).thenReturn(entityToSave);
+        when(changeRequestMapper.toEntity(any(ChangeRequestDTO.class))).thenReturn(entityToSave);
         when(changeRequestRepository.findByStudentId(studentId)).thenReturn(Collections.emptyList());
         when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
         when(studentRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
@@ -188,7 +191,7 @@ class ChangeRequestServiceImplTest {
 
         Group oldG = new Group(); oldG.setGroupId("DOSW-2"); oldG.setWaitlist(new ArrayList<>(List.of(studentId)));
         Group newG = new Group(); newG.setGroupId("PRI2IS-3"); newG.setWaitlist(new ArrayList<>());
-        ChangeRequestDTO incoming = new ChangeRequestDTO();
+        ChangeRequestUpdateDTO incoming = new ChangeRequestUpdateDTO();
 
         incoming.setTargetGroup("PRI2IS-3");
         when(message.findStudentOrThrow(studentId)).thenReturn(student);
@@ -372,7 +375,7 @@ class ChangeRequestServiceImplTest {
         request.setTargetSubject("FUPR");
         request.setFaculty(Faculty.ADMINISTRACION_DE_EMPRESAS);
 
-        ChangeRequestDTO dto = new ChangeRequestDTO();
+        ChangeRequestUpdateDTO dto = new ChangeRequestUpdateDTO();
         dto.setTargetSubject("FUEC");
 
         Subject newSubject = new Subject();
@@ -405,7 +408,7 @@ class ChangeRequestServiceImplTest {
         request.setStatus(RequestStatus.PENDING);
         request.setTargetGroup("DOSW-1");
 
-        ChangeRequestDTO dto = new ChangeRequestDTO();
+        ChangeRequestUpdateDTO dto = new ChangeRequestUpdateDTO();
         dto.setTargetGroup("DOSW-2");
 
         Group oldG = new Group();
@@ -446,7 +449,7 @@ class ChangeRequestServiceImplTest {
         request.setTargetGroup("DOSW-2");
         request.setTargetSubject("DOSW-2");
 
-        ChangeRequestDTO dto = new ChangeRequestDTO();
+        ChangeRequestUpdateDTO dto = new ChangeRequestUpdateDTO();
         dto.setTargetSubject("DOSW");
         dto.setTargetGroup("DOSW-1");
 
@@ -493,7 +496,7 @@ class ChangeRequestServiceImplTest {
         request.setStudentId(studentId);
         request.setStatus(RequestStatus.PENDING);
 
-        ChangeRequestDTO dto = new ChangeRequestDTO();
+        ChangeRequestUpdateDTO dto = new ChangeRequestUpdateDTO();
         dto.setObservations("Nueva observación");
 
         when(message.findStudentOrThrow(studentId)).thenReturn(student);
@@ -534,19 +537,19 @@ class ChangeRequestServiceImplTest {
         Group gCurrent = new Group(); gCurrent.setGroupId("DOSW-1");
         Group gTarget = new Group(); gTarget.setGroupId("TPYC-1");
 
-        ChangeRequestDTO dto = new ChangeRequestDTO();
+        ChangeRequestCreateDTO dto = new ChangeRequestCreateDTO();
         dto.setCurrentSubject("DOSW");
         dto.setTargetSubject("TPYC");
         dto.setCurrentGroup("DOSW-1");
         dto.setTargetGroup("TPYC-1");
-        
+
         when(message.findStudentOrThrow(studentId)).thenReturn(student);
         when(message.findActiveSecretariatOrThrow(any())).thenReturn(sec);
         when(message.findSubjectOrThrow("DOSW")).thenReturn(current);
         when(message.findSubjectOrThrow("TPYC")).thenReturn(target);
         when(message.findGroupOrThrow("DOSW-1")).thenReturn(gCurrent);
         when(message.findGroupOrThrow("TPYC-1")).thenReturn(gTarget);
-        when(changeRequestMapper.toEntity(dto)).thenAnswer(i -> new ChangeRequest());
+        when(message.findActiveSecretariatOrThrow(ArgumentMatchers.any(LocalDateTime.class))).thenReturn(sec);
         when(changeRequestRepository.findByStudentId(studentId)).thenReturn(Collections.emptyList());
         when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));
         when(studentRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
