@@ -1,7 +1,9 @@
 package eci.edu.dosw.proyecto;
 
 import eci.edu.dosw.proyecto.controller.ChangeRequestController;
+import eci.edu.dosw.proyecto.dtos.ChangeRequestCreateDTO;
 import eci.edu.dosw.proyecto.dtos.ChangeRequestDTO;
+import eci.edu.dosw.proyecto.dtos.ChangeRequestUpdateDTO;
 import eci.edu.dosw.proyecto.dtos.StudentDTO;
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.models.ChangeRequestHistory;
@@ -16,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
@@ -38,16 +42,25 @@ class ChangeRequestControllerTest {
     private ChangeRequestController controller;
 
     @Test
-    void shouldCreateRequest() {
+    void shouldCreateRequest_shortAndRobust() {
         Integer studentId = 1000100575;
-        ChangeRequestDTO requestDTO = new ChangeRequestDTO();
-        requestDTO.setId(UUID.randomUUID());
-        when(changeRequestService.createChangeRequest(studentId, requestDTO)).thenReturn(requestDTO);
-        ChangeRequestDTO res = controller.createRequest(studentId, requestDTO);
+
+        ChangeRequestCreateDTO createDto = new ChangeRequestCreateDTO();
+        createDto.setCurrentSubject("DOSW");
+        createDto.setCurrentGroup("DOSW-1");
+        createDto.setTargetSubject("DOSW");
+        createDto.setTargetGroup("DOSW-1");
+        createDto.setStudentName("Robinson Steven Nuñez");
+        ChangeRequestDTO responseDto = new ChangeRequestDTO();
+        responseDto.setId(UUID.randomUUID());
+        when(changeRequestService.createChangeRequest(eq(studentId), any(ChangeRequestCreateDTO.class))).
+                thenReturn(responseDto);
+        ChangeRequestDTO res = controller.createRequest(studentId, createDto);
 
         assertNotNull(res);
-        assertEquals(requestDTO.getId(), res.getId());
+        assertEquals(responseDto.getId(), res.getId());
     }
+
 
     @Test
     void shouldGetRequestsByStudent() {
@@ -87,6 +100,22 @@ class ChangeRequestControllerTest {
 
         assertNotNull(res);
         assertEquals(id, res.getId());
+    }
+
+    @Test
+    void shouldGetCurrentScheduleWhenSemesterProvided() {
+        Integer id = 1000100282;
+        int semester = 2;
+        StudentDTO scheduleDto = new StudentDTO();
+        scheduleDto.setId(id);
+
+        when(studentService.getStudentSchedule(id, semester)).thenReturn(scheduleDto);
+
+        StudentDTO res = controller.getCurrentSchedule(id, semester);
+
+        assertNotNull(res);
+        assertEquals(id, res.getId());
+        
     }
 
     @Test
@@ -137,12 +166,14 @@ class ChangeRequestControllerTest {
     void shouldUpdateRequest() {
         Integer studentId = 1000100279;
         UUID requestId = UUID.randomUUID();
-        ChangeRequestDTO in = new ChangeRequestDTO();
-        in.setId(requestId);
+        ChangeRequestUpdateDTO updateDto = new ChangeRequestUpdateDTO();
+        updateDto.setTargetSubject("ODSC");
+        updateDto.setTargetGroup("ODSC-3");
+        updateDto.setObservations("Cambio de grupo por favor");
         ChangeRequestDTO out = new ChangeRequestDTO();
         out.setId(requestId);
-        when(changeRequestService.updateChangeRequest(studentId, requestId, in)).thenReturn(out);
-        ChangeRequestDTO res = controller.updateRequest(studentId, requestId, in);
+        when(changeRequestService.updateChangeRequest(studentId, requestId, updateDto)).thenReturn(out);
+        ChangeRequestDTO res = controller.updateRequest(studentId, requestId, updateDto);
 
         assertEquals(out, res);
     }

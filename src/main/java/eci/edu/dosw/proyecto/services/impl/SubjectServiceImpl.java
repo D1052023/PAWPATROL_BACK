@@ -125,6 +125,8 @@ public class SubjectServiceImpl implements SubjectService {
         message.ensureCurriculumMatchesStudent(student, subject);
         message.ensureStudentNotEnrolledInSubject(student, subjectId);
 
+        message.ensurePrerequisitesMet(student, subject);
+
         int totalCuposUsados = groupRepository.findBySubjectId(subjectId)
                 .stream()
                 .mapToInt(g -> g.getCurrentCapacity() != null ? g.getCurrentCapacity() : 0)

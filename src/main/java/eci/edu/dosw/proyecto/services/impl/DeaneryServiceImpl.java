@@ -92,45 +92,64 @@ public class DeaneryServiceImpl implements DeaneryService {
     @Override
     public ChangeRequestDTO respondRequestByDeanery(int deaneryId, UUID requestId, RequestDecisionDTO decision, RequestDatesDTO dates) {
         Deanery deanery = message.findDeaneryOrThrow(deaneryId);
-
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
+        validateDeaneryRequest(deanery, request, dates);
+
+        if (decision.getRequestAdditionalInfo() != null && decision.getRequestAdditionalInfo()) {
+            return handleAdditionalInfoRequest(request, decision, deaneryId);
+        }
+
+        return handleFinalDecision(request, decision, deaneryId);
+    }
+
+    private void validateDeaneryRequest(Deanery deanery, ChangeRequest request, RequestDatesDTO dates) {
         LocalDateTime now = LocalDateTime.now();
         message.ensureResolutionDeadlineNotExceeded(request, now);
         message.ensureDatesProvided(dates);
         message.ensureNowWithinDates(now, dates);
         message.ensureDeaneryFacultyMatches(deanery, request);
         message.ensureRequestPending(request);
+    }
 
-        if (decision.getRequestAdditionalInfo() != null && decision.getRequestAdditionalInfo()) {
-            request.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
-            request.setUpdatedAt(LocalDateTime.now());
-            request.setProcessedBy("DEANERY");
+    private ChangeRequestDTO handleAdditionalInfoRequest(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
+        request.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
+        request.setUpdatedAt(LocalDateTime.now());
+        request.setProcessedBy("DEANERY");
 
-            if (decision.getAdditionalInfoRequestMessage() != null) {
-                String prevObs = request.getObservations() == null ? "" : request.getObservations() + " | ";
-                request.setObservations(prevObs + "SOLICITUD INFO: " + decision.getAdditionalInfoRequestMessage());
-            }
-
-            changeRequestRepository.save(request);
-
-            StringBuilder note = new StringBuilder("Se solicitó información adicional");
-            if (decision.getAdditionalInfoRequestMessage() != null) {
-                note.append(": ").append(decision.getAdditionalInfoRequestMessage());
-            }
-            if (decision.getInfoDueDate() != null) {
-                note.append(" (Plazo: ").append(decision.getInfoDueDate().toString()).append(")");
-            }
-
-            historyService.addHistoryEvent(request.getId(), "DEANERY", "REQUEST_ADDITIONAL_INFO",
-                    note.toString(), "DEANERY:" + deaneryId);
-
-            return changeRequestMapper.toDTO(request);
+        if (decision.getAdditionalInfoRequestMessage() != null) {
+            String prevObs = request.getObservations() == null ? "" : request.getObservations() + " | ";
+            request.setObservations(prevObs + "INFO REQUEST: " + decision.getAdditionalInfoRequestMessage());
         }
 
+        changeRequestRepository.save(request);
+        recordAdditionalInfoEvent(request, decision, deaneryId);
+        return changeRequestMapper.toDTO(request);
+    }
+
+    private void recordAdditionalInfoEvent(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
+        StringBuilder note = new StringBuilder("Additional information requested");
+        if (decision.getAdditionalInfoRequestMessage() != null) {
+            note.append(": ").append(decision.getAdditionalInfoRequestMessage());
+        }
+        if (decision.getInfoDueDate() != null) {
+            note.append(" (Deadline: ").append(decision.getInfoDueDate().toString()).append(")");
+        }
+
+        historyService.addHistoryEvent(
+                request.getId(),
+                "DEANERY",
+                "REQUEST_ADDITIONAL_INFO",
+                note.toString(),
+                "DEANERY:" + deaneryId
+        );
+    }
+
+    private ChangeRequestDTO handleFinalDecision(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
         request.setStatus(decision.getStatus());
         request.setUpdatedAt(LocalDateTime.now());
         request.setProcessedBy("DEANERY");
+
         if (decision.getObservations() != null) {
             request.setObservations(decision.getObservations());
         }
@@ -143,15 +162,20 @@ public class DeaneryServiceImpl implements DeaneryService {
         return changeRequestMapper.toDTO(request);
     }
 
+    @Override
     public void processApprovedRequest(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
-
         Group currentGroup = message.findGroupOrThrow(request.getCurrentGroup());
-
         Group targetGroup = message.findGroupOrThrow(request.getTargetGroup());
         targetGroup.attach(alertService);
 
         message.ensureGroupHasCapacity(targetGroup);
 
+        updateGroupCapacities(request, currentGroup, targetGroup);
+        updateStudentEnrollment(request, targetGroup);
+        recordApprovalHistory(request, decision, deaneryId);
+    }
+
+    private void updateGroupCapacities(ChangeRequest request, Group currentGroup, Group targetGroup) {
         targetGroup.setCurrentCapacity(targetGroup.getCurrentCapacity() + 1);
         targetGroup.enrollStudent();
 
@@ -161,19 +185,31 @@ public class DeaneryServiceImpl implements DeaneryService {
 
         groupRepository.save(currentGroup);
         groupRepository.save(targetGroup);
+    }
 
+    private void updateStudentEnrollment(ChangeRequest request, Group targetGroup) {
         Student student = message.findStudentOrThrow(request.getStudentId());
 
         if (student.getSchedule() == null) {
             student.setSchedule(new ArrayList<>());
         }
 
+        removeOldScheduleEntries(student, request);
+        updateEnrolledSubjects(student, request);
+        addNewScheduleEntries(student, targetGroup, request);
+
+        studentRepository.save(student);
+    }
+
+    private void removeOldScheduleEntries(Student student, ChangeRequest request) {
         student.getSchedule().removeIf(se ->
                 se.getSubject() != null && se.getGroup() != null &&
                         se.getSubject().equals(request.getCurrentSubject()) &&
                         se.getGroup().equals(request.getCurrentGroup())
         );
+    }
 
+    private void updateEnrolledSubjects(Student student, ChangeRequest request) {
         if (student.getEnrolledSubjects() == null) {
             student.setEnrolledSubjects(new ArrayList<>());
         }
@@ -183,10 +219,11 @@ public class DeaneryServiceImpl implements DeaneryService {
         if (!student.getEnrolledSubjects().contains(request.getTargetSubject())) {
             student.getEnrolledSubjects().add(request.getTargetSubject());
         }
+    }
 
-        String subjectIdFromGroup = targetGroup.getSubjectId();
-        String subjectId = (subjectIdFromGroup != null && !subjectIdFromGroup.isBlank())
-                ? subjectIdFromGroup
+    private void addNewScheduleEntries(Student student, Group targetGroup, ChangeRequest request) {
+        String subjectId = (targetGroup.getSubjectId() != null && !targetGroup.getSubjectId().isBlank())
+                ? targetGroup.getSubjectId()
                 : request.getTargetSubject();
 
         if (targetGroup.getSchedule() != null && !targetGroup.getSchedule().isEmpty()) {
@@ -221,13 +258,24 @@ public class DeaneryServiceImpl implements DeaneryService {
             basic.setGroup(request.getTargetGroup());
             student.getSchedule().add(basic);
         }
+    }
 
-        studentRepository.save(student);
-        historyService.addHistoryEvent(request.getId(), "DEANERY", RequestStatus.APPROVED.name(),
-                decisionToNote(decision), "DEANERY:" + deaneryId);
+    private void recordApprovalHistory(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
+        historyService.addHistoryEvent(
+                request.getId(),
+                "DEANERY",
+                RequestStatus.APPROVED.name(),
+                decisionToNote(decision),
+                "DEANERY:" + deaneryId
+        );
 
-        historyService.addHistoryEvent(request.getId(), "DEANERY", "STUDENT_SCHEDULE_UPDATED",
-                "Horario actualizado al aprobar la solicitud", "DEANERY:" + deaneryId);
+        historyService.addHistoryEvent(
+                request.getId(),
+                "DEANERY",
+                "STUDENT_SCHEDULE_UPDATED",
+                "Student schedule updated after approval",
+                "DEANERY:" + deaneryId
+        );
     }
 
 

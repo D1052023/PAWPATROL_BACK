@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -60,6 +61,7 @@ public class MessageExceptions {
     private static final String SUBJECT_NEW_MAX_LESS_THAN_GROUPS = "El nuevo cupo máximo es menor que la suma de los grupos existentes";
     private static final String TEACHER_EMAIL_EXISTS = "Email ya existe: %s";
     private static final String TEACHER_EMAIL_CONFLICT = "Email ya registrado: %s";
+    private static final String EXCEPTIONAL_REASON_REQUIRED = "Razón obligatoria para solicitar revisión excepcional";
 
     private final StudentRepository studentRepository;
     private final ChangeRequestRepository changeRequestRepository;
@@ -146,6 +148,7 @@ public class MessageExceptions {
             throw forbidden(FORBIDDEN_FACULTY);
         }
     }
+    
 
     public Deanery findDeaneryByFacultyOrThrow(Faculty faculty) {
         return deaneryRepository.findByFaculty(faculty)
@@ -180,6 +183,20 @@ public class MessageExceptions {
     public void ensureGroupHasCapacity(Group group) {
         if (group.getCurrentCapacity() >= group.getMaximumCapacity()) {
             throw badRequest(GROUP_FULL);
+        }
+    }
+
+    public void ensurePrerequisitesMet(Student student, Subject subject) {
+        List<String> prerequisites = subject.getPrerequisites(); 
+        List<String> approvedSubjects = student.getApprovedSubjects();
+
+        if (prerequisites != null) {
+            for (String pre : prerequisites) {
+                if (approvedSubjects == null || !approvedSubjects.contains(pre)) {
+                    throw new IllegalArgumentException(
+                        "El estudiante no ha cumplido con el prerrequisito: " + pre);
+                }
+            }
         }
     }
 
@@ -277,6 +294,11 @@ public class MessageExceptions {
         }
     }
 
+    public void ensureExceptionalReasonProvided(String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw badRequest(EXCEPTIONAL_REASON_REQUIRED);
+        }
+    }
 
     private ResponseStatusException badRequest(String message) {
         LOG.debug("BadRequest: {}", message);

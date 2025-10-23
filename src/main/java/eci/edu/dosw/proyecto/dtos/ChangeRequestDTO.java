@@ -3,9 +3,11 @@ package eci.edu.dosw.proyecto.dtos;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import eci.edu.dosw.proyecto.enums.Faculty;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 
 
@@ -14,28 +16,38 @@ import lombok.Data;
  */
 @Data
 public class ChangeRequestDTO {
+
+    @Schema(type = "string", format = "uuid")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID id;
-    @NotBlank
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Faculty faculty;
     private String currentSubject;
-    @NotBlank
     private String currentGroup;
-    @NotBlank
     private String targetSubject;
-    @NotBlank
     private String targetGroup;
-    @NotBlank
     private String studentName;
     private String observations;
-    private Faculty faculty;
-    @NotNull
+    @Schema(type = "string", format = "date-time")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime resolutionDeadline;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private boolean exceptional;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String exceptionalReason;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String exceptionalRequestedBy;
+    @Schema(type = "string", format = "date-time")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime exceptionalRequestedAt;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Boolean exceptionalApproved;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String exceptionalApprovedBy;
+    @Schema(type = "string", format = "date-time", example = "2025-10-18T12:00:00")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime exceptionalApprovedAt;
+    @Schema(type = "string", format = "date-time")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime exceptionalResolutionDeadline;
-
 }
