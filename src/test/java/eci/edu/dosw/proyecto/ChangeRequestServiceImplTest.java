@@ -545,7 +545,7 @@ class ChangeRequestServiceImplTest {
         dto.setTargetSubject("TPYC");
         dto.setCurrentGroup("DOSW-1");
         dto.setTargetGroup("TPYC-1");
-        
+
         when(message.findStudentOrThrow(studentId)).thenReturn(student);
         when(message.findActiveSecretariatOrThrow(any())).thenReturn(sec);
         when(message.findSubjectOrThrow("DOSW")).thenReturn(current);
@@ -635,7 +635,6 @@ class ChangeRequestServiceImplTest {
         request.setStatus(RequestStatus.PENDING);
 
         ExceptionalRequestDTO dto = new ExceptionalRequestDTO();
-        dto.setReason("Medical emergency – needs schedule flexibility.");
 
         when(message.findChangeRequestOrThrow(requestId)).thenReturn(request);
         when(changeRequestRepository.save(any(ChangeRequest.class))).thenAnswer(i -> i.getArgument(0));

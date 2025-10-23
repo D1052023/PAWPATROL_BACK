@@ -246,14 +246,17 @@ public class MessageExceptions {
     }
 
     public void ensureGroupHasNoTeacherAssigned(Group group) {
-        if (group != null && group.getTeacher() != 0) {
+        if (group == null) return;
+        Integer teacher = group.getTeacher();
+        if (teacher != null && teacher != 0) {
             throw badRequest(GROUP_HAS_TEACHER);
         }
     }
 
     public void ensureGroupHasTeacherAssigned(Group group) {
         if (group == null) return;
-        if (group.getTeacher() == 0) {
+        Integer teacher = group.getTeacher();
+        if (teacher == null || teacher == 0) {
             throw badRequest(GROUP_NO_TEACHER);
         }
     }
@@ -291,12 +294,6 @@ public class MessageExceptions {
     public void ensureAtomicUpdateSucceeded(Object updated, String errorMessage) {
         if (updated == null) {
             throw badRequest(errorMessage);
-        }
-    }
-
-    public void ensureExceptionalReasonProvided(String reason) {
-        if (reason == null || reason.isBlank()) {
-            throw badRequest(EXCEPTIONAL_REASON_REQUIRED);
         }
     }
 
@@ -365,6 +362,12 @@ public class MessageExceptions {
             if (owner == null || owner.getId() != currentTeacherId) {
                 throw badRequest(String.format(TEACHER_EMAIL_CONFLICT, newEmail));
             }
+        }
+    }
+
+    public void ensureExceptionalReasonProvided(String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw badRequest(EXCEPTIONAL_REASON_REQUIRED);
         }
     }
 

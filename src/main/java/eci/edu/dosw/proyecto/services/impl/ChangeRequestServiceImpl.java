@@ -90,6 +90,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         return request;
     }
 
+
     private void applyExceptionalDetails(ChangeRequest request, ChangeRequestCreateDTO dto, Integer studentId, LocalDateTime now) {
         message.ensureExceptionalReasonProvided(dto.getExceptionalReason());
         request.setExceptional(true);
@@ -156,6 +157,41 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         updateObservationsIfPresent(request, updateDTO);
         updateTargetSubjectIfPresent(student, request, updateDTO);
         updateTargetGroupIfPresent(studentId, student, request, updateDTO);
+
+        message.ensureStudentOwnsRequest(request, studentId);
+        message.ensureRequestPending(request);
+
+
+        if (updateDTO.getObservations() != null) {
+            request.setObservations(updateDTO.getObservations());
+        }
+
+        if (updateDTO.getTargetSubject() != null && !updateDTO.getTargetSubject().isBlank()) {
+            Subject targetSubject = message.findSubjectOrThrow(updateDTO.getTargetSubject());
+            message.ensureCurriculumMatchesStudent(student,  targetSubject);
+            request.setTargetSubject(targetSubject.getSubjectId());
+            request.setFaculty(curriculumToFacultyMapper.map(targetSubject.getCurriculum()));
+        }
+
+        if (updateDTO.getTargetGroup() != null && !updateDTO.getTargetGroup().isBlank()) {
+            Group targetGroup = message.findGroupOrThrow(updateDTO.getTargetGroup());
+            message.ensureCurriculumMatchesStudentGroup(student,  targetGroup);
+
+            if (request.getTargetGroup() != null) {
+                groupRepository.findByGroupId(request.getTargetGroup())
+                        .ifPresent(g -> {
+                            if (g.getWaitlist() != null) g.getWaitlist().removeIf(id -> id.equals(studentId));
+                            groupRepository.save(g);
+                        });
+            }
+
+            if (targetGroup.getWaitlist() == null) targetGroup.setWaitlist(new ArrayList<>());
+            if (!targetGroup.getWaitlist().contains(studentId)) {
+                targetGroup.getWaitlist().add(studentId);
+                groupRepository.save(targetGroup);
+            }
+            request.setTargetGroup(targetGroup.getGroupId());
+        }
 
         request.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
         ChangeRequest saved = changeRequestRepository.save(request);

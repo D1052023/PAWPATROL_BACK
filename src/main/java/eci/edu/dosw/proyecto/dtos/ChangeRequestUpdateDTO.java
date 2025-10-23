@@ -11,3 +11,5 @@ public class ChangeRequestUpdateDTO {
     private String targetGroup;
     private String observations;
 }
+
+

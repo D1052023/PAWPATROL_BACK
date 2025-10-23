@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import eci.edu.dosw.proyecto.enums.Faculty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import lombok.Data;
 
 

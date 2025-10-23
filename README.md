@@ -7,7 +7,9 @@
 - Diego Chavarro.
 
 **Nombre De la Rama:**
+
 `feature/Pruebas-PruebasSirha`
+
 ---
 
 ## Estrategia de Versionamiento y ramas.
@@ -24,6 +26,7 @@
 `feature: Tarea - Acción Realizada`
 
 ---
+
 ## Tecnologías utilizadas
 
 - Java 21
@@ -37,6 +40,8 @@
 - Azure
 - Kubernetes
 - GitHub Actions
+
+---
 
 ## Arquitectura
 
@@ -53,6 +58,7 @@ El proyecto sigue el patrón MVC (Modelo - Vista - Controlador):
 ---
 
 ## Diagrama de contexto.
+
 ![alt text](docs/uml/DiagramaContexto.png)
 
 El diagrama de contexto muestra el  sistema central SIRHA y sus relaciones con los actores externos que interactúan con el. SIRAH centraliza la gestion de solicitudes de cambio de horario, aplica las reglas de negocio definidas por la institución y coordina validaciones y autorizaciones.
@@ -66,9 +72,11 @@ El diagrama de contexto muestra el  sistema central SIRHA y sus relaciones con l
 - Docentes:  Consultan sus horarios y grupos asignados para verificar afectaciones o disponibilidades. Normalmente no realizan cambios desde SIRHA, solo consultan.
 
 - Decanatura: Supervisa y valida solicitudes, resolviendo conflictos complejos que el sistema no pueda resolver automáticamente (p. ej. choques entre asignaturas o limitaciones de recursos).
+
 ---
 
 ## Diagrama de casos de uso.
+
 ![alt text](docs/uml/DiagramaCasosUso.png)
 
 Define como interactuan los siguientes actores con el sistema de SIRHA para la elaboracion de horarios, cada actor tiene ciertas funcionalidades dentro del sistema para saber que puede hacer
@@ -81,6 +89,7 @@ Define como interactuan los siguientes actores con el sistema de SIRHA para la e
 - Decanatura: Este usario se le permite consultar información sobre le estudiante, responder solicitudes según su facultad y tipo de solicitud (si es excepcional), consultar las alertas sobre un grupo que este al limite de su capacidad, se le permite asignar profesores capacidad en materias y grupos, crear y consultar reportes sobre un estudiante cantidad de solicitudes.
 
 - Secretaria Académica: Establecer periodos para responder solicitudes y crear solicitudes, consultar solicitudes generalmente o dependiendo del estudiante, prioridad, estado y demás.
+
 ---
 
 ## Diagrama de componentes general.
@@ -95,6 +104,7 @@ Se realizo el diagrama identificando los componentes del sistema, identificando 
 ---
 
 ## Diagrama de componentes especificos.
+
 ![alt text](docs/uml/DiagramaComponentesEspecifico.png)
 
 Se realizo el diagrama identificando los subcomponentes que interactuan con el componente backend
@@ -125,6 +135,8 @@ Vínculos entre materias, carreras, roles y facultades, representando la organiz
 
 En general, el diagrama muestra una arquitectura orientada a objetos que integra la gestión de usuarios, solicitudes, materias, grupos y notificaciones de alertas para avisar sobre las capacidades de un grupo.
 
+---
+
 ### **Patrones de diseño:**
 
 #### **Observer**
@@ -133,6 +145,7 @@ Group actúa como el que notifica cambios cuando se llena o alcanza el 90% de ca
 
 
 #### **Factory Method**
+
 Se uso ya que nos permitió evitar centralizar la lógica de la validación de los usurios ya que cada uno al entrar en la aplicación SIRHA navega y interactua solo con lo que es de su rol asi evitamos que se mezcle lo que un decano puede hacer y lo que puede hacer un estudiante dentro de la app.
 
 ---
@@ -165,83 +178,61 @@ implementa un observador que notifica si un grupo esta próximo o ya esta lleno.
 Group es un modulo de alto nivel por lo que no estamos dependiendo de los modulos de bajo nivel ya que
 define el flujo usando y implementando la interfaz de observer asi trabaja con abstracciones no con clases concretas.
 
+---
+
 ## Diagrama de secuencia.
 
 ![DiagramaSecuencia](docs/uml/DiagramaSecuencia.png)
+
 Diagramas basados en casos de uso principales del sistema SIRHA:
 - Login / Autenticación de usuario
 - Gestión de usuarios (validar/crear usuario)
 - Crear solicitud de reasignación (Application)
 - Validar solicitud de reasignación
 - Notificación del resultado
+
 ---
 
 ## Diagrama de Base de datos.
 
-![DiagramaBases](docs/uml/DiagramaBasesDeDatos.png)
+![DiagramaBasesDatos](docs/uml/DiagramaBasesDeDatos.png)
 
-En este diagrama encontramos las tablas(relaciones) que vamos a necesitar para tener una base
-de datos suficiente para cumplir con los requisitos y poder administrar de manera correcta la información necesaria.
+El modelo de base de datos de SIRHA organiza toda la información académica y administrativa del sistema.
+Parte de una entidad base User, de la cual se derivan Student, Deanery, Secretariat y Teacher, lo que permite manejar roles y permisos de forma centralizada.
 
-Encontramos 8 tablas, las cuales son:
-- Estudiante, guarda la información de un estudiante(id,carrera,semestre).
-- Usuario, guarda la información de un usuario general(sin discriminar estudiante o decanatura)(id,nombre,correo_institucional,contraseña y rol).
-- Decanatura, guarda la información de un usuario con el rol de decanatura(id, facultad).
-- Materia, guarda la información sobre una materia en especifico(id, codigo, nombre y creditos).
-- Grupo, encontramos la información sobre un grupo(de una materia), (id, id_materia,profesor,cupoMaximo y horario).
-- Solicitud, es la tabla con más valores ya que contiene la información de una solicitud(id, id_estudiante,id_materia,grupo_origen,grupo_destino,estado,prioridad,fecha_creacion,observaciones).
-- DecisiónSolicitud, aqui se guardará la información con respecto a las respuestas por parte de la decanatura a las solicitudes(id, id_solicitud, id_decanatura, fechaRespuesta, resultado y comentarios).
-- Inscripcion, esta tabla nos permite llevar un control sobre las inscripciones que realiza y tiene un estudiante(id, id_estudiante, id_grupo, fechaInscripcion).
+Las entidades Subject, Group y ScheduleEntry controlan la oferta académica, los grupos y los horarios de los estudiantes.
+Por otro lado, ChangeRequest y ChangeRequestHistory gestionan las solicitudes de cambio y su trazabilidad, registrando quién hizo qué y cuándo.
 
-Con esta estructura nos aseguramos:
-- Evitar redundancia de datos (no repetimos la información, usamos llaves foraneas).
-- Mantener la integridad (las claves foráneas aseguran que una solicitud no se cree para un grupo inexistente)
-- Flexibilidad (es un sistema con tendencia a crecer, sin necesidad de modificar lo que hay).
-- Escalabilidad (Al estar normalizada, es más eficiente para operaciones CRUD y consultas).
-_ _ _
-
-## Configuracion base de datos MongoDB
-
-[Ver Configuración(PDF)](docs/pdf/BaseMongoDB.pdf)
-
-
-### DOCKERIZACIÓN DE LA APPI
-
-*Video:*
-
-https://youtu.be/QJJyAQXGyAM
-
-
-
-1. Se Creo el archivo Dockerfile en IntelliJ y se ajusto el path a JDK 21 y se verifico el
-   .jar del proyecto que es `PAWPATROL_BACK-0.0.5.jar`
-2. Luego se creo un .dockerignore para no almacenar cosas innecesarias en el proyecto
-3. Y otro archivo .yml para usar nuestro proyecto de manera local y con mongo docker-compose.local
-4. Posteriormente se descargo  mongo con el comando  `docker pull mongo:6.0`
-5. Compilamos el proyecto  con  `mvn -DskipTests clean package`
-6. Levantamos el Docker con el comando:  `docker compose -f docker-compose.local.yml up -d --build`
-7. Luego subimos nuestra imagen a Docker Hub: https://hub.docker.com/repositories/robinson677?_gl=1*habqp2*_gcl_au*MzI4MDkxODgwLjE3NTcxMzc2OTM.*_ga*NTIxOTAwOTExLjE3NTcxMzc2OTM.*_ga_XJWPQMJYHQ*czE3NTkzODQzNDQkbzQkZzEkdDE3NTkzODUzMDckajYwJGwwJGgw
-8. Hice login Write-Output `Mi token | docker login --username robinson677 --password-stdin`
-9. Y casi finalizando se creo la imagen `docker build -t robinson677/pawpatrol-back:0.0.5 .`
-10. Finalmente se le hizo push Haz push:  `docker push robin123/pawpatrol-back:0.0.5`
-11.  Si se quiere probar la imagen:
-
-
-docker pull robinson677/pawpatrol-back:0.0.5
-docker run --rm -p 8080:8080 `
-  -e SPRING_DATA_MONGODB_URI="mongodb://<host>:27017/sirha" `
--e SPRING_PROFILES_ACTIVE=docker `
-robinson677/pawpatrol-back:0.0.5
+El diseño busca mantener integridad, trazabilidad y escalabilidad,
+garantizando que cada solicitud pueda seguirse desde su creación hasta su resolución sin pérdida de información. En conjunto, el modelo refleja una arquitectura limpia, modular y orientada a procesos académicos reales.
 
 ---
 
-**Evidencia en Docker Desktop:**
+## Diagrama de Despliegue.
 
-![alt text](docs/imagenes/dockerEvidencia1.png)
+![DiagramaDespliegue](docs/uml/DiagramaDeDespliegue.png)
 
-**Evidencia de la imagen en Docker Hub:**
+El sistema SIRHA se despliega en la nube de Azure, utilizando un clúster de Kubernetes para la ejecución de contenedores Docker que alojan el backend desarrollado con Spring Boot.
+Este servicio adicional que comunica con una base de datos MongoDB, encargada de almacenar toda la información académica y de solicitudes.
 
-![alt text](docs/imagenes/dockerEvidencia2.png)
+El cliente accede al sistema desde un navegador web, que se conecta al backend a través de API REST bajo HTTPS, garantizando seguridad en la comunicación.
+El flujo de despliegue incluye tres entornos: Sandbox, Preproducción y Producción, lo que permite pruebas y validaciones antes del lanzamiento final.
+
+El sistema también integra herramientas de CI/CD para control de calidad. SonarQube realiza el análisis estático del código y JaCoCo mide la cobertura de pruebas, asegurando la calidad del software en cada despliegue.
+
+En conjunto, este esquema ofrece un despliegue escalable, seguro y automatizado, alineado con buenas prácticas de desarrollo en la nube.
+
+---
+
+## Configuracion base de datos MongoDB
+
+[Ver Configuración (PDF)](docs/pdf/BaseMongoDB.pdf)
+
+---
+
+### DOCKERIZACIÓN DE LA APPI
+
+[Ver Configuración de la Dockerización (PDF)](docs/pdf/dockerizacionAppi.pdf)
 
 --- 
 
@@ -285,6 +276,11 @@ Azure:
 
 
   ![alt text](docs/imagenes/pruebaAzure.png)
-  
+
 ---
+
 ## PRUEBAS DE SWAGGER
+
+[Ver Pruebas de videos de Swagger en (PDF)](docs/pdf/pruebasEndpoints.pdf)
+
+---

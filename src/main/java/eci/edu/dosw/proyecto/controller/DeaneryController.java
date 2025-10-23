@@ -70,22 +70,22 @@ public class DeaneryController {
     @Operation(summary = "Responder solicitud")
     @PostMapping("/{deaneryId}/requests/{requestId}/respond")
     public ChangeRequestDTO respondRequestByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
-            @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision, @RequestBody RequestDatesDTO dates) {
-        return deaneryService.respondRequestByDeanery(deaneryId, requestId, decision, dates);
+                                                    @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RespondRequestInfo body) {
+        return deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates());
     }
 
     @Operation(summary = "Responder solicitud (info consolidada)")
     @PostMapping("/{deaneryId}/requests/{requestId}/respondInfo")
-    public ChangeRequestDTO respondRequestByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
-            @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RespondRequestInfo body) {
+    public ChangeRequestDTO respondRequestByDeaneryInfo(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
+                                                        @Parameter(description = "ID de la solicitud a responder") @PathVariable UUID requestId, @RequestBody RespondRequestInfo body) {
         return deaneryService.respondRequestByDeanery(deaneryId, requestId, body.getDecision(), body.getDates());
     }
 
     @Operation(summary = "Actualizar solicitud como decano/a")
     @PutMapping("/{deaneryId}/requests/{requestId}")
     public ChangeRequestDTO updateRequestAsDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
-            @Parameter(description = "ID de la solicitud a actualizar") @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision, @RequestParam(required = false) LocalDateTime startDate,
-            @RequestParam(required = false) LocalDateTime endDate) {
+                                                   @Parameter(description = "ID de la solicitud a actualizar") @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision, @RequestParam(required = false) LocalDateTime startDate,
+                                                   @RequestParam(required = false) LocalDateTime endDate) {
         RequestDatesDTO dates = new RequestDatesDTO(startDate, endDate);
         return deaneryService.updateRequestAsDeanery(deaneryId, requestId, decision, dates);
     }
@@ -100,14 +100,14 @@ public class DeaneryController {
     @Operation(summary = "Solicitudes por facultad y estado")
     @GetMapping("/requests/faculty/{faculty}/status/{status}")
     public List<ChangeRequestDTO>  getRequestsByFacultyAndStatus(@Parameter(description = "Facultad a filtrar") @PathVariable Faculty faculty,
-            @Parameter(description = "Estado de la solicitud") @PathVariable RequestStatus status) {
+                                                                 @Parameter(description = "Estado de la solicitud") @PathVariable RequestStatus status) {
         return deaneryService.getRequestsByFacultyAndStatus(faculty, status);
     }
 
     @Operation(summary = "Solicitudes por facultad y prioridad")
     @GetMapping("/requests/faculty/{faculty}/priority/{priority}")
     public  List<ChangeRequestDTO>  getRequestsByFacultyAndPriority(@Parameter(description = "Facultad a filtrar") @PathVariable Faculty faculty,
-            @Parameter(description = "Nivel de prioridad") @PathVariable int priority) {
+                                                                    @Parameter(description = "Nivel de prioridad") @PathVariable int priority) {
         return deaneryService.getRequestsByFacultyAndPriority(faculty, priority);
     }
 
@@ -145,14 +145,14 @@ public class DeaneryController {
     @Operation(summary = "Aprobar o rechazar solicitud excepcional")
     @PostMapping("/{deaneryId}/requests/{requestId}")
     public ChangeRequestDTO approveExceptional(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
-            @Parameter(description = "ID de la solicitud excepcional") @PathVariable UUID requestId, @RequestParam boolean approve, @RequestParam(required = false) String observations) {
+                                               @Parameter(description = "ID de la solicitud excepcional") @PathVariable UUID requestId, @RequestParam boolean approve, @RequestParam(required = false) String observations) {
         return changeRequestService.approveExceptionalRequest(deaneryId, requestId, approve, observations);
     }
 
     @Operation(summary = "Solicitudes excepcionales de un estudiante")
     @GetMapping("/{deaneryId}/students/{studentId}/requests/exceptional")
     public List<ChangeRequestDTO>  getExceptionalRequestsForStudentByDeanery(@Parameter(description = "ID del decano o decana") @PathVariable int deaneryId,
-            @Parameter(description = "ID del estudiante") @PathVariable Integer studentId) {
+                                                                             @Parameter(description = "ID del estudiante") @PathVariable Integer studentId) {
         return changeRequestService.getExceptionalRequestsByStudentForDeanery(deaneryId, studentId);
     }
 
