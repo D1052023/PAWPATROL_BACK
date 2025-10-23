@@ -182,7 +182,7 @@ define el flujo usando y implementando la interfaz de observer asi trabaja con a
 
 ## Diagrama de secuencia.
 
-![DiagramaSecuencia](docs/uml/DiagramaSecuencia.png)
+[DiagramaSecuencia](docs/pdf/secuenciaSIRHA.pdf)
 
 Diagramas basados en casos de uso principales del sistema SIRHA:
 - Login / Autenticación de usuario
