@@ -14,9 +14,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
+import static eci.edu.dosw.proyecto.util.TimeUtils.parseLocalTime;
 
 /**
  * Clase central que agrupa busquedas y validaciones para lanzar execpciones
@@ -353,6 +358,78 @@ public class MessageExceptions {
     public void ensureExceptionalReasonProvided(String reason) {
         if (reason == null || reason.isBlank()) {
             throw badRequest(EXCEPTIONAL_REASON_REQUIRED);
+        }
+    }
+
+
+    /**
+     * Comprueba si existe cruce entre el horario de un estudiante y el horario de un grupo.
+
+     */
+    public static boolean hasScheduleConflict(List<ScheduleEntry> studentSchedule, List<ScheduleEntry> groupSchedule) {
+        if (studentSchedule == null || studentSchedule.isEmpty()) return false;
+        if (groupSchedule == null || groupSchedule.isEmpty()) return false;
+
+        for (ScheduleEntry sEntry : studentSchedule) {
+            if (sEntry == null) continue;
+            String sDay = sEntry.getDay();
+            String sFrom = sEntry.getFrom();
+            String sTo = sEntry.getTo();
+            Integer sSemester = Integer.valueOf(sEntry.getSemester());
+
+            if (sDay == null || sFrom == null || sTo == null) continue;
+            for (ScheduleEntry gEntry : groupSchedule) {
+                if (gEntry == null) continue;
+                String gDay = gEntry.getDay();
+                String gFrom = gEntry.getFrom();
+                String gTo = gEntry.getTo();
+                Integer gSemester = Integer.valueOf(gEntry.getSemester());
+
+                if (gDay == null || gFrom == null || gTo == null) continue;
+                if (!sDay.equalsIgnoreCase(gDay)) continue;
+                if (sEntry.getSemester() != 0 && gEntry.getSemester() != 0 && sEntry.getSemester() != gEntry.getSemester()) {
+                    continue;
+                }
+
+                LocalTime sStart = parseLocalTime(sFrom);
+                LocalTime sEnd   = parseLocalTime(sTo);
+                LocalTime gStart = parseLocalTime(gFrom);
+                LocalTime gEnd   = parseLocalTime(gTo);
+
+                if (!sStart.isBefore(sEnd) || !gStart.isBefore(gEnd)) {
+                    continue;
+                }
+
+                boolean overlap = sStart.isBefore(gEnd) && gStart.isBefore(sEnd);
+                if (overlap) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Sobrecarga de comodidad: acepta Student y Group
+     */
+    public static boolean hasScheduleConflict(Student student, Group group) {
+        if (student == null || group == null) return false;
+        return hasScheduleConflict(student.getSchedule(), group.getSchedule());
+    }
+
+    public void ensureNoScheduleConflict(Student student, Group group) {
+        if (student == null || group == null) return;
+        try {
+            if (hasScheduleConflict(student, group)) {
+                throw badRequest("Cruce de horarios detectado: el estudiante tiene una clase que choca con el grupo objetivo.");
+            }
+        } catch (DateTimeParseException ex) {
+            LOG.debug("Formato de hora inválido al verificar cruce: {}", ex.getParsedString(), ex);
+            throw badRequest("Formato de hora inválido al verificar horario: " + ex.getParsedString());
+        } catch (Exception ex) {
+            LOG.error("Error verificando cruce de horarios", ex);
+            throw badRequest("Error verificando cruce de horarios");
         }
     }
 

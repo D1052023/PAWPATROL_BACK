@@ -1,0 +1,15 @@
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: file:${JWT_KEYSTORE_PATH:C:\keys\jwt.p12}
+    key-store-password: ${JWT_KEYSTORE_PASS:change-me}
+    key-store-type: PKCS12
+    key-alias: ${JWT_KEY_ALIAS:jwt-key}
+
+security:
+  jwt:
+    keystore:
+      path: ${JWT_KEYSTORE_PATH:C:\keys\jwt.p12}
+      password: ${JWT_KEYSTORE_PASS:change-me}
+      alias: ${JWT_KEY_ALIAS:jwt-key}

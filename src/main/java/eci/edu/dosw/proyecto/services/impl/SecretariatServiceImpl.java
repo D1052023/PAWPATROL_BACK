@@ -1,5 +1,7 @@
 package eci.edu.dosw.proyecto.services.impl;
 
+import eci.edu.dosw.proyecto.models.Student;
+import eci.edu.dosw.proyecto.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -70,8 +72,8 @@ public class SecretariatServiceImpl implements SecretariatService {
         Secretariat sec = message.findSecretariatOrThrow(id);
         if(dto.getName() != null) sec.setName(dto.getName());
         if(dto.getEmail() != null) sec.setEmail(dto.getEmail());
-        if(dto.getRequestStartDate() != null) sec.setRequestStartDate(dto.getRequestStartDate());
-        if(dto.getRequestEndDate() != null) sec.setRequestEndDate(dto.getRequestEndDate());
+        if(dto.getRequestStartDate() != null) sec.setRequestStartDate(TimeUtils.toUtc(dto.getRequestStartDate()));
+        if(dto.getRequestEndDate() != null)   sec.setRequestEndDate(TimeUtils.toUtc(dto.getRequestEndDate()));
 
         secretariatRepository.save(sec);
         return secretariatMapper.toDTO(sec);
@@ -80,8 +82,8 @@ public class SecretariatServiceImpl implements SecretariatService {
     @Override
     public void updateRequestDates(int id, LocalDateTime startDate, LocalDateTime endDate) {
         Secretariat sec = message.findSecretariatOrThrow(id);
-        sec.setRequestStartDate(startDate);
-        sec.setRequestEndDate(endDate);
+        sec.setRequestStartDate(TimeUtils.toUtc(startDate));
+        sec.setRequestEndDate(TimeUtils.toUtc(endDate));
 
         secretariatRepository.save(sec);
     }
@@ -97,14 +99,15 @@ public class SecretariatServiceImpl implements SecretariatService {
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
         message.ensureRequestPending(request);
 
-        LocalDateTime now = LocalDateTime.now();
-        if (requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
-            message.ensureNowWithinDatesIfPresent(LocalDateTime.now(), requestDates);
+        LocalDateTime now = TimeUtils.nowUtc();
+
+        if (requestDates != null && requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
+            message.ensureNowWithinDatesIfPresent(now, requestDates);
         }
 
         if (decision.getRequestAdditionalInfo() != null && decision.getRequestAdditionalInfo()) {
             request.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(now);
             request.setProcessedBy("SECRETARIAT");
 
             if (decision.getAdditionalInfoRequestMessage() != null) {
@@ -125,6 +128,7 @@ public class SecretariatServiceImpl implements SecretariatService {
             historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "REQUEST_ADDITIONAL_INFO",
                     note.toString(), "SECRETARIAT");
 
+            return changeRequestMapper.toDTO(request);
         }
 
         request.setStatus(decision.getStatus());
@@ -137,10 +141,12 @@ public class SecretariatServiceImpl implements SecretariatService {
 
         if (decision.getStatus() == RequestStatus.APPROVED) {
             Group currentGroup = message.findGroupOrThrow(request.getCurrentGroup());
-            Group targetGroup =  message.findGroupOrThrow(request.getTargetGroup());
+            Group targetGroup = message.findGroupOrThrow(request.getTargetGroup());
 
             targetGroup.attach(alertService);
             message.ensureGroupHasCapacity(targetGroup);
+            Student student = message.findStudentOrThrow(request.getStudentId());
+            message.ensureNoScheduleConflict(student, targetGroup);
             targetGroup.enrollStudent();
 
             if (currentGroup.getWaitlist() != null) {
@@ -162,6 +168,7 @@ public class SecretariatServiceImpl implements SecretariatService {
     }
 
 
+
     @Override
     public List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status) {
         List<ChangeRequest> requests = changeRequestRepository.findByFacultyAndStatus(faculty, status);
@@ -174,7 +181,7 @@ public class SecretariatServiceImpl implements SecretariatService {
     public ChangeRequestDTO updateRequestAsSecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates) {
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtils.nowUtc();
         if (requestDates != null && requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
             message.ensureNowWithinDatesIfPresent(now, requestDates);
         }
@@ -188,13 +195,13 @@ public class SecretariatServiceImpl implements SecretariatService {
         if (decision.getStatus() != null) {
             request.setStatus(decision.getStatus());
             request.setProcessedBy("SECRETARIAT");
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(TimeUtils.nowUtc());
 
             if (decision.getStatus() == RequestStatus.APPROVED) {
                 return respondRequestBySecretariat(requestId, decision, requestDates);
             }
         } else {
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(TimeUtils.nowUtc());
             changeRequestRepository.save(request);
             historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "UPDATED",
                     "Solicitud actualizada por secretaría", "SECRETARIAT");

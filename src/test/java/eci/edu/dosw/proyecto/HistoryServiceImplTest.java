@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import eci.edu.dosw.proyecto.util.TimeUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,7 +49,7 @@ class HistoryServiceImplTest {
         assertEquals(note, saved.getNote());
         assertEquals(processedBy, saved.getProcessedBy());
         assertNotNull(saved.getTimestamp());
-        assertTrue(saved.getTimestamp().isBefore(LocalDateTime.now().plusSeconds(2)));
+        assertTrue(saved.getTimestamp().isBefore(TimeUtils.nowUtc().plusSeconds(2)));
     }
     @Test
     void shouldReturnHistory() {

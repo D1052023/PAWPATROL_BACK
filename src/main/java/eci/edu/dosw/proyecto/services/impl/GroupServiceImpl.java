@@ -289,6 +289,7 @@ public class GroupServiceImpl implements GroupService {
         Group group = message.findGroupOrThrow(groupId);
         message.ensureCurriculumMatchesStudentGroup(student, group);
         message.ensureStudentNotInGroup(student, groupId);
+        message.ensureNoScheduleConflict(student, group);
         message.ensureGroupHasAvailableCapacity(group);
 
         Query q = Query.query(Criteria.where("groupId").is(groupId)
