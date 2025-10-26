@@ -114,7 +114,7 @@ public class SecretariatServiceImpl implements SecretariatService {
     }
 
     private void validateDatesIfPresent(RequestDatesDTO requestDates, LocalDateTime now) {
-        if (requestDates != null && requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
+        if (requestDates != null && requestDates.getRequestStartDate() != null && requestDates.getRequestEndDate() != null) {
             message.ensureNowWithinDatesIfPresent(now, requestDates);
         }
     }
@@ -193,6 +193,7 @@ public class SecretariatServiceImpl implements SecretariatService {
         }
     }
 
+
     @Override
     public List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status) {
         List<ChangeRequest> requests = changeRequestRepository.findByFacultyAndStatus(faculty, status);
@@ -206,7 +207,7 @@ public class SecretariatServiceImpl implements SecretariatService {
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
         LocalDateTime now = TimeUtils.nowUtc();
-        if (requestDates != null && requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
+        if (requestDates != null && requestDates.getRequestStartDate() != null && requestDates.getRequestEndDate() != null) {
             message.ensureNowWithinDatesIfPresent(now, requestDates);
         }
 

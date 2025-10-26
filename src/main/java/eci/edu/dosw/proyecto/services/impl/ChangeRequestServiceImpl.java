@@ -71,8 +71,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         LocalDateTime start = sec.getRequestStartDate();
         LocalDateTime end = sec.getRequestEndDate();
         RequestDatesDTO dates = new RequestDatesDTO();
-        dates.setStartDate(start);
-        dates.setEndDate(end);
+        dates.setRequestStartDate(start);
+        dates.setRequestEndDate(end);
         message.ensureNowWithinDatesIfPresent(now, dates);
     }
 
