@@ -12,6 +12,7 @@ import org.mapstruct.Mapping;
 public interface SecretariatMapper {
 
     @Mapping(target = "role", expression = "java(eci.edu.dosw.proyecto.enums.Role.SECRETARIAT)")
+    @Mapping(target = "faculty", ignore = true)
     Secretariat toEntity(SecretariatDTO dto);
     SecretariatDTO toDTO(Secretariat sec);
 }

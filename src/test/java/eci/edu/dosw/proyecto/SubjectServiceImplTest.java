@@ -2,12 +2,14 @@ package eci.edu.dosw.proyecto;
 
 import eci.edu.dosw.proyecto.dtos.SubjectDTO;
 import eci.edu.dosw.proyecto.enums.Curriculum;
+import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.enums.SubjectStatus;
 import eci.edu.dosw.proyecto.enums.SubjectType;
 import eci.edu.dosw.proyecto.mappers.SubjectMapper;
 import eci.edu.dosw.proyecto.models.Group;
 import eci.edu.dosw.proyecto.models.ScheduleEntry;
 import eci.edu.dosw.proyecto.models.Subject;
+import eci.edu.dosw.proyecto.models.Teacher;
 import eci.edu.dosw.proyecto.models.Student;
 import eci.edu.dosw.proyecto.repositories.GroupRepository;
 import eci.edu.dosw.proyecto.repositories.StudentRepository;
@@ -81,7 +83,34 @@ class SubjectServiceImplTest {
         student.setId(1000100516);
         student.setEnrolledSubjects(new ArrayList<>());
         student.setSchedule(new ArrayList<>());
-    }  
+    }
+    
+    @Test
+    void ShouldCreateSubjectSuccessfully() {
+        dto.setTeacherId(101);
+        Teacher teacher = new Teacher();
+        teacher.setId(101);
+        teacher.setFaculty(Faculty.ECONOMIA);
+
+        Subject subjectModel = new Subject();
+        subjectModel.setSubjectId(dto.getSubjectId());
+        subjectModel.setFaculty(Faculty.ECONOMIA);
+
+        Subject savedSubject = new Subject();
+        savedSubject.setSubjectId(dto.getSubjectId());
+        savedSubject.setFaculty(Faculty.ECONOMIA);
+
+        when(message.findTeacherOrThrow(101)).thenReturn(teacher);
+        when(subjectMapper.toModel(dto)).thenReturn(subjectModel);
+        when(subjectRepository.save(subjectModel)).thenReturn(savedSubject);
+        when(subjectMapper.toDTO(savedSubject)).thenReturn(dto);
+
+        SubjectDTO result = subjectService.createSubject(dto);
+
+        assertNotNull(result);
+        assertEquals("ODSC", result.getSubjectId());
+    }
+
 
     @Test
     void ShouldReturnSubjectsByTeacher() {
@@ -103,9 +132,6 @@ class SubjectServiceImplTest {
         assertNotNull(result);
         assertEquals(2, result.size());
     }
-
-
-
 
     @Test
     void ShouldGetAllSubjects() {

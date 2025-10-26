@@ -5,7 +5,7 @@ import eci.edu.dosw.proyecto.repositories.ChangeRequestHistoryRepository;
 import eci.edu.dosw.proyecto.services.HistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
+import eci.edu.dosw.proyecto.util.TimeUtils;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +22,7 @@ public class HistoryServiceImpl implements HistoryService {
     public void addHistoryEvent(UUID requestId, String actor, String action, String note, String processedBy) {
         ChangeRequestHistory h = new ChangeRequestHistory();
         h.setRequestId(requestId);
-        h.setTimestamp(LocalDateTime.now());
+        h.setTimestamp(TimeUtils.nowUtc());
         h.setActor(actor);
         h.setAction(action);
         h.setNote(note);

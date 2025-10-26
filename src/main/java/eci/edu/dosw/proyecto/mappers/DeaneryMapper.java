@@ -5,7 +5,6 @@ import eci.edu.dosw.proyecto.models.Deanery;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
@@ -15,11 +14,9 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface DeaneryMapper {
 
-    DeaneryMapper INSTANCE = Mappers.getMapper(DeaneryMapper.class);
     DeaneryDTO toDTO(Deanery deanery);
 
     @Mapping(target = "role", ignore = true)
-    @Mapping(target = "faculty", ignore = true)
     Deanery toEntity(DeaneryDTO dto);
 
     List<DeaneryDTO> toDTOList(List<Deanery> deaneries);

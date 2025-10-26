@@ -119,13 +119,13 @@ public class GroupController {
         groupService.removeStudentFromGroup(groupId, studentId);
     }
 
-    @GetMapping("/{id}/waitlist")
+    @GetMapping("/{groupId}/waitlist")
     @Operation(summary = "Obtener lista de espera")
-    public List<Integer> getWaitlist(@Parameter(description = "ID del grupo") @PathVariable String id) {
-        return groupService.getWaitlist(id);
+    public List<Integer> getWaitlist(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
+        return groupService.getWaitlist(groupId);
     }
 
-    @GetMapping("/{groupId}/waitlist")
+    @GetMapping("/{groupId}/waitlist/details")
     @Operation(summary = "Obtener lista de espera detallada")
     public List<StudentDTO> getWaitlistDetails(@Parameter(description = "ID del grupo") @PathVariable String groupId) {
         return groupService.getWaitlistDetails(groupId);
@@ -152,7 +152,7 @@ public class GroupController {
     @PutMapping("/{groupId}/schedule/day/{day}")
     @Operation(summary = "Actualizar horario por día")
     public List<ScheduleEntryDTO> updateScheduleForDay(@Parameter(description = "ID del grupo") @PathVariable String groupId,
-            @Parameter(description = "Día específico a actualizar") @PathVariable String day, @RequestBody List<ScheduleEntryDTO> entries) {
+                                                       @Parameter(description = "Día específico a actualizar") @PathVariable String day, @RequestBody List<ScheduleEntryDTO> entries) {
         return groupService.updateScheduleForDay(groupId, day, entries);
     }
 

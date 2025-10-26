@@ -21,8 +21,8 @@
         <java.version>17</java.version>
         <jacoco.version>0.8.13</jacoco.version>
 
-        <sonar.projectKey>library</sonar.projectKey>
-        <sonar.projectName>library</sonar.projectName>
+        <sonar.projectKey>PAWPATROL_BACK</sonar.projectKey>
+        <sonar.projectName>PAWPATROL_BACK</sonar.projectName>
         <sonar.host.url>http://localhost:9000</sonar.host.url>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         

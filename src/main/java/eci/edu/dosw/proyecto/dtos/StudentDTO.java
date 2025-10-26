@@ -23,7 +23,7 @@ public class StudentDTO {
     private int semester;
     private Curriculum curriculum;
     private AcademicTrafficLight academicTrafficLight;
-    
+
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private List<ScheduleEntryDTO> schedule;
 
