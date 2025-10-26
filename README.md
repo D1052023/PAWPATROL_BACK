@@ -277,6 +277,10 @@ Azure:
 
   ![alt text](docs/imagenes/pruebaAzure.png)
 
+### Prueba ejecución CI/CD (preprod)
+
+- https://youtu.be/wFsXqD1tffc
+
 ---
 
 ## PRUEBAS DE SWAGGER
