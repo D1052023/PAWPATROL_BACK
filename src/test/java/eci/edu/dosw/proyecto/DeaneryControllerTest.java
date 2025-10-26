@@ -216,7 +216,7 @@ class DeaneryControllerTest {
         ChangeRequestDTO returned = new ChangeRequestDTO();
 
         when(deaneryService.respondRequestByDeanery(deaneryId, reqId, decision, dates)).thenReturn(returned);
-        ChangeRequestDTO response = controller.respondRequestByDeanery(deaneryId, reqId, body);
+        ChangeRequestDTO response = controller.respondRequestByDeaneryInfo(deaneryId, reqId, body);
 
         assertEquals(returned, response);
     }

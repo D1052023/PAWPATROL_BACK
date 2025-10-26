@@ -15,6 +15,7 @@ import eci.edu.dosw.proyecto.repositories.GroupRepository;
 import eci.edu.dosw.proyecto.repositories.StudentRepository;
 import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.DeaneryService;
+import eci.edu.dosw.proyecto.util.TimeUtils;
 
 import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.util.MessageExceptions;
@@ -104,7 +105,7 @@ public class DeaneryServiceImpl implements DeaneryService {
     }
 
     private void validateDeaneryRequest(Deanery deanery, ChangeRequest request, RequestDatesDTO dates) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtils.nowUtc();
         message.ensureResolutionDeadlineNotExceeded(request, now);
         message.ensureDatesProvided(dates);
         message.ensureNowWithinDates(now, dates);
@@ -114,7 +115,7 @@ public class DeaneryServiceImpl implements DeaneryService {
 
     private ChangeRequestDTO handleAdditionalInfoRequest(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
         request.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
-        request.setUpdatedAt(LocalDateTime.now());
+        request.setUpdatedAt(TimeUtils.nowUtc());
         request.setProcessedBy("DEANERY");
 
         if (decision.getAdditionalInfoRequestMessage() != null) {
@@ -147,7 +148,7 @@ public class DeaneryServiceImpl implements DeaneryService {
 
     private ChangeRequestDTO handleFinalDecision(ChangeRequest request, RequestDecisionDTO decision, int deaneryId) {
         request.setStatus(decision.getStatus());
-        request.setUpdatedAt(LocalDateTime.now());
+        request.setUpdatedAt(TimeUtils.nowUtc());
         request.setProcessedBy("DEANERY");
 
         if (decision.getObservations() != null) {
@@ -169,6 +170,8 @@ public class DeaneryServiceImpl implements DeaneryService {
         targetGroup.attach(alertService);
 
         message.ensureGroupHasCapacity(targetGroup);
+        Student student = message.findStudentOrThrow(request.getStudentId());
+        message.ensureNoScheduleConflict(student, targetGroup);
 
         updateGroupCapacities(request, currentGroup, targetGroup);
         updateStudentEnrollment(request, targetGroup);
@@ -176,7 +179,6 @@ public class DeaneryServiceImpl implements DeaneryService {
     }
 
     private void updateGroupCapacities(ChangeRequest request, Group currentGroup, Group targetGroup) {
-        targetGroup.setCurrentCapacity(targetGroup.getCurrentCapacity() + 1);
         targetGroup.enrollStudent();
 
         if (currentGroup.getWaitlist() != null) {
@@ -298,7 +300,7 @@ public class DeaneryServiceImpl implements DeaneryService {
         Deanery deanery = message.findDeaneryOrThrow(deaneryId);
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtils.nowUtc();
         message.ensureNowWithinDatesIfPresent(now, dates);
         message.ensureDeaneryFacultyMatches(deanery, request);
         message.ensureRequestPending(request);
@@ -306,7 +308,7 @@ public class DeaneryServiceImpl implements DeaneryService {
 
         if (decision.getStatus() != null) {
             request.setStatus(decision.getStatus());
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(TimeUtils.nowUtc());
             request.setProcessedBy("DEANERY");
 
             if (decision.getStatus() == RequestStatus.APPROVED) {
@@ -317,7 +319,7 @@ public class DeaneryServiceImpl implements DeaneryService {
             historyService.addHistoryEvent(request.getId(), "DEANERY",
                     decision.getStatus().name(), decisionToNote(decision), "DEANERY:" + deaneryId);
         } else {
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(TimeUtils.nowUtc());
             changeRequestRepository.save(request);
             historyService.addHistoryEvent(request.getId(), "DEANERY", "UPDATED",
                     "Solicitud actualizada por decanatura", "DEANERY:" + deaneryId);

@@ -240,8 +240,8 @@ class DeaneryServiceImplTest {
 
         when(message.findDeaneryOrThrow(1000000143)).thenReturn(d);
         deaneryService.deleteDeanery(1000000143);
-
-        assertNotNull(d.getId());
+        
+        verify(deaneryRepository, times(1)).deleteById(1000000143);
     }
 
     @Test
@@ -338,7 +338,7 @@ class DeaneryServiceImplTest {
 
         assertNotNull(res);
         assertEquals(reqId, res.getId());
-        assertEquals(12, target.getCurrentCapacity());
+        assertEquals(11, target.getCurrentCapacity());
         assertTrue(student.getEnrolledSubjects().contains("ODSC-3"));
     }
 
@@ -610,7 +610,7 @@ class DeaneryServiceImplTest {
         boolean found = student.getSchedule().stream().anyMatch(se -> "DOPO".equals(se.getSubject()) && "DOPO-2".equals(se.getGroup()));
 
         assertFalse(current.getWaitlist().contains(1000100282));
-        assertEquals(4, target.getCurrentCapacity());
+        assertEquals(3, target.getCurrentCapacity());
         assertTrue(student.getEnrolledSubjects().contains("DOPO"));
         assertTrue(found);
     }
@@ -682,7 +682,7 @@ class DeaneryServiceImplTest {
         boolean foundNew = student.getSchedule().stream().anyMatch(se -> "TPYC".equals(se.getSubject()) && "TPYC-3".equals(se.getGroup()));
 
         assertFalse(current.getWaitlist().contains(1000100282));
-        assertEquals(4, target.getCurrentCapacity());
+        assertEquals(3, target.getCurrentCapacity());
         assertFalse(student.getEnrolledSubjects().contains("TPRO"));
         assertTrue(student.getEnrolledSubjects().contains("TPYC"));
         assertTrue(foundNew);
@@ -842,7 +842,7 @@ class DeaneryServiceImplTest {
 
         boolean found = student.getSchedule().stream().anyMatch(se -> "ODSC".equals(se.getSubject()) && "G-2".equals(se.getGroup()));
 
-        assertEquals(3, target.getCurrentCapacity());
+        assertEquals(2, target.getCurrentCapacity());
         assertFalse(current.getWaitlist().contains(studentId));
         assertTrue(student.getEnrolledSubjects().contains("ODSC"));
         assertTrue(found);

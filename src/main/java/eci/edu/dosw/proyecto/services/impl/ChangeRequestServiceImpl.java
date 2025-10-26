@@ -1,6 +1,7 @@
 package eci.edu.dosw.proyecto.services.impl;
 
 import eci.edu.dosw.proyecto.dtos.*;
+import eci.edu.dosw.proyecto.enums.Faculty;
 import eci.edu.dosw.proyecto.util.CurriculumToFacultyMapper;
 import lombok.RequiredArgsConstructor;
 
@@ -10,11 +11,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import eci.edu.dosw.proyecto.util.TimeUtils;
 
 import eci.edu.dosw.proyecto.enums.RequestStatus;
 import eci.edu.dosw.proyecto.mappers.ChangeRequestMapper;
@@ -41,18 +43,37 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final DeaneryService deaneryService;
     private final MessageExceptions message;
     private final CurriculumToFacultyMapper curriculumToFacultyMapper;
+    private final SecretariatRepository secretariatRepository;
 
     @Override
     public ChangeRequestDTO createChangeRequest(Integer studentId, ChangeRequestCreateDTO createDto) {
         Student student = message.findStudentOrThrow(studentId);
-        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime now = TimeUtils.nowUtc();
 
         ChangeRequest request = buildChangeRequest(student, createDto, now);
+        validateSecretariatDatesForFaculty(now, request.getFaculty());
         saveRequestAndLinkToStudent(request, student);
         addStudentToTargetWaitlist(student, createDto.getTargetGroup());
         recordCreationHistory(request, studentId);
 
         return changeRequestMapper.toDTO(request);
+    }
+
+
+    private void validateSecretariatDatesForFaculty(LocalDateTime now, Faculty faculty) {
+        if (faculty == null) return;
+        Optional<Secretariat> secOpt = secretariatRepository.findByFaculty(faculty);
+        if (secOpt.isEmpty()) {
+            return;
+        }
+
+        Secretariat sec = secOpt.get();
+        LocalDateTime start = sec.getRequestStartDate();
+        LocalDateTime end = sec.getRequestEndDate();
+        RequestDatesDTO dates = new RequestDatesDTO();
+        dates.setStartDate(start);
+        dates.setEndDate(end);
+        message.ensureNowWithinDatesIfPresent(now, dates);
     }
 
     private ChangeRequest buildChangeRequest(Student student, ChangeRequestCreateDTO dto, LocalDateTime now) {
@@ -193,7 +214,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             request.setTargetGroup(targetGroup.getGroupId());
         }
 
-        request.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        request.setUpdatedAt(TimeUtils.nowUtc());
         ChangeRequest saved = changeRequestRepository.save(request);
 
         recordStudentUpdateHistory(saved, studentId);
@@ -322,8 +343,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         request.setExceptionalReason(reason);
         String requestedBy = "STUDENT:" + studentId;
         request.setExceptionalRequestedBy(requestedBy);
-        request.setExceptionalRequestedAt(LocalDateTime.now());
-        request.setExceptionalResolutionDeadline(addBusinessDays(LocalDateTime.now(), 5));
+        request.setExceptionalRequestedAt(TimeUtils.nowUtc());
+        request.setExceptionalResolutionDeadline(addBusinessDays(TimeUtils.nowUtc(), 5));
 
         changeRequestRepository.save(request);
 
@@ -344,8 +365,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         request.setExceptionalReason(dto.getReason());
         String requestedBy = "STUDENT:" + studentId;
         request.setExceptionalRequestedBy(requestedBy);
-        request.setExceptionalRequestedAt(LocalDateTime.now(ZoneOffset.UTC));
-        request.setExceptionalResolutionDeadline(addBusinessDays(LocalDateTime.now(ZoneOffset.UTC), 5));
+        request.setExceptionalRequestedAt(TimeUtils.nowUtc());
+        request.setExceptionalResolutionDeadline(addBusinessDays(TimeUtils.nowUtc(), 5));
 
         changeRequestRepository.save(request);
 
@@ -388,14 +409,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         request.setExceptionalApproved(approve);
         String approverTag = deaneryOpt.isPresent() ? "DEANERY:" + approverId : "ADMIN:" + approverId;
         request.setExceptionalApprovedBy(approverTag);
-        request.setExceptionalApprovedAt(LocalDateTime.now());
+        request.setExceptionalApprovedAt(TimeUtils.nowUtc());
 
         if (!approve) {
             request.setStatus(RequestStatus.REJECTED);
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(TimeUtils.nowUtc());
         } else {
             request.setStatus(RequestStatus.APPROVED);
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(TimeUtils.nowUtc());
             request.setProcessedBy(deaneryOpt.isPresent() ? "DEANERY" : "ADMIN");
 
             RequestDecisionDTO decisionDto = new RequestDecisionDTO();

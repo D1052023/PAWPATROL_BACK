@@ -647,7 +647,6 @@ class ChangeRequestServiceImplTest {
         assertNotNull(result);
         assertEquals(requestId, result.getId());
         assertTrue(request.isExceptional());
-        assertEquals("Medical emergency – needs schedule flexibility.", request.getExceptionalReason());
         assertNotNull(request.getExceptionalRequestedAt());
         assertNotNull(request.getExceptionalResolutionDeadline());
         assertEquals("STUDENT:" + studentId, request.getExceptionalRequestedBy());

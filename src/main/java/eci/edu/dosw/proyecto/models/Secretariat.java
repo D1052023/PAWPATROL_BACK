@@ -1,5 +1,6 @@
 package eci.edu.dosw.proyecto.models;
 
+import eci.edu.dosw.proyecto.enums.Faculty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 public class Secretariat extends User {
 
+    private Faculty faculty;
     private LocalDateTime requestStartDate;
     private LocalDateTime requestEndDate;
 

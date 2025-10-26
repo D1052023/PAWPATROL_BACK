@@ -26,6 +26,8 @@ import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.SecretariatService;
 import eci.edu.dosw.proyecto.util.MessageExceptions;
+import eci.edu.dosw.proyecto.models.Student;
+import eci.edu.dosw.proyecto.util.TimeUtils;
 
 
 /**
@@ -70,8 +72,8 @@ public class SecretariatServiceImpl implements SecretariatService {
         Secretariat sec = message.findSecretariatOrThrow(id);
         if(dto.getName() != null) sec.setName(dto.getName());
         if(dto.getEmail() != null) sec.setEmail(dto.getEmail());
-        if(dto.getRequestStartDate() != null) sec.setRequestStartDate(dto.getRequestStartDate());
-        if(dto.getRequestEndDate() != null) sec.setRequestEndDate(dto.getRequestEndDate());
+        if(dto.getRequestStartDate() != null) sec.setRequestStartDate(TimeUtils.toUtc(dto.getRequestStartDate()));
+        if(dto.getRequestEndDate() != null)   sec.setRequestEndDate(TimeUtils.toUtc(dto.getRequestEndDate()));
 
         secretariatRepository.save(sec);
         return secretariatMapper.toDTO(sec);
@@ -80,8 +82,8 @@ public class SecretariatServiceImpl implements SecretariatService {
     @Override
     public void updateRequestDates(int id, LocalDateTime startDate, LocalDateTime endDate) {
         Secretariat sec = message.findSecretariatOrThrow(id);
-        sec.setRequestStartDate(startDate);
-        sec.setRequestEndDate(endDate);
+        sec.setRequestStartDate(TimeUtils.toUtc(startDate));
+        sec.setRequestEndDate(TimeUtils.toUtc(endDate));
 
         secretariatRepository.save(sec);
     }
@@ -92,41 +94,62 @@ public class SecretariatServiceImpl implements SecretariatService {
         secretariatRepository.deleteById(id);
     }
 
+    
     @Override
     public ChangeRequestDTO respondRequestBySecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates) {
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
         message.ensureRequestPending(request);
 
-        LocalDateTime now = LocalDateTime.now();
-        if (requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
-            message.ensureNowWithinDatesIfPresent(LocalDateTime.now(), requestDates);
+        LocalDateTime now = TimeUtils.nowUtc();
+        validateDatesIfPresent(requestDates, now);
+
+        if (isAdditionalInfoRequest(decision)) {
+            return handleAdditionalInfoRequest(request, decision, now);
         }
 
-        if (decision.getRequestAdditionalInfo() != null && decision.getRequestAdditionalInfo()) {
-            request.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
-            request.setUpdatedAt(LocalDateTime.now());
-            request.setProcessedBy("SECRETARIAT");
+        handleDecision(request, decision, now);
+        changeRequestRepository.save(request);
+        addHistoryEvents(request, decision);
+        return changeRequestMapper.toDTO(request);
+    }
 
-            if (decision.getAdditionalInfoRequestMessage() != null) {
-                String prevObs = request.getObservations() == null ? "" : request.getObservations() + " | ";
-                request.setObservations(prevObs + "SOLICITUD INFO: " + decision.getAdditionalInfoRequestMessage());
-            }
+    private void validateDatesIfPresent(RequestDatesDTO requestDates, LocalDateTime now) {
+        if (requestDates != null && requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
+            message.ensureNowWithinDatesIfPresent(now, requestDates);
+        }
+    }
 
-            changeRequestRepository.save(request);
+    private boolean isAdditionalInfoRequest(RequestDecisionDTO decision) {
+        return Boolean.TRUE.equals(decision.getRequestAdditionalInfo());
+    }
 
-            StringBuilder note = new StringBuilder("Se solicitó información adicional");
-            if (decision.getAdditionalInfoRequestMessage() != null) {
-                note.append(": ").append(decision.getAdditionalInfoRequestMessage());
-            }
-            if (decision.getInfoDueDate() != null) {
-                note.append(" (Plazo: ").append(decision.getInfoDueDate().toString()).append(")");
-            }
+    private ChangeRequestDTO handleAdditionalInfoRequest(ChangeRequest request, RequestDecisionDTO decision, LocalDateTime now) {
+        request.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
+        request.setUpdatedAt(now);
+        request.setProcessedBy("SECRETARIAT");
 
-            historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "REQUEST_ADDITIONAL_INFO",
-                    note.toString(), "SECRETARIAT");
-
+        if (decision.getAdditionalInfoRequestMessage() != null) {
+            String prevObs = request.getObservations() == null ? "" : request.getObservations() + " | ";
+            request.setObservations(prevObs + "SOLICITUD INFO: " + decision.getAdditionalInfoRequestMessage());
         }
 
+        changeRequestRepository.save(request);
+
+        StringBuilder note = new StringBuilder("Se solicitó información adicional");
+        if (decision.getAdditionalInfoRequestMessage() != null) {
+            note.append(": ").append(decision.getAdditionalInfoRequestMessage());
+        }
+        if (decision.getInfoDueDate() != null) {
+            note.append(" (Plazo: ").append(decision.getInfoDueDate().toString()).append(")");
+        }
+
+        historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "REQUEST_ADDITIONAL_INFO",
+                note.toString(), "SECRETARIAT");
+
+        return changeRequestMapper.toDTO(request);
+    }
+
+    private void handleDecision(ChangeRequest request, RequestDecisionDTO decision, LocalDateTime now) {
         request.setStatus(decision.getStatus());
         request.setUpdatedAt(now);
         request.setProcessedBy("SECRETARIAT");
@@ -136,31 +159,39 @@ public class SecretariatServiceImpl implements SecretariatService {
         }
 
         if (decision.getStatus() == RequestStatus.APPROVED) {
-            Group currentGroup = message.findGroupOrThrow(request.getCurrentGroup());
-            Group targetGroup =  message.findGroupOrThrow(request.getTargetGroup());
+            approveChangeRequest(request);
+        }
+    }
 
-            targetGroup.attach(alertService);
-            message.ensureGroupHasCapacity(targetGroup);
-            targetGroup.enrollStudent();
+    private void approveChangeRequest(ChangeRequest request) {
+        Group currentGroup = message.findGroupOrThrow(request.getCurrentGroup());
+        Group targetGroup = message.findGroupOrThrow(request.getTargetGroup());
 
-            if (currentGroup.getWaitlist() != null) {
-                currentGroup.getWaitlist().removeIf(id -> id.equals(request.getStudentId()));
-            }
+        targetGroup.attach(alertService);
+        message.ensureGroupHasCapacity(targetGroup);
 
-            groupRepository.save(currentGroup);
-            groupRepository.save(targetGroup);
+        Student student = message.findStudentOrThrow(request.getStudentId());
+        message.ensureNoScheduleConflict(student, targetGroup);
+
+        targetGroup.enrollStudent();
+
+        if (currentGroup.getWaitlist() != null) {
+            currentGroup.getWaitlist().removeIf(id -> id.equals(request.getStudentId()));
         }
 
-        changeRequestRepository.save(request);
+        groupRepository.save(currentGroup);
+        groupRepository.save(targetGroup);
+    }
+
+    private void addHistoryEvents(ChangeRequest request, RequestDecisionDTO decision) {
         historyService.addHistoryEvent(request.getId(), "SECRETARIAT", decision.getStatus().name(),
                 decision.getObservations() == null ? "" : decision.getObservations(), "SECRETARIAT");
+
         if (decision.getStatus() == RequestStatus.APPROVED) {
             historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "STUDENT_SCHEDULE_UPDATED",
                     "Horario actualizado al aprobar la solicitud", "SECRETARIAT");
         }
-        return changeRequestMapper.toDTO(request);
     }
-
 
     @Override
     public List<ChangeRequestDTO> getRequestsByFacultyAndStatus(Faculty faculty, RequestStatus status) {
@@ -174,7 +205,7 @@ public class SecretariatServiceImpl implements SecretariatService {
     public ChangeRequestDTO updateRequestAsSecretariat(UUID requestId, RequestDecisionDTO decision, RequestDatesDTO requestDates) {
         ChangeRequest request = message.findChangeRequestOrThrow(requestId);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtils.nowUtc();
         if (requestDates != null && requestDates.getStartDate() != null && requestDates.getEndDate() != null) {
             message.ensureNowWithinDatesIfPresent(now, requestDates);
         }
@@ -188,13 +219,13 @@ public class SecretariatServiceImpl implements SecretariatService {
         if (decision.getStatus() != null) {
             request.setStatus(decision.getStatus());
             request.setProcessedBy("SECRETARIAT");
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(TimeUtils.nowUtc());
 
             if (decision.getStatus() == RequestStatus.APPROVED) {
                 return respondRequestBySecretariat(requestId, decision, requestDates);
             }
         } else {
-            request.setUpdatedAt(LocalDateTime.now());
+            request.setUpdatedAt(TimeUtils.nowUtc());
             changeRequestRepository.save(request);
             historyService.addHistoryEvent(request.getId(), "SECRETARIAT", "UPDATED",
                     "Solicitud actualizada por secretaría", "SECRETARIAT");

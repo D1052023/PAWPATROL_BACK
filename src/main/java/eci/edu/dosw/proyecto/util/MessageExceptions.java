@@ -14,10 +14,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
+import static eci.edu.dosw.proyecto.util.TimeUtils.parseLocalTime;
 
 /**
  * Clase central que agrupa busquedas y validaciones para lanzar execpciones
@@ -148,7 +152,6 @@ public class MessageExceptions {
             throw forbidden(FORBIDDEN_FACULTY);
         }
     }
-    
 
     public Deanery findDeaneryByFacultyOrThrow(Faculty faculty) {
         return deaneryRepository.findByFaculty(faculty)
@@ -183,20 +186,6 @@ public class MessageExceptions {
     public void ensureGroupHasCapacity(Group group) {
         if (group.getCurrentCapacity() >= group.getMaximumCapacity()) {
             throw badRequest(GROUP_FULL);
-        }
-    }
-
-    public void ensurePrerequisitesMet(Student student, Subject subject) {
-        List<String> prerequisites = subject.getPrerequisites(); 
-        List<String> approvedSubjects = student.getApprovedSubjects();
-
-        if (prerequisites != null) {
-            for (String pre : prerequisites) {
-                if (approvedSubjects == null || !approvedSubjects.contains(pre)) {
-                    throw new IllegalArgumentException(
-                        "El estudiante no ha cumplido con el prerrequisito: " + pre);
-                }
-            }
         }
     }
 
@@ -297,6 +286,7 @@ public class MessageExceptions {
         }
     }
 
+
     private ResponseStatusException badRequest(String message) {
         LOG.debug("BadRequest: {}", message);
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
@@ -368,6 +358,80 @@ public class MessageExceptions {
     public void ensureExceptionalReasonProvided(String reason) {
         if (reason == null || reason.isBlank()) {
             throw badRequest(EXCEPTIONAL_REASON_REQUIRED);
+        }
+    }
+
+
+    public static boolean hasScheduleConflict(List<ScheduleEntry> studentSchedule, List<ScheduleEntry> groupSchedule) {
+        if (isNullOrEmpty(studentSchedule) || isNullOrEmpty(groupSchedule)) {
+            return false;
+        }
+
+        for (ScheduleEntry sEntry : studentSchedule) {
+            for (ScheduleEntry gEntry : groupSchedule) {
+                if (entriesConflict(sEntry, gEntry)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean entriesConflict(ScheduleEntry sEntry, ScheduleEntry gEntry) {
+        if (!isValidEntry(sEntry) || !isValidEntry(gEntry)) return false;
+        if (!sameDay(sEntry, gEntry)) return false;
+        if (!sameSemester(sEntry, gEntry)) return false;
+        return hasOverlap(sEntry, gEntry);
+    }
+
+    private static boolean isNullOrEmpty(List<ScheduleEntry> schedule) {
+        return schedule == null || schedule.isEmpty();
+    }
+
+    private static boolean isValidEntry(ScheduleEntry entry) {
+        return entry != null && entry.getDay() != null && entry.getFrom() != null && entry.getTo() != null;
+    }
+
+    private static boolean sameDay(ScheduleEntry sEntry, ScheduleEntry gEntry) {
+        return sEntry.getDay().equalsIgnoreCase(gEntry.getDay());
+    }
+
+    private static boolean sameSemester(ScheduleEntry sEntry, ScheduleEntry gEntry) {
+        int sSemester = sEntry.getSemester();
+        int gSemester = gEntry.getSemester();
+        return sSemester == 0 || gSemester == 0 || sSemester == gSemester;
+    }
+
+    private static boolean hasOverlap(ScheduleEntry sEntry, ScheduleEntry gEntry) {
+        LocalTime sStart = parseLocalTime(sEntry.getFrom());
+        LocalTime sEnd = parseLocalTime(sEntry.getTo());
+        LocalTime gStart = parseLocalTime(gEntry.getFrom());
+        LocalTime gEnd = parseLocalTime(gEntry.getTo());
+
+        if (!sStart.isBefore(sEnd) || !gStart.isBefore(gEnd)) return false;
+
+        return sStart.isBefore(gEnd) && gStart.isBefore(sEnd);
+    }
+
+
+    public static boolean hasScheduleConflict(Student student, Group group) {
+        if (student == null || group == null) return false;
+        return hasScheduleConflict(student.getSchedule(), group.getSchedule());
+    }
+
+    public void ensureNoScheduleConflict(Student student, Group group) {
+        if (student == null || group == null) return;
+        try {
+            if (hasScheduleConflict(student, group)) {
+                throw badRequest("Cruce de horarios detectado: el estudiante tiene una clase que choca con el grupo objetivo.");
+            }
+        } catch (DateTimeParseException ex) {
+            LOG.debug("Formato de hora inválido al verificar cruce: {}", ex.getParsedString(), ex);
+            throw badRequest("Formato de hora inválido al verificar horario: " + ex.getParsedString());
+        } catch (Exception ex) {
+            LOG.error("Error verificando cruce de horarios", ex);
+            throw badRequest("Error verificando cruce de horarios");
         }
     }
 

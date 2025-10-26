@@ -18,6 +18,7 @@ import eci.edu.dosw.proyecto.services.AlertService;
 import eci.edu.dosw.proyecto.services.HistoryService;
 import eci.edu.dosw.proyecto.services.impl.SecretariatServiceImpl;
 import eci.edu.dosw.proyecto.util.MessageExceptions;
+import eci.edu.dosw.proyecto.util.TimeUtils;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -158,8 +159,8 @@ class SecretariatServiceImplTest {
         LocalDateTime end = LocalDateTime.now().plusDays(3);
         secretariatService.updateRequestDates(id, start, end);
 
-        assertEquals(start, sec.getRequestStartDate());
-        assertEquals(end, sec.getRequestEndDate());
+        assertEquals(TimeUtils.toUtc(start), sec.getRequestStartDate());
+        assertEquals(TimeUtils.toUtc(end), sec.getRequestEndDate());
     }
 
     @Test
@@ -487,8 +488,8 @@ class SecretariatServiceImplTest {
         SecretariatDTO out = secretariatService.updateSecretariat(id, dto);
 
         assertNotNull(out);
-        assertEquals(s, sec.getRequestStartDate());
-        assertEquals(e, sec.getRequestEndDate());
+        assertEquals(TimeUtils.toUtc(s), sec.getRequestStartDate());
+        assertEquals(TimeUtils.toUtc(e), sec.getRequestEndDate());
 
     }
 

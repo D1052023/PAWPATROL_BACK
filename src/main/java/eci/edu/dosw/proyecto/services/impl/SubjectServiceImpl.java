@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDateTime;
+import eci.edu.dosw.proyecto.util.TimeUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,8 +47,8 @@ public class SubjectServiceImpl implements SubjectService {
 
         Subject subject = subjectMapper.toModel(dto);
         subject.setFaculty(teacher.getFaculty());
-        subject.setCreatedAt(LocalDateTime.now());
-        subject.setUpdatedAt(LocalDateTime.now());
+        subject.setCreatedAt(TimeUtils.nowUtc());
+        subject.setUpdatedAt(TimeUtils.nowUtc());
 
         subject = subjectRepository.save(subject);
         return subjectMapper.toDTO(subject);
@@ -71,7 +71,7 @@ public class SubjectServiceImpl implements SubjectService {
         message.findSubjectOrThrow(subjectId);
         Subject updated = subjectMapper.toModel(dto);
         updated.setSubjectId(subjectId); 
-        updated.setUpdatedAt(LocalDateTime.now());
+        updated.setUpdatedAt(TimeUtils.nowUtc());
         updated = subjectRepository.save(updated);
         return subjectMapper.toDTO(updated);
     }
@@ -104,7 +104,7 @@ public class SubjectServiceImpl implements SubjectService {
             existing.setMaximumCapacity(dto.getMaximumCapacity());
         }
 
-        existing.setUpdatedAt(LocalDateTime.now());
+        existing.setUpdatedAt(TimeUtils.nowUtc());
         existing = subjectRepository.save(existing);
         return subjectMapper.toDTO(existing);
     }
@@ -124,8 +124,6 @@ public class SubjectServiceImpl implements SubjectService {
 
         message.ensureCurriculumMatchesStudent(student, subject);
         message.ensureStudentNotEnrolledInSubject(student, subjectId);
-
-        message.ensurePrerequisitesMet(student, subject);
 
         int totalCuposUsados = groupRepository.findBySubjectId(subjectId)
                 .stream()
