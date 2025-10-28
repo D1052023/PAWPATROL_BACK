@@ -288,3 +288,9 @@ Azure:
 [Ver Pruebas de videos de Swagger en (PDF)](docs/pdf/pruebasEndpoints.pdf)
 
 ---
+
+## CONFIGURACIÓN Y PRUEBA DE SEGURIDAD SSL
+
+[Ver Configuración y prueba (PDF)](docs/pdf/SeguridadSSLPAWPATROL.pdf)
+
+---
