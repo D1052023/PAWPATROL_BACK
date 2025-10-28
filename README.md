@@ -193,6 +193,18 @@ Diagramas basados en casos de uso principales del sistema SIRHA:
 
 ---
 
+## Documento de arquitectura Backend SIRHA
+[Ver el documento (PDF)](docs/pdf/Documento%20de%20Arquitectura.pdf)
+El presente documento de arquitectura corresponde al backend del sistema SIRHA
+(Sistema de Reasignación de Horarios Académicos), desarrollado por el equipo
+Paw Patrol en el marco de las asignaturas Ciclos de Vida del Desarrollo de Software
+(CVDS) y Desarrollo de Operaciones de Software (DOSW) de la Escuela Colombiana
+de Ingeniería Julio Garavito.
+
+Su propósito es describir la estructura, diseño y componentes técnicos del sistema,
+especificando cómo se organizan las capas, tecnologías y flujos de información dentro
+de la solución. Este documento permite garantizar la coherencia arquitectónica,
+trazabilidad funcional y mantenibilidad del software durante su ciclo de vida.
 ## Diagrama de Base de datos.
 
 ![DiagramaBasesDatos](docs/uml/DiagramaBasesDeDatos.png)
@@ -270,12 +282,12 @@ GitHub Actions:
 
 ![alt text](docs/imagenes/pruebaGitActions.png)
 
-Azure: 
+Azure:
 
 - Para verificar si desplego ve a centro de implementaciones y tiene que estar registrado la implementacion que se realizo
 
 
-  ![alt text](docs/imagenes/pruebaAzure.png)
+![alt text](docs/imagenes/pruebaAzure.png)
 
 ### Prueba ejecución CI/CD (preprod)
 
