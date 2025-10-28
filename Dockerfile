@@ -1,7 +1,12 @@
+FROM eclipse-temurin:21-jdk-jammy AS build
+WORKDIR /app
+COPY . .
+RUN ./mvnw clean package -DskipTests
+
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-COPY target/PAWPATROL_BACK-0.0.5.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 USER root
 RUN apt-get update && apt-get install -y curl --no-install-recommends \
