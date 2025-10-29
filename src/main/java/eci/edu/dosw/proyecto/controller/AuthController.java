@@ -8,7 +8,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import lombok.RequiredArgsConstructor;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import eci.edu.dosw.proyecto.dtos.LoginDTO;
 import eci.edu.dosw.proyecto.dtos.LoginResponse;
@@ -22,7 +21,6 @@ import eci.edu.dosw.proyecto.services.AuthUserService;
 /**
  * Clase controlador para autenticación y registro de usuarios en SIRHA.
  */
-@Tag(name = "Autenticación", description = "Endpoints para el inicio de sesión y registro de usuarios en SIRHA")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
