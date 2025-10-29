@@ -38,7 +38,6 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://127.0.0.1:5173",
                 "https://pawpatrol-front.vercel.app"
                 
         ));
@@ -58,7 +57,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "http://localhost:5173","https://pawpatrol-front.vercel.app").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, ApiPaths.DEANERY).hasAnyRole(Role.DEANERY.name(), Role.ADMIN.name())
                 .requestMatchers(HttpMethod.GET, ApiPaths.DEANERY).hasAnyRole(Role.SECRETARIAT.name(), Role.DEANERY.name(), Role.ADMIN.name())
