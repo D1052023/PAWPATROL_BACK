@@ -58,7 +58,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/auth/**", "/auth-controller/**").permitAll()
                 .requestMatchers(HttpMethod.POST, ApiPaths.DEANERY).hasAnyRole(Role.DEANERY.name(), Role.ADMIN.name())
                 .requestMatchers(HttpMethod.GET, ApiPaths.DEANERY).hasAnyRole(Role.SECRETARIAT.name(), Role.DEANERY.name(), Role.ADMIN.name())
                 .requestMatchers(HttpMethod.GET, ApiPaths.DEANERY_BY_ID).hasAnyRole(Role.SECRETARIAT.name(), Role.DEANERY.name(), Role.ADMIN.name())

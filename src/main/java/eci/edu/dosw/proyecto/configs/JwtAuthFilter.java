@@ -28,15 +28,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
-    @SuppressWarnings("null")
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        String path = request.getServletPath();
-        if (path.startsWith("/auth/login") || path.startsWith("/auth/register")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+    protected void doFilterInternal(@SuppressWarnings("null") HttpServletRequest request, @SuppressWarnings("null") HttpServletResponse response,@SuppressWarnings("null") FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -52,11 +45,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String roleStr = claims.get("role", String.class);
             Role roleEnum = Role.valueOf(roleStr.toUpperCase()); 
             UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
+                 new UsernamePasswordAuthenticationToken(
                     email,
                     null,
                     java.util.List.of(new SimpleGrantedAuthority("ROLE_" + roleEnum.name()))
                 );
+
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
