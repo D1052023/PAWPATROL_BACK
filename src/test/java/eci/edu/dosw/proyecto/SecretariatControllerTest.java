@@ -109,10 +109,10 @@ class SecretariatControllerTest {
     void shouldUpdateRequestDates() {
         RequestDatesDTO dto = new RequestDatesDTO(LocalDateTime.of(2025,1,1,9,0), LocalDateTime.of(2025,1,10,18,0));
 
-        doNothing().when(secretariatService).updateRequestDates(1000000398, dto.getRequestStartDate(), dto.getRequestEndDate());
+        doNothing().when(secretariatService).updateRequestDates(1000000398, dto.getStartDate(), dto.getEndDate());
         controller.updateRequestDates(1000000398, dto);
 
-        verify(secretariatService).updateRequestDates(1000000398, dto.getRequestStartDate(), dto.getRequestEndDate());
+        verify(secretariatService).updateRequestDates(1000000398, dto.getStartDate(), dto.getEndDate());
     }
 
     @Test
@@ -218,7 +218,7 @@ class SecretariatControllerTest {
         ChangeRequestDTO out = new ChangeRequestDTO(); out.setId(reqId);
 
         when(secretariatService.updateRequestAsSecretariat(reqId, decision, dates)).thenReturn(out);
-        ChangeRequestDTO res = controller.updateRequestAsSecretariat(reqId, decision, dates.getRequestStartDate(), dates.getRequestEndDate());
+        ChangeRequestDTO res = controller.updateRequestAsSecretariat(reqId, decision, dates.getStartDate(), dates.getEndDate());
         controller.deleteRequestAsSecretariat(reqId);
         
         assertEquals(reqId, res.getId());

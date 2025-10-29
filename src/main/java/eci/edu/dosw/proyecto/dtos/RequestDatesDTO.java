@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class RequestDatesDTO {
     @Schema(type = "string", format = "date-time", example = "2025-10-18T00:00:00")
-    private LocalDateTime requestStartDate;
+    private LocalDateTime startDate;
     @Schema(type = "string", format = "date-time", example = "2025-10-25T23:59:59")
-    private LocalDateTime requestEndDate;
+    private LocalDateTime endDate;
 }

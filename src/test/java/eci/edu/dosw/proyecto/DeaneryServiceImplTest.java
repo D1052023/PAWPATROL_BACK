@@ -265,8 +265,8 @@ class DeaneryServiceImplTest {
         decision.setAdditionalInfoRequestMessage("adjuntar certificado");
 
         RequestDatesDTO dates = new RequestDatesDTO();
-        dates.setRequestStartDate(LocalDateTime.now().minusDays(1));
-        dates.setRequestEndDate(LocalDateTime.now().plusDays(1));
+        dates.setStartDate(LocalDateTime.now().minusDays(1));
+        dates.setEndDate(LocalDateTime.now().plusDays(1));
 
         ChangeRequestDTO out = new ChangeRequestDTO();
         out.setId(reqId);
@@ -331,8 +331,8 @@ class DeaneryServiceImplTest {
         decision.setStatus(RequestStatus.APPROVED);
 
         RequestDatesDTO dates = new RequestDatesDTO();
-        dates.setRequestStartDate(LocalDateTime.now().minusDays(1));
-        dates.setRequestEndDate(LocalDateTime.now().plusDays(1));
+        dates.setStartDate(LocalDateTime.now().minusDays(1));
+        dates.setEndDate(LocalDateTime.now().plusDays(1));
 
         ChangeRequestDTO res = deaneryService.respondRequestByDeanery(deaneryId, reqId, decision, dates);
 
@@ -361,8 +361,8 @@ class DeaneryServiceImplTest {
         when(changeRequestMapper.toDTO(req)).thenReturn(new ChangeRequestDTO(){ { setId(reqId); } });
 
         RequestDatesDTO dates = new RequestDatesDTO();
-        dates.setRequestStartDate(LocalDateTime.now().minusDays(1));
-        dates.setRequestEndDate(LocalDateTime.now().plusDays(1));
+        dates.setStartDate(LocalDateTime.now().minusDays(1));
+        dates.setEndDate(LocalDateTime.now().plusDays(1));
 
         ChangeRequestDTO out = deaneryService.respondRequestByDeanery(deaneryId, reqId, decision, dates);
 
@@ -390,8 +390,8 @@ class DeaneryServiceImplTest {
 
         RequestDecisionDTO decision = new RequestDecisionDTO();
         RequestDatesDTO dates = new RequestDatesDTO();
-        dates.setRequestStartDate(LocalDateTime.now().plusDays(1));
-        dates.setRequestEndDate(LocalDateTime.now().plusDays(2));
+        dates.setStartDate(LocalDateTime.now().plusDays(1));
+        dates.setEndDate(LocalDateTime.now().plusDays(2));
 
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "No se pueden gestionar solicitudes fuera del periodo académico habilitado")).when(message).ensureNowWithinDates(any(LocalDateTime.class), eq(dates));
 
@@ -463,8 +463,8 @@ class DeaneryServiceImplTest {
         decision.setStatus(RequestStatus.APPROVED);
 
         RequestDatesDTO dates = new RequestDatesDTO();
-        dates.setRequestStartDate(LocalDateTime.now().minusDays(2));
-        dates.setRequestEndDate(LocalDateTime.now().plusDays(2));
+        dates.setStartDate(LocalDateTime.now().minusDays(2));
+        dates.setEndDate(LocalDateTime.now().plusDays(2));
 
         ChangeRequestDTO out = deaneryService.updateRequestAsDeanery(deaneryId, reqId, decision, dates);
 
@@ -792,8 +792,8 @@ class DeaneryServiceImplTest {
         decision.setAdditionalInfoRequestMessage("Adjunta certificado");
 
         RequestDatesDTO dates = new RequestDatesDTO();
-        dates.setRequestStartDate(LocalDateTime.now().minusDays(1));
-        dates.setRequestEndDate(LocalDateTime.now().plusDays(1));
+        dates.setStartDate(LocalDateTime.now().minusDays(1));
+        dates.setEndDate(LocalDateTime.now().plusDays(1));
 
         ChangeRequestDTO out = deaneryService.respondRequestByDeanery(deaneryId, reqId, decision, dates);
 

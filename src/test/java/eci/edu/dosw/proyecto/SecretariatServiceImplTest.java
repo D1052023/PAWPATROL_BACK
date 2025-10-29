@@ -194,8 +194,8 @@ class SecretariatServiceImplTest {
         decision.setStatus(RequestStatus.REQUEST_ADDITIONAL_INFO);
 
         RequestDatesDTO rd = new RequestDatesDTO();
-        rd.setRequestStartDate(LocalDateTime.now().minusDays(1));
-        rd.setRequestEndDate(LocalDateTime.now().plusDays(1));
+        rd.setStartDate(LocalDateTime.now().minusDays(1));
+        rd.setEndDate(LocalDateTime.now().plusDays(1));
 
         when(changeRequestRepository.save(req)).thenReturn(req);
         when(changeRequestMapper.toDTO(req)).thenReturn(new ChangeRequestDTO() {{ setId(reqId); }});

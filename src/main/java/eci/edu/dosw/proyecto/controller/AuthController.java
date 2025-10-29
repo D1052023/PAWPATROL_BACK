@@ -46,27 +46,28 @@ public class AuthController {
         return new LoginResponse(token);
     }
 
-    @Operation(summary = "Registrar nuevo usuario", description = "Registra un nuevo usuario en el sistema con un rol determinado.")
+    @Operation(summary = "Registrar nuevo usuario", description = "Registra un nuevo usuario en el sistema asignando el rol automáticamente según el correo.")
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDTO register(@RequestBody RegisterDTO request) {
-        if (authUserService.getByEmail(request.getEmail()) != null) {
+        String email = request.getEmail().toLowerCase();
+
+        if (authUserService.getByEmail(email) != null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El correo ya está registrado");
         }
 
-        if (request.getRole() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar un rol válido");
-        }
-        Role role = request.getRole();
+        Role role;
 
-        String email = request.getEmail().toLowerCase();
-
-        if (role == Role.STUDENT && !email.endsWith("@mail.escuelaing.edu.co")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe usar un correo institucional");
-        }
-        if ((role == Role.DEANERY || role == Role.SECRETARIAT)
-                && !email.endsWith("@escuelaing.edu.co")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe usar un correo institucional");
+        if (email.startsWith("ad@") && email.endsWith("@mail.escuelaing.edu.co")) {
+            role = Role.ADMIN;
+        } else if (email.startsWith("se@") && email.endsWith("@escuelaing.edu.co")) {
+            role = Role.SECRETARIAT;
+        } else if (email.endsWith("@mail.escuelaing.edu.co")) {
+            role = Role.STUDENT;
+        } else if (email.endsWith("@escuelaing.edu.co")) {
+            role = Role.DEANERY;
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe usar un correo institucional válido");
         }
 
         AuthUser newUser = new AuthUser();

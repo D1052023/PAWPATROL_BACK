@@ -73,14 +73,14 @@ public class SecretariatController {
     @PutMapping("/{id}/request-dates")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateRequestDates(@Parameter(description = "ID de la secretaría") @PathVariable int id, @RequestBody RequestDatesDTO dto) {
-        secretariatService.updateRequestDates(id, dto.getRequestStartDate(), dto.getRequestEndDate());
+        secretariatService.updateRequestDates(id, dto.getStartDate(), dto.getEndDate());
     }
 
     @Operation(summary = "Responder solicitud")
     @PostMapping("/requests/{requestId}/respond")
     public ChangeRequestDTO respondRequestBySecretariat(@Parameter(description = "ID de la solicitud") @PathVariable UUID requestId, @RequestBody RequestDecisionDTO decision,
-            @RequestParam(required = false) LocalDateTime requestStartDate, @RequestParam(required = false) LocalDateTime requestEndDate) {
-        RequestDatesDTO dates = new RequestDatesDTO(requestStartDate, requestEndDate);
+            @RequestParam(required = false) LocalDateTime startDate, @RequestParam(required = false) LocalDateTime endDate) {
+        RequestDatesDTO dates = new RequestDatesDTO(startDate, endDate);
         return secretariatService.respondRequestBySecretariat(requestId, decision, dates);
     }
 
@@ -154,8 +154,8 @@ public class SecretariatController {
     @Operation(summary = "Actualizar solicitud como secretaría")
     @PutMapping("/requests/{requestId}")
     public ChangeRequestDTO updateRequestAsSecretariat(@Parameter(description = "ID de la solicitud") @PathVariable UUID requestId,@RequestBody RequestDecisionDTO decision,
-            @RequestParam(required = false) LocalDateTime requestStartDate, @RequestParam(required = false) LocalDateTime requestEndDate) {
-        RequestDatesDTO dates = new RequestDatesDTO(requestStartDate, requestEndDate);
+            @RequestParam(required = false) LocalDateTime startDate, @RequestParam(required = false) LocalDateTime endDate) {
+        RequestDatesDTO dates = new RequestDatesDTO(startDate, endDate);
         return secretariatService.updateRequestAsSecretariat(requestId, decision, dates);
     }
 

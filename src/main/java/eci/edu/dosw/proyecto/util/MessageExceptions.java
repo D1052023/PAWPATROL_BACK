@@ -165,13 +165,13 @@ public class MessageExceptions {
     }
 
     public void ensureDatesProvided(RequestDatesDTO dates) {
-        if (dates == null || dates.getRequestStartDate() == null || dates.getRequestEndDate() == null) {
+        if (dates == null || dates.getStartDate() == null || dates.getEndDate() == null) {
             throw badRequest(DATES_REQUIRED);
         }
     }
 
     public void ensureNowWithinDates(LocalDateTime now, RequestDatesDTO dates) {
-        if (dates != null && dates.getRequestStartDate() != null && dates.getRequestEndDate() != null && (now.isBefore(dates.getRequestStartDate()) || now.isAfter(dates.getRequestEndDate()))) {
+        if (dates != null && dates.getStartDate() != null && dates.getEndDate() != null && (now.isBefore(dates.getStartDate()) || now.isAfter(dates.getEndDate()))) {
             throw forbidden(OUTSIDE_PERIOD);
         }
 
@@ -190,7 +190,7 @@ public class MessageExceptions {
     }
 
     public void ensureNowWithinDatesIfPresent(LocalDateTime now, RequestDatesDTO dates) {
-        if (dates == null || dates.getRequestStartDate() == null || dates.getRequestEndDate() == null) return;
+        if (dates == null || dates.getStartDate() == null || dates.getEndDate() == null) return;
         ensureNowWithinDates(now, dates);
     }
 

@@ -9,251 +9,234 @@ import eci.edu.dosw.proyecto.services.JwtService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.mockito.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-
 class AuthControllerTest {
-
-    @InjectMocks
-    private AuthController authController;
-
-    @Mock
-    private AuthUserService authUserService;
 
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private AuthUserService authUserService;
+
+    @InjectMocks
+    private AuthController authController;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @BeforeEach
-    void setUp() {
+    void setup() {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void ShouldLoginCorrectCredentials() {
-        String email = "user@mail.escuelaing.edu.co";
-        String password = "password123";
-
-        AuthUser user = new AuthUser();
-        user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode(password));
-        user.setRole(Role.STUDENT);
-
-        when(authUserService.getByEmail(email)).thenReturn(user);
-        when(jwtService.generateToken(email, "STUDENT")).thenReturn("token-falso-prueba");
-
-        LoginDTO loginDTO = new LoginDTO();
-        loginDTO.setEmail(email);
-        loginDTO.setPassword(password);
-
-        LoginResponse response = authController.login(loginDTO);
-
-        assertEquals("token-falso-prueba", response.getToken());
-    }
-
 
     @Test
-    void ShouldNotLoginWrongPassword() {
-        String email = "user@mail.escuelaing.edu.co";
+    void registerAdminWithCorrectPrefixAndDomainAssignsAdminRole() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("ad@admin@mail.escuelaing.edu.co");
+        dto.setPassword("1234");
 
-        AuthUser user = new AuthUser();
-        user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode("otherpassword"));
-        user.setRole(Role.STUDENT);
+        when(authUserService.getByEmail(dto.getEmail().toLowerCase())).thenReturn(null);
+        when(authUserService.saveUser(any(AuthUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        when(authUserService.getByEmail(email)).thenReturn(user);
+        UserResponseDTO response = authController.register(dto);
 
-        LoginDTO loginDTO = new LoginDTO();
-        loginDTO.setEmail(email);
-        loginDTO.setPassword("wrongpassword");
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> authController.login(loginDTO));
-
-        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+        assertEquals(Role.ADMIN, response.getRole());
     }
 
     @Test
-    void ShouldRegisterStudentWithValidEmail() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("student@mail.escuelaing.edu.co");
-        registerDTO.setPassword("password123");
-        registerDTO.setRole(Role.STUDENT);
+    void registerSecretariatWithCorrectPrefixAndDomainAssignsSecretariatRole() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("se@office@escuelaing.edu.co");
+        dto.setPassword("1234");
 
-        when(authUserService.getByEmail(registerDTO.getEmail())).thenReturn(null);
+        when(authUserService.getByEmail(dto.getEmail().toLowerCase())).thenReturn(null);
+        when(authUserService.saveUser(any(AuthUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        AuthUser savedUser = new AuthUser();
-        savedUser.setId("1000100516");
-        savedUser.setEmail(registerDTO.getEmail());
-        savedUser.setRole(Role.STUDENT);
+        UserResponseDTO response = authController.register(dto);
 
-        when(authUserService.saveUser(any(AuthUser.class))).thenReturn(savedUser);
-
-        UserResponseDTO response = authController.register(registerDTO);
-
-        assertEquals("1000100516", response.getId());
-        assertEquals(registerDTO.getEmail(), response.getEmail());
-        assertEquals(Role.STUDENT, response.getRole());
-    }
-
-    @Test
-    void ShouldRegisterExistingEmail() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("existing@mail.escuelaing.edu.co");
-        registerDTO.setPassword("password");
-        registerDTO.setRole(Role.STUDENT);
-
-        when(authUserService.getByEmail(registerDTO.getEmail())).thenReturn(new AuthUser());
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> authController.register(registerDTO));
-
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-    }
-
-    @Test
-    void ShouldRegisterInvalidStudentEmail() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("student@gmail.co");
-        registerDTO.setPassword("password");
-        registerDTO.setRole(Role.STUDENT);
-
-        when(authUserService.getByEmail(registerDTO.getEmail())).thenReturn(null);
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> authController.register(registerDTO));
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    }
-
-    @Test
-    void ShouldThrowBadRequestWhenRoleIsNull() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("user@mail.escuelaing.edu.co");
-        registerDTO.setPassword("password123");
-        registerDTO.setRole(null);
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> authController.register(registerDTO));
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    }
-
-    @Test
-    void ShouldThrowBadRequestForStudentWithInvalidEmail() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("student@gmail.com");
-        registerDTO.setPassword("password123");
-        registerDTO.setRole(Role.STUDENT);
-
-        when(authUserService.getByEmail(registerDTO.getEmail())).thenReturn(null);
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> authController.register(registerDTO));
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    }
-
-    @Test
-    void ShouldThrowBadRequestForDeaneryWithInvalidEmail() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("deanery@gmail.com"); 
-        registerDTO.setPassword("password123");
-        registerDTO.setRole(Role.DEANERY);
-
-        when(authUserService.getByEmail(registerDTO.getEmail())).thenReturn(null);
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> authController.register(registerDTO));
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    }
-
-    @Test
-    void ShouldThrowBadRequestForSecretariatWithInvalidEmail() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("secretariat@gmail.com"); 
-        registerDTO.setPassword("password123");
-        registerDTO.setRole(Role.SECRETARIAT);
-
-        when(authUserService.getByEmail(registerDTO.getEmail())).thenReturn(null);
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> authController.register(registerDTO));
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    }
-
-    @Test
-    void ShouldRegisterDeaneryWithValidEmail() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("decano@escuelaing.edu.co");
-        registerDTO.setPassword("password123");
-        registerDTO.setRole(Role.DEANERY);
-
-        when(authUserService.getByEmail(registerDTO.getEmail())).thenReturn(null);
-
-        AuthUser savedUser = new AuthUser();
-        savedUser.setId("1000100575");
-        savedUser.setEmail(registerDTO.getEmail());
-        savedUser.setRole(Role.DEANERY);
-
-        when(authUserService.saveUser(any(AuthUser.class))).thenReturn(savedUser);
-
-        UserResponseDTO response = authController.register(registerDTO);
-
-        assertEquals("1000100575", response.getId());
-        assertEquals(registerDTO.getEmail(), response.getEmail());
-        assertEquals(Role.DEANERY, response.getRole());
-    }
-
-    @Test
-    void ShouldRegisterSecretariatWithValidEmail() {
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setEmail("secretaria@escuelaing.edu.co");
-        registerDTO.setPassword("password123");
-        registerDTO.setRole(Role.SECRETARIAT);
-
-        when(authUserService.getByEmail(registerDTO.getEmail())).thenReturn(null);
-
-        AuthUser savedUser = new AuthUser();
-        savedUser.setId("1000100575");
-        savedUser.setEmail(registerDTO.getEmail());
-        savedUser.setRole(Role.SECRETARIAT);
-
-        when(authUserService.saveUser(any(AuthUser.class))).thenReturn(savedUser);
-
-        UserResponseDTO response = authController.register(registerDTO);
-
-        assertEquals("1000100575", response.getId());
-        assertEquals(registerDTO.getEmail(), response.getEmail());
         assertEquals(Role.SECRETARIAT, response.getRole());
     }
 
     @Test
-    void ShouldNotLoginWhenUserIsNull() {
-        String email = "nonexistent@mail.escuelaing.edu.co";
-        String password = "password123";
+    void registerStudentWithMailEscuelaingDomainAssignsStudentRole() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("student@mail.escuelaing.edu.co");
+        dto.setPassword("1234");
 
-        when(authUserService.getByEmail(email)).thenReturn(null);
+        when(authUserService.getByEmail(dto.getEmail().toLowerCase())).thenReturn(null);
+        when(authUserService.saveUser(any(AuthUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        LoginDTO loginDTO = new LoginDTO();
-        loginDTO.setEmail(email);
-        loginDTO.setPassword(password);
+        UserResponseDTO response = authController.register(dto);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> authController.login(loginDTO));
-
-        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+        assertEquals(Role.STUDENT, response.getRole());
     }
+
+    @Test
+    void registerDeaneryWithEscuelaingDomainAssignsDeaneryRole() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("professor@escuelaing.edu.co");
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(dto.getEmail().toLowerCase())).thenReturn(null);
+        when(authUserService.saveUser(any(AuthUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserResponseDTO response = authController.register(dto);
+
+        assertEquals(Role.DEANERY, response.getRole());
+    }
+
+    @Test
+    void registerWithInvalidEmailThrowsBadRequest() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("user@gmail.com");
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(dto.getEmail().toLowerCase())).thenReturn(null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            authController.register(dto);
+        });
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    void registerWithExistingEmailThrowsConflict() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("existing@mail.escuelaing.edu.co");
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(dto.getEmail().toLowerCase())).thenReturn(new AuthUser());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            authController.register(dto);
+        });
+
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
+    }
+
+    @Test
+    void loginWithValidCredentialsReturnsToken() {
+        AuthUser user = new AuthUser();
+        user.setEmail("student@mail.escuelaing.edu.co");
+        user.setPasswordHash(passwordEncoder.encode("1234"));
+        user.setRole(Role.STUDENT);
+
+        LoginDTO dto = new LoginDTO();
+        dto.setEmail(user.getEmail());
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(user.getEmail())).thenReturn(user);
+        when(jwtService.generateToken(user.getEmail(), user.getRole().name())).thenReturn("mockedToken");
+
+        LoginResponse response = authController.login(dto);
+
+        assertEquals("mockedToken", response.getToken());
+    }
+
+    @Test
+    void loginWithWrongPasswordThrowsUnauthorized() {
+        AuthUser user = new AuthUser();
+        user.setEmail("student@mail.escuelaing.edu.co");
+        user.setPasswordHash(passwordEncoder.encode("1234"));
+        user.setRole(Role.STUDENT);
+
+        LoginDTO dto = new LoginDTO();
+        dto.setEmail(user.getEmail());
+        dto.setPassword("wrongpass");
+
+        when(authUserService.getByEmail(user.getEmail())).thenReturn(user);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            authController.login(dto);
+        });
+
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+    }
+
+    @Test
+    void loginWithNonExistingUserThrowsUnauthorized() {
+        LoginDTO dto = new LoginDTO();
+        dto.setEmail("noexist@mail.escuelaing.edu.co");
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(dto.getEmail())).thenReturn(null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            authController.login(dto);
+        });
+
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+    }
+
+    @Test
+    void registerAdminCorrectEmailAssignsAdminRole() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("ad@mail.escuelaing.edu.co");
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(anyString())).thenReturn(null);
+        when(authUserService.saveUser(any(AuthUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserResponseDTO response = authController.register(dto);
+
+        assertEquals(Role.ADMIN, response.getRole());
+    }
+
+    @Test
+    void registerAdminWrongEndDoesNotAssignAdmin() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("ad@gmail.com"); 
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(anyString())).thenReturn(null);
+
+        ResponseStatusException ex = assertThrows(
+            ResponseStatusException.class,
+            () -> authController.register(dto)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    void registerSecretariatCorrectEmailAssignsSecretariatRole() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("se@escuelaing.edu.co");
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(anyString())).thenReturn(null);
+        when(authUserService.saveUser(any(AuthUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserResponseDTO response = authController.register(dto);
+
+        assertEquals(Role.SECRETARIAT, response.getRole());
+    }
+
+
+    @Test
+    void registerSecretariatWrongEndThrowsBadRequest() {
+        RegisterDTO dto = new RegisterDTO();
+        dto.setEmail("se@gmail.com"); 
+        dto.setPassword("1234");
+
+        when(authUserService.getByEmail(anyString())).thenReturn(null);
+
+        ResponseStatusException ex = assertThrows(
+            ResponseStatusException.class,
+            () -> authController.register(dto)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
 
 }
